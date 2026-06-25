@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 type PaperContent = {
   title: string;
   course: string;
+  kata_pengantar: string;
   abstract: string;
   sections: {
     heading: string;
@@ -34,6 +35,8 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
     HeadingLevel,
     AlignmentType,
     PageBreak,
+    TableOfContents,
+    StyleLevel,
   } = await import("docx");
 
   const FONT = "Times New Roman";
@@ -82,6 +85,7 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
   const h2 = (text: string) =>
     new Paragraph({
       heading: HeadingLevel.HEADING_2,
+      alignment: AlignmentType.JUSTIFIED,
       spacing: { before: 240, after: 120 },
       children: [new TextRun({ text, font: FONT, size: H2, bold: true })],
     });
@@ -89,13 +93,43 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
   const h3 = (text: string) =>
     new Paragraph({
       heading: HeadingLevel.HEADING_3,
+      alignment: AlignmentType.JUSTIFIED,
       spacing: { before: 200, after: 120 },
       children: [new TextRun({ text, font: FONT, size: H3, bold: true, italics: true })],
     });
 
+  const kataPengantarBlock = [
+    h1("Kata Pengantar"),
+    ...content.kata_pengantar
+      .split(/\n+/)
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .map((p) => bodyPara(p, { firstLine: true })),
+    new Paragraph({ children: [new PageBreak()] }),
+  ];
+
+  const daftarIsiBlock = [
+    h1("Daftar Isi"),
+    new Paragraph({
+      children: [
+        new TableOfContents("Daftar Isi", {
+          hyperlink: true,
+          headingStyleRange: "1-3",
+          stylesWithLevels: [
+            new StyleLevel("Heading1", 1),
+            new StyleLevel("Heading2", 2),
+            new StyleLevel("Heading3", 3),
+          ],
+        }),
+      ],
+    }),
+    new Paragraph({ children: [new PageBreak()] }),
+  ];
+
   const abstractBlock = [
     h1("Abstrak"),
     bodyPara(content.abstract, { italic: true, firstLine: true }),
+    new Paragraph({ children: [new PageBreak()] }),
   ];
 
   const sectionBlocks = content.sections.flatMap((s) => {
@@ -168,7 +202,15 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
             margin: { top: 1701, right: 1701, bottom: 1701, left: 2268 },
           },
         },
-        children: [...cover, ...abstractBlock, ...sectionBlocks, ...conclusion, ...references],
+        children: [
+          ...cover,
+          ...kataPengantarBlock,
+          ...daftarIsiBlock,
+          ...abstractBlock,
+          ...sectionBlocks,
+          ...conclusion,
+          ...references,
+        ],
       },
     ],
   });

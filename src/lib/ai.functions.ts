@@ -12,6 +12,10 @@ const paperTool = {
       properties: {
         title: { type: "string" },
         course: { type: "string" },
+        kata_pengantar: {
+          type: "string",
+          description: "Kata pengantar berisi ucapan syukur, tujuan penulisan singkat, ucapan terima kasih, dan harapan. Sekitar 100 kata, boleh 2-3 paragraf dipisah newline.",
+        },
         abstract: { type: "string", description: "Abstrak singkat 100-150 kata." },
         sections: {
           type: "array",
@@ -54,7 +58,7 @@ const paperTool = {
           items: { type: "string", description: "Referensi gaya APA." },
         },
       },
-      required: ["title", "course", "abstract", "sections", "conclusion", "references"],
+      required: ["title", "course", "kata_pengantar", "abstract", "sections", "conclusion", "references"],
       additionalProperties: false,
     },
   },
