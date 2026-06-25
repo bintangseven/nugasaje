@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { TablesUpdate } from "@/integrations/supabase/types";
 
 const MissionEnum = z.enum(["paper", "presentation"]);
 const PhaseEnum = z.enum(["interview", "working", "done"]);
@@ -12,7 +13,7 @@ const ProjectPatch = z.object({
   step_index: z.number().int().min(-1).max(50).optional(),
   question_index: z.number().int().min(0).max(50).optional(),
   answers: z.record(z.string(), z.string()).optional(),
-  ai_context: z.record(z.string(), z.unknown()).optional(),
+  ai_context: z.record(z.string(), z.any()).optional(),
 });
 
 export const listProjects = createServerFn({ method: "GET" })
@@ -78,9 +79,10 @@ export const updateProject = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    const patch = data.patch as TablesUpdate<"projects">;
     const { error } = await context.supabase
       .from("projects")
-      .update(data.patch)
+      .update(patch)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
