@@ -79,14 +79,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Nugasinaje — Asisten Tugas Mahasiswa" },
-      { name: "description", content: "Nugasinaje membantu mahasiswa Indonesia menyelesaikan tugas kuliah lebih cepat." },
+      { title: "Nugasin Aje" },
+      { name: "description", content: "Student OS is an AI workspace guiding Indonesian students through academic assignments." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Nugasinaje — Asisten Tugas Mahasiswa" },
-      { property: "og:description", content: "Nugasinaje membantu mahasiswa Indonesia menyelesaikan tugas kuliah lebih cepat." },
+      { property: "og:title", content: "Nugasin Aje" },
+      { property: "og:description", content: "Student OS is an AI workspace guiding Indonesian students through academic assignments." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Nugasin Aje" },
+      { name: "twitter:description", content: "Student OS is an AI workspace guiding Indonesian students through academic assignments." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b77cf73b-ccbb-4cdd-8975-1e8c7137a1ac/id-preview-84b74573--69aa74d3-c60c-4a11-9f38-8c05acbcf556.lovable.app-1782429964340.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b77cf73b-ccbb-4cdd-8975-1e8c7137a1ac/id-preview-84b74573--69aa74d3-c60c-4a11-9f38-8c05acbcf556.lovable.app-1782429964340.png" },
     ],
     links: [
       {
