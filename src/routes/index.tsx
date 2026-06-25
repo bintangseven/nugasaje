@@ -63,15 +63,15 @@ function Index() {
   const recent = ((projectsQuery.data ?? []) as ProjectRow[]).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background mesh-bg noise-overlay">
       <AppHeader />
       <main className="mx-auto max-w-6xl px-6 pb-24 pt-16">
-        <section className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-muted-foreground">
+        <section className="mx-auto max-w-3xl text-center animate-fade-in">
+          <p className="text-sm font-medium uppercase tracking-[0.18em] text-gradient-ocean">
             Ruang kerja akademik
           </p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
-            Mau menyelesaikan apa hari ini?
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight md:text-5xl">
+            Mau <span className="text-gradient-ocean">menyelesaikan apa</span> hari ini?
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
             Pilih satu misi. Jawab beberapa pertanyaan singkat. Nugasinaje akan
