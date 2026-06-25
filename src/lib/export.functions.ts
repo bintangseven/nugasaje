@@ -528,7 +528,12 @@ export const exportProject = createServerFn({ method: "POST" })
       };
     }
 
-    const bytes = await buildPptx(ctx.content as PresentationContent, studentName);
+    const answers = (project.answers ?? {}) as Record<string, string>;
+    const bytes = await buildPptx(ctx.content as PresentationContent, studentName, {
+      course: answers.course,
+      style: answers.style,
+      audience: answers.audience,
+    });
     return {
       base64: toBase64(bytes),
       filename: `${baseName}.pptx`,
