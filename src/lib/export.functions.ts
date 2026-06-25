@@ -82,6 +82,14 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
       children: [new TextRun({ text: text.toUpperCase(), font: FONT, size: H1, bold: true })],
     });
 
+  const h1Tight = (text: string) =>
+    new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 240 },
+      children: [new TextRun({ text: text.toUpperCase(), font: FONT, size: H1, bold: true })],
+    });
+
   const h2 = (text: string) =>
     new Paragraph({
       heading: HeadingLevel.HEADING_2,
@@ -133,7 +141,17 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
   ];
 
   const sectionBlocks = content.sections.flatMap((s) => {
-    const blocks: InstanceType<typeof Paragraph>[] = [h1(s.heading)];
+    const blocks: InstanceType<typeof Paragraph>[] = [
+      new Paragraph({ children: [new PageBreak()] }),
+    ];
+    // Pisah "BAB I PENDAHULUAN" -> baris 1: "BAB I", baris 2: "PENDAHULUAN"
+    const match = s.heading.match(/^(BAB\s+[IVXLCDM]+)\s+(.+)$/i);
+    if (match) {
+      blocks.push(h1(match[1]));
+      blocks.push(h1Tight(match[2]));
+    } else {
+      blocks.push(h1(s.heading));
+    }
     s.paragraphs.forEach((p) => blocks.push(bodyPara(p, { firstLine: true })));
     (s.subsections ?? []).forEach((sub) => {
       blocks.push(h2(sub.heading));
