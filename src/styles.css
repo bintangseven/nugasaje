@@ -4,6 +4,42 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: "PF Centro Sans Pro";
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: url("/__l5e/assets-v1/388cc509-884a-4906-ae38-a5fea16befa2/PFCentroSansPro-Light.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PF Centro Sans Pro";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("/__l5e/assets-v1/6b267a20-995e-4a30-9171-f93a2c10ee10/PFCentroSansPro-Regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PF Centro Sans Pro";
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url("/__l5e/assets-v1/bc6f9d74-c5ba-4fad-9fb7-b345c331ba69/PFCentroSansPro-Medium.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PF Centro Sans Pro";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("/__l5e/assets-v1/0458b4d8-ff61-4659-9b5b-566c4024310c/PFCentroSansPro-Bold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "PF Centro Sans Pro";
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+  src: url("/__l5e/assets-v1/ba5a3a8e-a2c7-4557-9702-a9d547a75bff/PFCentroSansPro-Black.woff2") format("woff2");
+}
+
 /*
  * Design system definition.
  *
