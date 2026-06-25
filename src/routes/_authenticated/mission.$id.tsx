@@ -22,8 +22,8 @@ import { exportProject } from "@/lib/export.functions";
 export const Route = createFileRoute("/_authenticated/mission/$id")({
   head: () => ({
     meta: [
-      { title: "Misi — Student OS" },
-      { name: "description", content: "Ruang kerja misi akademik di Student OS." },
+      { title: "Misi — Nugasinaje" },
+      { name: "description", content: "Ruang kerja misi akademik di Nugasinaje." },
     ],
   }),
   component: MissionWorkspace,
