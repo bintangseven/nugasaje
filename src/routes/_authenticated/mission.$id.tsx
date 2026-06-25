@@ -99,7 +99,15 @@ function Workspace({
   // Debounced auto-save to cloud whenever local state changes.
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scheduleSave = useCallback(
-    (patch: Parameters<typeof updateFn>[0]["data"]["patch"]) => {
+    (patch: Partial<{
+      name: string;
+      phase: "interview" | "working" | "done";
+      progress: number;
+      step_index: number;
+      question_index: number;
+      answers: Record<string, string>;
+      ai_context: Record<string, unknown>;
+    }>) => {
       setSaveStatus("saving");
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(async () => {
