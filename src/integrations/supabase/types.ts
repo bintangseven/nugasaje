@@ -18,9 +18,12 @@ export type Database = {
         Row: {
           created_at: string
           email: string | null
+          generations_used: number
           id: string
           major: string | null
           name: string | null
+          plan: Database["public"]["Enums"]["user_plan"]
+          pro_until: string | null
           semester: string | null
           university: string | null
           updated_at: string
@@ -28,9 +31,12 @@ export type Database = {
         Insert: {
           created_at?: string
           email?: string | null
+          generations_used?: number
           id: string
           major?: string | null
           name?: string | null
+          plan?: Database["public"]["Enums"]["user_plan"]
+          pro_until?: string | null
           semester?: string | null
           university?: string | null
           updated_at?: string
@@ -38,9 +44,12 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string | null
+          generations_used?: number
           id?: string
           major?: string | null
           name?: string | null
+          plan?: Database["public"]["Enums"]["user_plan"]
+          pro_until?: string | null
           semester?: string | null
           university?: string | null
           updated_at?: string
@@ -102,6 +111,7 @@ export type Database = {
     Enums: {
       mission_type: "paper" | "presentation"
       project_phase: "interview" | "working" | "done"
+      user_plan: "trial" | "pro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -231,6 +241,7 @@ export const Constants = {
     Enums: {
       mission_type: ["paper", "presentation"],
       project_phase: ["interview", "working", "done"],
+      user_plan: ["trial", "pro"],
     },
   },
 } as const

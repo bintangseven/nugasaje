@@ -105,11 +105,32 @@ export const getProfile = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("profiles")
-      .select("id,name,email,university,major,semester")
+      .select("id,name,email,university,major,semester,plan,generations_used,pro_until")
       .eq("id", context.userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
     return data;
+  });
+
+export const TRIAL_LIMIT = 2;
+
+/**
+ * Placeholder upgrade — TANPA pembayaran nyata.
+ * Sekarang menandai akun sebagai PRO selama 30 hari supaya alur kuota bisa diuji.
+ * Sambungkan ke payment gateway (Midtrans/Xendit/dll) lalu panggil ini setelah
+ * webhook pembayaran sukses, atau pindahkan logikanya ke webhook handler.
+ */
+export const upgradeToPro = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const until = new Date();
+    until.setDate(until.getDate() + 30);
+    const { error } = await context.supabase
+      .from("profiles")
+      .update({ plan: "pro", pro_until: until.toISOString() })
+      .eq("id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true, pro_until: until.toISOString() };
   });
 
 export const updateProfile = createServerFn({ method: "POST" })
