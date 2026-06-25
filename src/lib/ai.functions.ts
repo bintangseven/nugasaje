@@ -142,29 +142,33 @@ const presentationTool = {
   },
 } as const;
 
-const TRIAL_LIMIT = 2;
+const BASIC_DAILY_LIMIT = 1;
+const PRO_DAILY_LIMIT = 10;
 
 export const generateProjectContent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    // Cek kuota langganan
+    // Cek kuota langganan harian
     const { data: profile, error: profileErr } = await context.supabase
       .from("profiles")
-      .select("plan,generations_used,pro_until")
+      .select("plan,generations_used,generations_date,pro_until")
       .eq("id", context.userId)
       .maybeSingle();
     if (profileErr) throw new Error(profileErr.message);
     const isProActive =
       profile?.plan === "pro" &&
       (!profile.pro_until || new Date(profile.pro_until).getTime() > Date.now());
-    if (!isProActive) {
-      const used = profile?.generations_used ?? 0;
-      if (used >= TRIAL_LIMIT) {
-        throw new Error(
-          `Kuota trial habis (${TRIAL_LIMIT}/${TRIAL_LIMIT} dokumen). Upgrade ke PRO untuk generate tanpa batas.`,
-        );
-      }
+    const dailyLimit = isProActive ? PRO_DAILY_LIMIT : BASIC_DAILY_LIMIT;
+    const today = new Date().toISOString().slice(0, 10);
+    const sameDay = profile?.generations_date === today;
+    const usedToday = sameDay ? profile?.generations_used ?? 0 : 0;
+    if (usedToday >= dailyLimit) {
+      throw new Error(
+        isProActive
+          ? `Kuota PRO harian habis (${dailyLimit}/hari). Coba lagi besok.`
+          : `Kuota Basic habis (${dailyLimit}/hari). Upgrade ke PRO untuk 10 generate per hari.`,
+      );
     }
 
     const { data: project, error } = await context.supabase
@@ -277,13 +281,14 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (upErr) throw new Error(upErr.message);
 
-    // Catat pemakaian (hanya untuk trial — PRO tak dibatasi)
-    if (!isProActive) {
-      await context.supabase
-        .from("profiles")
-        .update({ generations_used: (profile?.generations_used ?? 0) + 1 })
-        .eq("id", context.userId);
-    }
+    // Catat pemakaian harian (reset tiap hari)
+    await context.supabase
+      .from("profiles")
+      .update({
+        generations_used: usedToday + 1,
+        generations_date: today,
+      })
+      .eq("id", context.userId);
 
     return { ok: true };
   });
