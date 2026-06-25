@@ -1,8 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { ProjectCard } from "@/components/ProjectCard";
-import { mockProjects } from "@/lib/mock-data";
+import { type ProjectRow } from "@/lib/mock-data";
+import { listProjects } from "@/lib/projects.functions";
 
 export const Route = createFileRoute("/_authenticated/projects")({
   head: () => ({
@@ -18,7 +21,13 @@ type Tab = "all" | "active" | "done";
 
 function ProjectsPage() {
   const [tab, setTab] = useState<Tab>("all");
-  const filtered = mockProjects.filter((p) =>
+  const listFn = useServerFn(listProjects);
+  const { data, isLoading } = useQuery({
+    queryKey: ["projects"],
+    queryFn: () => listFn(),
+  });
+  const projects = (data ?? []) as ProjectRow[];
+  const filtered = projects.filter((p) =>
     tab === "all" ? true : tab === "done" ? p.progress >= 100 : p.progress < 100,
   );
 
@@ -56,9 +65,21 @@ function ProjectsPage() {
           ))}
         </div>
 
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-40 animate-pulse rounded-2xl border border-border bg-card" />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="mt-10 rounded-2xl border border-dashed border-border bg-card p-12 text-center">
             <p className="text-sm text-muted-foreground">Belum ada proyek di kategori ini.</p>
+            <Link
+              to="/"
+              className="mt-4 inline-block text-sm font-medium text-foreground hover:underline"
+            >
+              Mulai misi baru →
+            </Link>
           </div>
         ) : (
           <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">

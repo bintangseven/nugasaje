@@ -1,8 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { LogOut } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { LogOut, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { AppHeader } from "@/components/AppHeader";
-import { clearMockUser, getMockUser, type MockUser } from "@/lib/auth-mock";
+import { supabase } from "@/integrations/supabase/client";
+import { getProfile, updateProfile } from "@/lib/projects.functions";
+import { useCurrentUser } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -16,22 +21,49 @@ export const Route = createFileRoute("/_authenticated/profile")({
 
 function ProfilePage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<MockUser | null>(null);
+  const { user } = useCurrentUser();
+  const queryClient = useQueryClient();
+  const getFn = useServerFn(getProfile);
+  const updateFn = useServerFn(updateProfile);
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => getFn(),
+  });
+
+  const [form, setForm] = useState({ name: "", university: "", major: "", semester: "" });
   useEffect(() => {
-    setUser(getMockUser());
-  }, []);
+    if (profile) {
+      setForm({
+        name: profile.name ?? "",
+        university: profile.university ?? "",
+        major: profile.major ?? "",
+        semester: profile.semester ?? "",
+      });
+    }
+  }, [profile]);
 
-  const display = user ?? { name: "Mahasiswa", email: "demo@studentos.id" };
-  const initials = display.name
+  const save = useMutation({
+    mutationFn: () => updateFn({ data: form }),
+    onSuccess: () => {
+      toast.success("Profil disimpan");
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Gagal menyimpan"),
+  });
+
+  const displayName = form.name || profile?.name || user?.email?.split("@")[0] || "Mahasiswa";
+  const initials = displayName
     .split(" ")
-    .map((p) => p[0])
+    .map((p: string) => p[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();
 
-  function handleSignOut() {
-    clearMockUser();
+  async function handleSignOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
     navigate({ to: "/auth" });
   }
 
@@ -47,16 +79,46 @@ function ProfilePage() {
               {initials}
             </span>
             <div>
-              <p className="text-base font-semibold text-foreground">{display.name}</p>
-              <p className="text-sm text-muted-foreground">{display.email}</p>
+              <p className="text-base font-semibold text-foreground">{displayName}</p>
+              <p className="text-sm text-muted-foreground">
+                {profile?.email ?? user?.email ?? "—"}
+              </p>
             </div>
           </div>
 
-          <div className="mt-6 grid gap-3 border-t border-border pt-6 text-sm">
-            <Row label="Universitas" value="Belum diatur" />
-            <Row label="Jurusan" value="Belum diatur" />
-            <Row label="Semester" value="Belum diatur" />
-            <Row label="Bahasa default" value="Bahasa Indonesia" />
+          <div className="mt-6 grid gap-4 border-t border-border pt-6">
+            <Field
+              label="Nama tampilan"
+              value={form.name}
+              onChange={(v) => setForm((f) => ({ ...f, name: v }))}
+            />
+            <Field
+              label="Universitas"
+              value={form.university}
+              onChange={(v) => setForm((f) => ({ ...f, university: v }))}
+            />
+            <Field
+              label="Jurusan"
+              value={form.major}
+              onChange={(v) => setForm((f) => ({ ...f, major: v }))}
+            />
+            <Field
+              label="Semester"
+              value={form.semester}
+              onChange={(v) => setForm((f) => ({ ...f, semester: v }))}
+              placeholder="Contoh: 5"
+            />
+            <div className="flex items-center justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => save.mutate()}
+                disabled={save.isPending}
+                className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                Simpan perubahan
+              </button>
+            </div>
           </div>
         </div>
 
@@ -73,11 +135,27 @@ function ProfilePage() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium text-foreground">{value}</span>
-    </div>
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-medium text-muted-foreground">{label}</span>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-foreground/30 focus:outline-none focus:ring-2 focus:ring-foreground/10"
+      />
+    </label>
   );
 }
