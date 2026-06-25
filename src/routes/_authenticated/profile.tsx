@@ -1,12 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { LogOut, Loader2 } from "lucide-react";
+import { LogOut, Loader2, Sparkles, Crown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
-import { getProfile, updateProfile } from "@/lib/projects.functions";
+import { getProfile, updateProfile, upgradeToPro, TRIAL_LIMIT } from "@/lib/projects.functions";
 import { useCurrentUser } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -25,6 +25,7 @@ function ProfilePage() {
   const queryClient = useQueryClient();
   const getFn = useServerFn(getProfile);
   const updateFn = useServerFn(updateProfile);
+  const upgradeFn = useServerFn(upgradeToPro);
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
@@ -52,6 +53,21 @@ function ProfilePage() {
     onError: (err) => toast.error(err instanceof Error ? err.message : "Gagal menyimpan"),
   });
 
+  const upgrade = useMutation({
+    mutationFn: () => upgradeFn(),
+    onSuccess: () => {
+      toast.success("Akun di-upgrade ke PRO (30 hari)");
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Gagal upgrade"),
+  });
+
+  const isProActive =
+    profile?.plan === "pro" &&
+    (!profile.pro_until || new Date(profile.pro_until).getTime() > Date.now());
+  const used = profile?.generations_used ?? 0;
+  const remaining = Math.max(0, TRIAL_LIMIT - used);
+
   const displayName = form.name || profile?.name || user?.email?.split("@")[0] || "Mahasiswa";
   const initials = displayName
     .split(" ")
@@ -72,6 +88,55 @@ function ProfilePage() {
       <AppHeader />
       <main className="mx-auto max-w-2xl px-6 pb-24 pt-12">
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">Profil</h1>
+
+        {/* Langganan */}
+        <div
+          className={`mt-8 overflow-hidden rounded-2xl border p-6 ${
+            isProActive
+              ? "border-amber-300/60 bg-gradient-to-br from-amber-50 to-orange-50"
+              : "border-border bg-card"
+          }`}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                {isProActive ? (
+                  <Crown className="h-4 w-4 text-amber-600" />
+                ) : (
+                  <Sparkles className="h-4 w-4 text-muted-foreground" />
+                )}
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {isProActive ? "Paket PRO" : "Paket Trial"}
+                </span>
+              </div>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {isProActive
+                  ? "Generate dokumen tanpa batas"
+                  : `Sisa kuota: ${remaining} dari ${TRIAL_LIMIT} dokumen`}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {isProActive
+                  ? `Aktif sampai ${profile?.pro_until ? new Date(profile.pro_until).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "—"}.`
+                  : "Akun trial dibatasi 2 kali generate dokumen. Upgrade ke PRO untuk pemakaian tanpa batas, billing per bulan."}
+              </p>
+            </div>
+            {!isProActive && (
+              <button
+                type="button"
+                onClick={() => upgrade.mutate()}
+                disabled={upgrade.isPending}
+                className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {upgrade.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Crown className="h-4 w-4" />
+                )}
+                Upgrade ke PRO
+              </button>
+            )}
+          </div>
+        </div>
 
         <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           <div className="flex items-center gap-4">
