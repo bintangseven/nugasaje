@@ -12,13 +12,13 @@ import { createProject, listProjects } from "@/lib/projects.functions";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Student OS — Selesaikan tugas kuliahmu lebih cepat" },
+      { title: "Nugasinaje — Selesaikan tugas kuliahmu lebih cepat" },
       {
         name: "description",
         content:
-          "Student OS adalah ruang kerja akademik untuk mahasiswa Indonesia. Pilih misi, jawab beberapa pertanyaan, dan tugasmu selesai.",
+          "Nugasinaje adalah ruang kerja akademik untuk mahasiswa Indonesia. Pilih misi, jawab beberapa pertanyaan, dan tugasmu selesai.",
       },
-      { property: "og:title", content: "Student OS" },
+      { property: "og:title", content: "Nugasinaje" },
       {
         property: "og:description",
         content: "Ruang kerja akademik untuk menyelesaikan paper dan presentasi.",
@@ -74,7 +74,7 @@ function Index() {
             Mau menyelesaikan apa hari ini?
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
-            Pilih satu misi. Jawab beberapa pertanyaan singkat. Student OS akan
+            Pilih satu misi. Jawab beberapa pertanyaan singkat. Nugasinaje akan
             mengerjakan sisanya hingga file final siap dikumpulkan.
           </p>
           {loaded && !user && (

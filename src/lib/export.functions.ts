@@ -186,7 +186,7 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
   ];
 
   const doc = new Document({
-    creator: "Student OS",
+    creator: "Nugasinaje",
     title: content.title,
     styles: {
       default: {

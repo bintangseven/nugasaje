@@ -8,8 +8,8 @@ import { lovable } from "@/integrations/lovable";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Masuk — Student OS" },
-      { name: "description", content: "Masuk ke ruang kerja akademik Student OS." },
+      { title: "Masuk — Nugasinaje" },
+      { name: "description", content: "Masuk ke ruang kerja akademik Nugasinaje." },
     ],
   }),
   component: AuthPage,
@@ -83,7 +83,7 @@ function AuthPage() {
             <GraduationCap className="h-5 w-5" />
           </span>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
-            Selamat datang di Student OS
+            Selamat datang di Nugasinaje
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Ruang kerja akademik untuk menyelesaikan tugas kuliahmu.

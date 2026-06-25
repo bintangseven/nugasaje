@@ -36,7 +36,7 @@ export function AppHeader() {
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background">
             <GraduationCap className="h-4 w-4" />
           </span>
-          <span className="text-[15px] font-semibold tracking-tight">Student OS</span>
+          <span className="text-[15px] font-semibold tracking-tight">Nugasinaje</span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">

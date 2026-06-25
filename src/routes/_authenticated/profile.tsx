@@ -19,8 +19,8 @@ import { useCurrentUser } from "@/hooks/use-auth";
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
-      { title: "Profil — Student OS" },
-      { name: "description", content: "Profil akun Student OS." },
+      { title: "Profil — Nugasinaje" },
+      { name: "description", content: "Profil akun Nugasinaje." },
     ],
   }),
   component: ProfilePage,

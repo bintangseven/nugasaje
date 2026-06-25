@@ -11,7 +11,7 @@ import { listProjects } from "@/lib/projects.functions";
 export const Route = createFileRoute("/_authenticated/projects")({
   head: () => ({
     meta: [
-      { title: "Proyek — Student OS" },
+      { title: "Proyek — Nugasinaje" },
       { name: "description", content: "Semua proyek akademik kamu di satu tempat." },
     ],
   }),
