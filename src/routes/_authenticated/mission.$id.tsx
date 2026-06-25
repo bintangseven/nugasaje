@@ -16,6 +16,8 @@ import {
   type ProjectRow,
 } from "@/lib/mock-data";
 import { getProject, updateProject } from "@/lib/projects.functions";
+import { generateProjectContent } from "@/lib/ai.functions";
+import { exportProject } from "@/lib/export.functions";
 
 export const Route = createFileRoute("/_authenticated/mission/$id")({
   head: () => ({
@@ -35,6 +37,8 @@ function MissionWorkspace() {
   const queryClient = useQueryClient();
   const getFn = useServerFn(getProject);
   const updateFn = useServerFn(updateProject);
+  const generateFn = useServerFn(generateProjectContent);
+  const exportFn = useServerFn(exportProject);
 
   const projectQuery = useQuery({
     queryKey: ["project", id],
@@ -62,17 +66,27 @@ function MissionWorkspace() {
   }
 
   return (
-    <Workspace project={projectQuery.data as ProjectRow} updateFn={updateFn} queryClient={queryClient} />
+    <Workspace
+      project={projectQuery.data as ProjectRow}
+      updateFn={updateFn}
+      generateFn={generateFn}
+      exportFn={exportFn}
+      queryClient={queryClient}
+    />
   );
 }
 
 function Workspace({
   project,
   updateFn,
+  generateFn,
+  exportFn,
   queryClient,
 }: {
   project: ProjectRow;
   updateFn: ReturnType<typeof useServerFn<typeof updateProject>>;
+  generateFn: ReturnType<typeof useServerFn<typeof generateProjectContent>>;
+  exportFn: ReturnType<typeof useServerFn<typeof exportProject>>;
   queryClient: ReturnType<typeof useQueryClient>;
 }) {
   const missionType: MissionType = project.mission;
