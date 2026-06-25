@@ -298,8 +298,11 @@ async function buildPptx(
   const W = 13.333;
   const H = 7.5;
 
-  const addFooter = (s: InstanceType<typeof pptxgen.prototype.addSlide>, pageNo: number, totalNo: number) => {
-    s.addShape(pres.shapes.RECTANGLE, {
+  type Slide = ReturnType<typeof pres.addSlide>;
+  const SHAPES = pptxgen.ShapeType;
+
+  const addFooter = (s: Slide, pageNo: number, totalNo: number) => {
+    s.addShape(SHAPES.rect, {
       x: 0, y: H - 0.35, w: W, h: 0.05, fill: { color: t.accent }, line: { color: t.accent },
     });
     s.addText(content.title, {
@@ -315,7 +318,7 @@ async function buildPptx(
   // ===== Cover =====
   const cover = pres.addSlide();
   cover.background = { color: t.bg };
-  cover.addShape(pres.shapes.RECTANGLE, {
+  cover.addShape(SHAPES.rect, {
     x: 0.6, y: 1.6, w: 1.4, h: 0.12, fill: { color: t.accentSoft }, line: { color: t.accentSoft },
   });
   cover.addText("PRESENTASI", {
@@ -346,12 +349,12 @@ async function buildPptx(
     x: 0.6, y: 0.55, w: 12, h: 0.8,
     fontFace: t.headFont, fontSize: 36, bold: true, color: t.ink,
   });
-  agenda.addShape(pres.shapes.RECTANGLE, {
+  agenda.addShape(SHAPES.rect, {
     x: 0.6, y: 1.35, w: 0.7, h: 0.08, fill: { color: t.accent }, line: { color: t.accent },
   });
   content.agenda.forEach((item, i) => {
     const y = 1.9 + i * 0.85;
-    agenda.addShape(pres.shapes.OVAL, {
+    agenda.addShape(SHAPES.ellipse, {
       x: 0.7, y, w: 0.55, h: 0.55, fill: { color: t.accent }, line: { color: t.accent },
     });
     agenda.addText(String(i + 1).padStart(2, "0"), {
@@ -381,7 +384,7 @@ async function buildPptx(
         x: 0.8, y: 3.1, w: 12, h: 2,
         fontFace: t.headFont, fontSize: 44, bold: true, color: "FFFFFF",
       });
-      s.addShape(pres.shapes.RECTANGLE, {
+      s.addShape(SHAPES.rect, {
         x: 0.8, y: 5.2, w: 1.6, h: 0.08, fill: { color: t.accent }, line: { color: t.accent },
       });
       if (slide.notes) s.addNotes(slide.notes);
@@ -395,7 +398,7 @@ async function buildPptx(
       x: 0.6, y: 0.5, w: W - 1.2, h: 0.8,
       fontFace: t.headFont, fontSize: 28, bold: true, color: t.ink,
     });
-    s.addShape(pres.shapes.RECTANGLE, {
+    s.addShape(SHAPES.rect, {
       x: 0.6, y: 1.25, w: 0.7, h: 0.07, fill: { color: t.accent }, line: { color: t.accent },
     });
 
@@ -422,7 +425,7 @@ async function buildPptx(
       const cardW = (W - 1.2 - gap * (n - 1)) / n;
       stats.forEach((st, idx) => {
         const x = 0.6 + idx * (cardW + gap);
-        s.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+        s.addShape(SHAPES.roundRect, {
           x, y: 2.1, w: cardW, h: 3.6, fill: { color: t.accentSoft }, line: { color: t.accentSoft }, rectRadius: 0.12,
         });
         s.addText(st.value, {
