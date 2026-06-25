@@ -6,7 +6,11 @@ type PaperContent = {
   title: string;
   course: string;
   abstract: string;
-  sections: { heading: string; paragraphs: string[] }[];
+  sections: {
+    heading: string;
+    paragraphs: string[];
+    subsections?: { heading: string; paragraphs: string[] }[];
+  }[];
   conclusion: string;
   references: string[];
 };
@@ -32,80 +36,88 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
     PageBreak,
   } = await import("docx");
 
+  const FONT = "Times New Roman";
+  // half-points: 24 = 12pt, 28 = 14pt
+  const BODY = 24;
+  const H1 = 28;
+  const H2 = 24;
+  const H3 = 24;
+
+  const bodyPara = (text: string, opts: { firstLine?: boolean; italic?: boolean; align?: (typeof AlignmentType)[keyof typeof AlignmentType] } = {}) =>
+    new Paragraph({
+      alignment: opts.align ?? AlignmentType.JUSTIFIED,
+      spacing: { after: 120, line: 360 },
+      indent: opts.firstLine ? { firstLine: 720 } : undefined,
+      children: [new TextRun({ text, font: FONT, size: BODY, italics: opts.italic })],
+    });
+
+  const centerPara = (text: string, size: number, bold = false, spacing: { before?: number; after?: number } = {}) =>
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing,
+      children: [new TextRun({ text, font: FONT, size, bold })],
+    });
+
   const cover = [
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { before: 2400, after: 400 },
-      children: [new TextRun({ text: content.title, bold: true, size: 36 })],
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 200 },
-      children: [new TextRun({ text: content.course, size: 28 })],
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { before: 1600, after: 200 },
-      children: [new TextRun({ text: studentName, size: 24 })],
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [new TextRun({ text: new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }), size: 22 })],
-    }),
+    centerPara(content.title.toUpperCase(), 32, true, { before: 2400, after: 400 }),
+    centerPara("MAKALAH", BODY, true, { after: 200 }),
+    centerPara(`Mata Kuliah: ${content.course}`, BODY, false, { after: 1600 }),
+    centerPara("Disusun oleh:", BODY, false, { after: 120 }),
+    centerPara(studentName, BODY, true, { after: 1600 }),
+    centerPara(
+      new Date().toLocaleDateString("id-ID", { month: "long", year: "numeric" }),
+      BODY,
+    ),
     new Paragraph({ children: [new PageBreak()] }),
   ];
 
+  const h1 = (text: string) =>
+    new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 360, after: 240 },
+      children: [new TextRun({ text: text.toUpperCase(), font: FONT, size: H1, bold: true })],
+    });
+
+  const h2 = (text: string) =>
+    new Paragraph({
+      heading: HeadingLevel.HEADING_2,
+      spacing: { before: 240, after: 120 },
+      children: [new TextRun({ text, font: FONT, size: H2, bold: true })],
+    });
+
+  const h3 = (text: string) =>
+    new Paragraph({
+      heading: HeadingLevel.HEADING_3,
+      spacing: { before: 200, after: 120 },
+      children: [new TextRun({ text, font: FONT, size: H3, bold: true, italics: true })],
+    });
+
   const abstractBlock = [
-    new Paragraph({
-      heading: HeadingLevel.HEADING_1,
-      spacing: { before: 240, after: 200 },
-      children: [new TextRun({ text: "Abstrak", bold: true, size: 28 })],
-    }),
-    new Paragraph({
-      spacing: { after: 200, line: 360 },
-      children: [new TextRun({ text: content.abstract, size: 24 })],
-    }),
+    h1("Abstrak"),
+    bodyPara(content.abstract, { italic: true, firstLine: true }),
   ];
 
-  const sectionBlocks = content.sections.flatMap((s) => [
-    new Paragraph({
-      heading: HeadingLevel.HEADING_1,
-      spacing: { before: 360, after: 200 },
-      children: [new TextRun({ text: s.heading, bold: true, size: 28 })],
-    }),
-    ...s.paragraphs.map(
-      (p) =>
-        new Paragraph({
-          spacing: { after: 200, line: 360 },
-          children: [new TextRun({ text: p, size: 24 })],
-        }),
-    ),
-  ]);
+  const sectionBlocks = content.sections.flatMap((s) => {
+    const blocks: Paragraph[] = [h1(s.heading)];
+    s.paragraphs.forEach((p) => blocks.push(bodyPara(p, { firstLine: true })));
+    (s.subsections ?? []).forEach((sub) => {
+      blocks.push(h2(sub.heading));
+      sub.paragraphs.forEach((p) => blocks.push(bodyPara(p, { firstLine: true })));
+    });
+    return blocks;
+  });
 
-  const conclusion = [
-    new Paragraph({
-      heading: HeadingLevel.HEADING_1,
-      spacing: { before: 360, after: 200 },
-      children: [new TextRun({ text: "Kesimpulan", bold: true, size: 28 })],
-    }),
-    new Paragraph({
-      spacing: { after: 200, line: 360 },
-      children: [new TextRun({ text: content.conclusion, size: 24 })],
-    }),
-  ];
+  const conclusion = [h1("Kesimpulan"), bodyPara(content.conclusion, { firstLine: true })];
 
   const references = [
-    new Paragraph({
-      heading: HeadingLevel.HEADING_1,
-      spacing: { before: 360, after: 200 },
-      children: [new TextRun({ text: "Daftar Pustaka", bold: true, size: 28 })],
-    }),
+    h1("Daftar Pustaka"),
     ...content.references.map(
       (r) =>
         new Paragraph({
-          spacing: { after: 120, line: 320 },
-          indent: { left: 0, hanging: 360 },
-          children: [new TextRun({ text: r, size: 22 })],
+          spacing: { after: 120, line: 360 },
+          indent: { left: 720, hanging: 720 },
+          children: [new TextRun({ text: r, font: FONT, size: BODY })],
         }),
     ),
   ];
@@ -113,12 +125,47 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
   const doc = new Document({
     creator: "Student OS",
     title: content.title,
+    styles: {
+      default: {
+        document: { run: { font: FONT, size: BODY } },
+      },
+      paragraphStyles: [
+        {
+          id: "Heading1",
+          name: "Heading 1",
+          basedOn: "Normal",
+          next: "Normal",
+          quickFormat: true,
+          run: { font: FONT, size: H1, bold: true },
+          paragraph: { spacing: { before: 360, after: 240 }, outlineLevel: 0 },
+        },
+        {
+          id: "Heading2",
+          name: "Heading 2",
+          basedOn: "Normal",
+          next: "Normal",
+          quickFormat: true,
+          run: { font: FONT, size: H2, bold: true },
+          paragraph: { spacing: { before: 240, after: 120 }, outlineLevel: 1 },
+        },
+        {
+          id: "Heading3",
+          name: "Heading 3",
+          basedOn: "Normal",
+          next: "Normal",
+          quickFormat: true,
+          run: { font: FONT, size: H3, bold: true, italics: true },
+          paragraph: { spacing: { before: 200, after: 120 }, outlineLevel: 2 },
+        },
+      ],
+    },
     sections: [
       {
         properties: {
           page: {
             size: { width: 12240, height: 15840 },
-            margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 },
+            // Standar makalah: kiri 4cm (2268), atas 3cm (1701), kanan 3cm (1701), bawah 3cm (1701)
+            margin: { top: 1701, right: 1701, bottom: 1701, left: 2268 },
           },
         },
         children: [...cover, ...abstractBlock, ...sectionBlocks, ...conclusion, ...references],
