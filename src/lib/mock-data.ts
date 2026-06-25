@@ -1,12 +1,18 @@
 export type MissionType = "paper" | "presentation";
+export type ProjectPhase = "interview" | "working" | "done";
 
-export interface Project {
+export interface ProjectRow {
   id: string;
   name: string;
   mission: MissionType;
-  progress: number; // 0-100
-  updatedAt: string; // human readable
-  course?: string;
+  phase: ProjectPhase;
+  progress: number;
+  step_index: number;
+  question_index: number;
+  answers: Record<string, string> | null;
+  ai_context: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export const missions = [
@@ -28,40 +34,27 @@ export const missions = [
   },
 ] as const;
 
-export const mockProjects: Project[] = [
-  {
-    id: "p1",
-    name: "Paper - Manajemen Sumber Daya Manusia",
-    mission: "paper",
-    progress: 65,
-    updatedAt: "2 jam lalu",
-    course: "Manajemen SDM",
-  },
-  {
-    id: "p2",
-    name: "Presentasi - Strategi Pemasaran Digital",
-    mission: "presentation",
-    progress: 100,
-    updatedAt: "Kemarin",
-    course: "Pemasaran Digital",
-  },
-  {
-    id: "p3",
-    name: "Paper - Etika Bisnis di Era Digital",
-    mission: "paper",
-    progress: 30,
-    updatedAt: "3 hari lalu",
-    course: "Etika Bisnis",
-  },
-  {
-    id: "p4",
-    name: "Presentasi - Analisis Laporan Keuangan",
-    mission: "presentation",
-    progress: 100,
-    updatedAt: "Minggu lalu",
-    course: "Akuntansi Keuangan",
-  },
-];
+export function defaultProjectName(mission: MissionType): string {
+  return mission === "paper" ? "Paper baru" : "Presentasi baru";
+}
+
+export function formatRelativeTime(iso: string): string {
+  const now = Date.now();
+  const then = new Date(iso).getTime();
+  const diff = Math.max(0, now - then);
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "Baru saja";
+  if (m < 60) return `${m} menit lalu`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} jam lalu`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d} hari lalu`;
+  return new Date(iso).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 export const missionQuestions: Record<
   MissionType,

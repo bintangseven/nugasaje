@@ -1,6 +1,9 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Download, Send, Sparkles } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowLeft, Check, Download, Loader2, Send, Sparkles, Cloud } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { AppHeader } from "@/components/AppHeader";
 import { AIStatusChecklist } from "@/components/AIStatusChecklist";
 import {
@@ -9,9 +12,12 @@ import {
   paperSteps,
   presentationSteps,
   type MissionType,
+  type ProjectPhase,
+  type ProjectRow,
 } from "@/lib/mock-data";
+import { getProject, updateProject } from "@/lib/projects.functions";
 
-export const Route = createFileRoute("/mission/$id")({
+export const Route = createFileRoute("/_authenticated/mission/$id")({
   head: () => ({
     meta: [
       { title: "Misi — Student OS" },
@@ -21,53 +27,133 @@ export const Route = createFileRoute("/mission/$id")({
   component: MissionWorkspace,
 });
 
-type Phase = "interview" | "working" | "done";
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 function MissionWorkspace() {
-  const { id } = useParams({ from: "/mission/$id" });
-  const missionType: MissionType = id === "presentation" ? "presentation" : "paper";
+  const { id } = useParams({ from: "/_authenticated/mission/$id" });
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const getFn = useServerFn(getProject);
+  const updateFn = useServerFn(updateProject);
+
+  const projectQuery = useQuery({
+    queryKey: ["project", id],
+    queryFn: () => getFn({ data: { id } }),
+  });
+
+  // Redirect if project not found
+  useEffect(() => {
+    if (projectQuery.isSuccess && !projectQuery.data) {
+      toast.error("Proyek tidak ditemukan");
+      navigate({ to: "/projects" });
+    }
+  }, [projectQuery.isSuccess, projectQuery.data, navigate]);
+
+  if (projectQuery.isLoading || !projectQuery.data) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AppHeader />
+        <div className="flex h-[60vh] items-center justify-center text-sm text-muted-foreground">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Memuat proyek…
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Workspace project={projectQuery.data as ProjectRow} updateFn={updateFn} queryClient={queryClient} />
+  );
+}
+
+function Workspace({
+  project,
+  updateFn,
+  queryClient,
+}: {
+  project: ProjectRow;
+  updateFn: ReturnType<typeof useServerFn<typeof updateProject>>;
+  queryClient: ReturnType<typeof useQueryClient>;
+}) {
+  const missionType: MissionType = project.mission;
   const mission = missions.find((m) => m.id === missionType)!;
   const questions = missionQuestions[missionType];
   const steps = missionType === "paper" ? paperSteps : presentationSteps;
 
-  const [qIndex, setQIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  // Local mirror of server state — hydrated once from the loaded project.
+  const [name, setName] = useState(project.name);
+  const [qIndex, setQIndex] = useState(project.question_index ?? 0);
+  const [answers, setAnswers] = useState<Record<string, string>>(
+    (project.answers ?? {}) as Record<string, string>,
+  );
+  const [phase, setPhase] = useState<ProjectPhase>(project.phase);
+  const [stepIndex, setStepIndex] = useState<number>(project.step_index ?? -1);
   const [draft, setDraft] = useState("");
-  const [phase, setPhase] = useState<Phase>("interview");
-  const [stepIndex, setStepIndex] = useState(-1);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     inputRef.current?.focus();
   }, [qIndex, phase]);
 
-  // Simulate progress
+  // Debounced auto-save to cloud whenever local state changes.
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleSave = useCallback(
+    (patch: Parameters<typeof updateFn>[0]["data"]["patch"]) => {
+      setSaveStatus("saving");
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(async () => {
+        try {
+          await updateFn({ data: { id: project.id, patch } });
+          setSaveStatus("saved");
+          queryClient.invalidateQueries({ queryKey: ["projects"] });
+        } catch (err) {
+          setSaveStatus("error");
+          toast.error(err instanceof Error ? err.message : "Auto-save gagal");
+        }
+      }, 600);
+    },
+    [project.id, updateFn, queryClient],
+  );
+
+  // Reset "saved" indicator after a moment.
+  useEffect(() => {
+    if (saveStatus !== "saved") return;
+    const t = setTimeout(() => setSaveStatus("idle"), 2000);
+    return () => clearTimeout(t);
+  }, [saveStatus]);
+
+  const interviewDone = qIndex >= questions.length;
+
+  // Simulated generation. Persists step_index/phase/progress as it advances.
   useEffect(() => {
     if (phase !== "working") return;
-    setStepIndex(0);
     const totalSteps = steps.length;
     const interval = setInterval(() => {
       setStepIndex((i) => {
-        if (i + 1 >= totalSteps) {
+        const next = i + 1;
+        if (next >= totalSteps) {
           clearInterval(interval);
           setPhase("done");
+          scheduleSave({ phase: "done", step_index: totalSteps, progress: 100 });
           return totalSteps;
         }
-        return i + 1;
+        const nextProgress = Math.min(
+          95,
+          30 + Math.round((next / totalSteps) * 65),
+        );
+        scheduleSave({ step_index: next, progress: nextProgress });
+        return next;
       });
     }, 1400);
     return () => clearInterval(interval);
-  }, [phase, steps.length]);
+  }, [phase, steps.length, scheduleSave]);
 
-  const interviewDone = qIndex >= questions.length;
   const progress =
     phase === "done"
       ? 100
       : phase === "working"
-        ? Math.min(
-            95,
-            30 + Math.round((Math.max(0, stepIndex) / steps.length) * 65),
-          )
+        ? Math.min(95, 30 + Math.round((Math.max(0, stepIndex) / steps.length) * 65))
         : Math.round((qIndex / questions.length) * 25);
 
   const remaining = useMemo(() => {
@@ -82,46 +168,66 @@ function MissionWorkspace() {
   function submitAnswer(e: React.FormEvent) {
     e.preventDefault();
     if (!draft.trim() || interviewDone) return;
-    setAnswers((a) => ({ ...a, [questions[qIndex].id]: draft.trim() }));
+    const newAnswers = { ...answers, [questions[qIndex].id]: draft.trim() };
+    const newQIndex = qIndex + 1;
+    setAnswers(newAnswers);
+    setQIndex(newQIndex);
     setDraft("");
-    setQIndex((i) => i + 1);
+
+    // Auto-name the project from the topic answer.
+    let nextName = name;
+    if (questions[qIndex].id === "topic" && !project.answers?.topic) {
+      const topic = draft.trim().slice(0, 80);
+      nextName = `${missionType === "paper" ? "Paper" : "Presentasi"} - ${topic}`;
+      setName(nextName);
+    }
+
+    scheduleSave({
+      answers: newAnswers,
+      question_index: newQIndex,
+      progress: Math.round((newQIndex / questions.length) * 25),
+      ...(nextName !== name ? { name: nextName } : {}),
+    });
   }
 
   function startGeneration() {
     setPhase("working");
+    setStepIndex(-1);
+    scheduleSave({ phase: "working", step_index: -1, progress: 30 });
   }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <AppHeader />
 
-      {/* Mission top bar */}
       <div className="border-b border-border bg-card">
         <div className="mx-auto max-w-6xl px-6 py-5">
           <Link
-            to="/"
+            to="/projects"
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Kembali ke beranda
+            Kembali ke proyek
           </Link>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <span>{mission.icon}</span>
-                Misi
+                {mission.title}
               </div>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
-                {mission.title}
+                {name}
               </h1>
             </div>
 
             <div className="flex items-center gap-3">
+              <SaveIndicator status={saveStatus} />
               <span className="text-xs text-muted-foreground">Sisa waktu {remaining}</span>
               <button
                 type="button"
                 disabled={phase !== "done"}
+                onClick={() => toast.info("Unduhan akan tersedia setelah fase generator file dipasang.")}
                 className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Download className="h-4 w-4" />
@@ -145,7 +251,6 @@ function MissionWorkspace() {
       </div>
 
       <main className="mx-auto grid w-full max-w-6xl flex-1 gap-6 px-6 py-8 lg:grid-cols-5">
-        {/* Assistant */}
         <section className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] lg:col-span-2">
           <div className="mb-4 flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary">
@@ -162,14 +267,12 @@ function MissionWorkspace() {
               </div>
             ))}
 
-            {!interviewDone && (
-              <Bubble role="ai">{questions[qIndex].question}</Bubble>
-            )}
+            {!interviewDone && <Bubble role="ai">{questions[qIndex].question}</Bubble>}
 
             {interviewDone && phase === "interview" && (
               <Bubble role="ai">
-                Aku punya semua yang aku butuhkan. Klik <strong>Mulai kerjakan</strong> dan
-                aku akan menyusun {missionType === "paper" ? "papermu" : "presentasimu"}.
+                Aku punya semua yang aku butuhkan. Klik <strong>Mulai kerjakan</strong> dan aku
+                akan menyusun {missionType === "paper" ? "papermu" : "presentasimu"}.
               </Bubble>
             )}
 
@@ -179,8 +282,8 @@ function MissionWorkspace() {
 
             {phase === "done" && (
               <Bubble role="ai">
-                Selesai! File siap diunduh dan diedit di Word{" "}
-                {missionType === "presentation" && "/ PowerPoint"}.
+                Selesai! File siap diunduh dan diedit di Word
+                {missionType === "presentation" ? " / PowerPoint" : ""}.
               </Bubble>
             )}
           </div>
@@ -222,7 +325,6 @@ function MissionWorkspace() {
           )}
         </section>
 
-        {/* Preview + status */}
         <section className="flex flex-col gap-6 lg:col-span-3">
           <div className="flex min-h-[360px] flex-col rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
             <div className="mb-4 flex items-center justify-between">
@@ -232,9 +334,7 @@ function MissionWorkspace() {
               </span>
             </div>
 
-            {phase === "interview" && (
-              <EmptyPreview missionType={missionType} />
-            )}
+            {phase === "interview" && <EmptyPreview missionType={missionType} />}
 
             {phase !== "interview" && missionType === "paper" && (
               <PaperPreview answers={answers} phase={phase} stepIndex={stepIndex} />
@@ -255,13 +355,35 @@ function MissionWorkspace() {
   );
 }
 
-function Bubble({
-  role,
-  children,
-}: {
-  role: "ai" | "user";
-  children: React.ReactNode;
-}) {
+function SaveIndicator({ status }: { status: SaveStatus }) {
+  if (status === "saving") {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Cloud className="h-3.5 w-3.5 animate-pulse" />
+        Menyimpan…
+      </span>
+    );
+  }
+  if (status === "saved") {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Check className="h-3.5 w-3.5" />
+        Tersimpan
+      </span>
+    );
+  }
+  if (status === "error") {
+    return <span className="text-xs text-destructive">Gagal menyimpan</span>;
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+      <Cloud className="h-3.5 w-3.5" />
+      Sinkron
+    </span>
+  );
+}
+
+function Bubble({ role, children }: { role: "ai" | "user"; children: React.ReactNode }) {
   return (
     <div
       className={`max-w-[90%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
@@ -294,7 +416,7 @@ function PaperPreview({
   stepIndex,
 }: {
   answers: Record<string, string>;
-  phase: Phase;
+  phase: ProjectPhase;
   stepIndex: number;
 }) {
   const topic = answers.topic || "Topik Paper";
@@ -338,7 +460,7 @@ function SlidesPreview({
   stepIndex,
 }: {
   answers: Record<string, string>;
-  phase: Phase;
+  phase: ProjectPhase;
   stepIndex: number;
 }) {
   const topic = answers.topic || "Topik Presentasi";

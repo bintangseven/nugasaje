@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { GraduationCap } from "lucide-react";
-import { useState } from "react";
-import { setMockUser } from "@/lib/auth-mock";
+import { GraduationCap, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -19,13 +21,58 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  function submit(e: React.FormEvent) {
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate({ to: "/" });
+    });
+  }, [navigate]);
+
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const displayName =
-      mode === "signup" && name.trim() ? name.trim() : email.split("@")[0] || "Mahasiswa";
-    setMockUser({ name: displayName, email: email || "demo@studentos.id" });
-    navigate({ to: "/" });
+    setBusy(true);
+    try {
+      if (mode === "signup") {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { name: name.trim() || email.split("@")[0] },
+          },
+        });
+        if (error) throw error;
+        toast.success("Akun berhasil dibuat. Selamat datang!");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      }
+      navigate({ to: "/" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal masuk");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function signInGoogle() {
+    setBusy(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast.error(
+          result.error instanceof Error ? result.error.message : "Gagal masuk dengan Google",
+        );
+        return;
+      }
+      if (result.redirected) return; // browser redirecting
+      navigate({ to: "/" });
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -63,10 +110,9 @@ function AuthPage() {
 
           <button
             type="button"
-            onClick={() =>
-              submit({ preventDefault: () => {} } as unknown as React.FormEvent)
-            }
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+            onClick={signInGoogle}
+            disabled={busy}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
           >
             <GoogleIcon />
             Lanjutkan dengan Google
@@ -106,8 +152,10 @@ function AuthPage() {
             />
             <button
               type="submit"
-              className="mt-2 w-full rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+              disabled={busy}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
             >
+              {busy && <Loader2 className="h-4 w-4 animate-spin" />}
               {mode === "login" ? "Masuk" : "Buat akun"}
             </button>
           </form>

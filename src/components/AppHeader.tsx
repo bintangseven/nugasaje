@@ -1,24 +1,33 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { GraduationCap } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getMockUser, type MockUser } from "@/lib/auth-mock";
+import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 export function AppHeader() {
-  const [user, setUser] = useState<MockUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    setUser(getMockUser());
+    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
   }, []);
 
-  const initials = user?.name
-    ? user.name
+  const displayName =
+    (user?.user_metadata?.name as string | undefined) ??
+    (user?.user_metadata?.full_name as string | undefined) ??
+    user?.email?.split("@")[0] ??
+    "S";
+
+  const initials = displayName
         .split(" ")
-        .map((p) => p[0])
+        .map((p: string) => p[0])
         .slice(0, 2)
         .join("")
-        .toUpperCase()
-    : "S";
+        .toUpperCase();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
@@ -47,14 +56,23 @@ export function AppHeader() {
           ))}
         </nav>
 
-        <button
-          type="button"
-          onClick={() => navigate({ to: "/profile" })}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-foreground transition-colors hover:bg-accent"
-          aria-label="Profil"
-        >
-          {initials}
-        </button>
+        {user ? (
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/profile" })}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+            aria-label="Profil"
+          >
+            {initials}
+          </button>
+        ) : (
+          <Link
+            to="/auth"
+            className="rounded-lg bg-foreground px-3 py-1.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+          >
+            Masuk
+          </Link>
+        )}
       </div>
     </header>
   );

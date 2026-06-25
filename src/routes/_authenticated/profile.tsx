@@ -1,0 +1,161 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { LogOut, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { AppHeader } from "@/components/AppHeader";
+import { supabase } from "@/integrations/supabase/client";
+import { getProfile, updateProfile } from "@/lib/projects.functions";
+import { useCurrentUser } from "@/hooks/use-auth";
+
+export const Route = createFileRoute("/_authenticated/profile")({
+  head: () => ({
+    meta: [
+      { title: "Profil — Student OS" },
+      { name: "description", content: "Profil akun Student OS." },
+    ],
+  }),
+  component: ProfilePage,
+});
+
+function ProfilePage() {
+  const navigate = useNavigate();
+  const { user } = useCurrentUser();
+  const queryClient = useQueryClient();
+  const getFn = useServerFn(getProfile);
+  const updateFn = useServerFn(updateProfile);
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => getFn(),
+  });
+
+  const [form, setForm] = useState({ name: "", university: "", major: "", semester: "" });
+  useEffect(() => {
+    if (profile) {
+      setForm({
+        name: profile.name ?? "",
+        university: profile.university ?? "",
+        major: profile.major ?? "",
+        semester: profile.semester ?? "",
+      });
+    }
+  }, [profile]);
+
+  const save = useMutation({
+    mutationFn: () => updateFn({ data: form }),
+    onSuccess: () => {
+      toast.success("Profil disimpan");
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Gagal menyimpan"),
+  });
+
+  const displayName = form.name || profile?.name || user?.email?.split("@")[0] || "Mahasiswa";
+  const initials = displayName
+    .split(" ")
+    .map((p: string) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  async function handleSignOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth" });
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <AppHeader />
+      <main className="mx-auto max-w-2xl px-6 pb-24 pt-12">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Profil</h1>
+
+        <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <div className="flex items-center gap-4">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-lg font-semibold text-foreground">
+              {initials}
+            </span>
+            <div>
+              <p className="text-base font-semibold text-foreground">{displayName}</p>
+              <p className="text-sm text-muted-foreground">
+                {profile?.email ?? user?.email ?? "—"}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 border-t border-border pt-6">
+            <Field
+              label="Nama tampilan"
+              value={form.name}
+              onChange={(v) => setForm((f) => ({ ...f, name: v }))}
+            />
+            <Field
+              label="Universitas"
+              value={form.university}
+              onChange={(v) => setForm((f) => ({ ...f, university: v }))}
+            />
+            <Field
+              label="Jurusan"
+              value={form.major}
+              onChange={(v) => setForm((f) => ({ ...f, major: v }))}
+            />
+            <Field
+              label="Semester"
+              value={form.semester}
+              onChange={(v) => setForm((f) => ({ ...f, semester: v }))}
+              placeholder="Contoh: 5"
+            />
+            <div className="flex items-center justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => save.mutate()}
+                disabled={save.isPending}
+                className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                Simpan perubahan
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="mt-6 inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+        >
+          <LogOut className="h-4 w-4" />
+          Keluar
+        </button>
+      </main>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-medium text-muted-foreground">{label}</span>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-foreground/30 focus:outline-none focus:ring-2 focus:ring-foreground/10"
+      />
+    </label>
+  );
+}
