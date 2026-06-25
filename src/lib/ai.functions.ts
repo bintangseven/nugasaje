@@ -25,6 +25,23 @@ const paperTool = {
                 minItems: 2,
                 items: { type: "string", description: "Satu paragraf utuh." },
               },
+              subsections: {
+                type: "array",
+                description: "Sub-bab (mis. 1.1 Latar Belakang). Opsional tapi sangat dianjurkan untuk BAB Pendahuluan & Pembahasan.",
+                items: {
+                  type: "object",
+                  properties: {
+                    heading: { type: "string", description: "Mis. '1.1 Latar Belakang'." },
+                    paragraphs: {
+                      type: "array",
+                      minItems: 1,
+                      items: { type: "string" },
+                    },
+                  },
+                  required: ["heading", "paragraphs"],
+                  additionalProperties: false,
+                },
+              },
             },
             required: ["heading", "paragraphs"],
             additionalProperties: false,
@@ -107,7 +124,14 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       ...Object.entries(answers).map(([k, v]) => `- ${k}: ${v}`),
       "",
       isPaper
-        ? "Susun paper lengkap: judul, abstrak, minimal 3 bagian pembahasan (pendahuluan, isi/pembahasan, kesimpulan tambahan jika perlu), kesimpulan, dan referensi APA. Setiap bagian minimal 2 paragraf utuh."
+        ? [
+            "Susun makalah akademik lengkap dengan struktur standar Indonesia:",
+            "- BAB I PENDAHULUAN dengan sub-bab: 1.1 Latar Belakang, 1.2 Rumusan Masalah, 1.3 Tujuan Penulisan.",
+            "- BAB II PEMBAHASAN dengan minimal 2-3 sub-bab sesuai topik (2.1, 2.2, dst).",
+            "- BAB III PENUTUP boleh berisi ringkasan; isi kesimpulan utama di field 'conclusion'.",
+            "Setiap sub-bab minimal 1-2 paragraf utuh. Tambahkan abstrak 100-150 kata dan minimal 4 referensi APA.",
+            "Gunakan heading 'BAB I PENDAHULUAN', 'BAB II PEMBAHASAN', 'BAB III PENUTUP' pada field 'heading' section.",
+          ].join("\n")
         : "Susun outline slide lengkap dengan judul, sub-judul, dan minimal 6 slide isi. Setiap slide harus punya 3-5 bullet ringkas dan catatan pembicara.",
     ].join("\n");
 
