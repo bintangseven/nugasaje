@@ -19,7 +19,18 @@ type PaperContent = {
 type PresentationContent = {
   title: string;
   subtitle: string;
-  slides: { title: string; bullets: string[]; notes: string }[];
+  agenda: string[];
+  closing: { message: string; cta?: string };
+  slides: {
+    title: string;
+    layout: "section" | "content" | "two_column" | "quote" | "stats";
+    bullets: string[];
+    bullets_right?: string[];
+    stats?: { value: string; label: string }[];
+    quote?: string;
+    quote_source?: string;
+    notes: string;
+  }[];
 };
 
 function sanitizeFilename(name: string): string {
@@ -237,52 +248,234 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
   return new Uint8Array(buffer);
 }
 
-async function buildPptx(content: PresentationContent, studentName: string): Promise<Uint8Array> {
+type Theme = {
+  bg: string;
+  surface: string;
+  ink: string;
+  inkInverse: string;
+  muted: string;
+  accent: string;
+  accentSoft: string;
+  headFont: string;
+  bodyFont: string;
+};
+
+function pickTheme(style: string | undefined): Theme {
+  const s = (style ?? "").toLowerCase();
+  if (s.includes("kreatif")) {
+    return {
+      bg: "0F172A", surface: "FFFFFF", ink: "0F172A", inkInverse: "FFFFFF",
+      muted: "64748B", accent: "F97316", accentSoft: "FED7AA",
+      headFont: "Calibri", bodyFont: "Calibri",
+    };
+  }
+  if (s.includes("semi")) {
+    return {
+      bg: "0E3A2F", surface: "FFFFFF", ink: "0F172A", inkInverse: "FFFFFF",
+      muted: "64748B", accent: "2E8B6B", accentSoft: "CFE9DE",
+      headFont: "Calibri", bodyFont: "Calibri",
+    };
+  }
+  // default: Formal akademik
+  return {
+    bg: "1E2761", surface: "FFFFFF", ink: "0F172A", inkInverse: "FFFFFF",
+    muted: "64748B", accent: "1E2761", accentSoft: "CADCFC",
+    headFont: "Calibri", bodyFont: "Calibri",
+  };
+}
+
+async function buildPptx(
+  content: PresentationContent,
+  studentName: string,
+  meta: { course?: string; style?: string; audience?: string },
+): Promise<Uint8Array> {
   const pptxgen = (await import("pptxgenjs")).default;
   const pres = new pptxgen();
   pres.layout = "LAYOUT_WIDE";
+  const t = pickTheme(meta.style);
 
-  const accent = "1E2761";
-  const ink = "0F172A";
-  const muted = "64748B";
+  // Slide dims (LAYOUT_WIDE = 13.333 x 7.5)
+  const W = 13.333;
+  const H = 7.5;
 
-  // Cover
+  const addFooter = (s: InstanceType<typeof pptxgen.prototype.addSlide>, pageNo: number, totalNo: number) => {
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 0, y: H - 0.35, w: W, h: 0.05, fill: { color: t.accent }, line: { color: t.accent },
+    });
+    s.addText(content.title, {
+      x: 0.5, y: H - 0.32, w: W - 2, h: 0.28,
+      fontFace: t.bodyFont, fontSize: 10, color: t.muted, align: "left",
+    });
+    s.addText(`${pageNo} / ${totalNo}`, {
+      x: W - 1.3, y: H - 0.32, w: 0.8, h: 0.28,
+      fontFace: t.bodyFont, fontSize: 10, color: t.muted, align: "right",
+    });
+  };
+
+  // ===== Cover =====
   const cover = pres.addSlide();
-  cover.background = { color: accent };
+  cover.background = { color: t.bg };
+  cover.addShape(pres.shapes.RECTANGLE, {
+    x: 0.6, y: 1.6, w: 1.4, h: 0.12, fill: { color: t.accentSoft }, line: { color: t.accentSoft },
+  });
+  cover.addText("PRESENTASI", {
+    x: 0.6, y: 1.85, w: 12, h: 0.4,
+    fontFace: t.headFont, fontSize: 14, bold: true, color: t.accentSoft, charSpacing: 4,
+  });
   cover.addText(content.title, {
-    x: 0.6, y: 2.4, w: 12, h: 1.6,
-    fontFace: "Calibri", fontSize: 44, bold: true, color: "FFFFFF",
+    x: 0.6, y: 2.4, w: 12, h: 2.2,
+    fontFace: t.headFont, fontSize: 48, bold: true, color: "FFFFFF", valign: "top",
   });
-  cover.addText(content.subtitle, {
-    x: 0.6, y: 4.1, w: 12, h: 0.8,
-    fontFace: "Calibri", fontSize: 22, color: "CADCFC",
+  cover.addText(content.subtitle || meta.course || "", {
+    x: 0.6, y: 4.8, w: 12, h: 0.7,
+    fontFace: t.bodyFont, fontSize: 22, color: t.accentSoft,
   });
-  cover.addText(studentName, {
-    x: 0.6, y: 6.4, w: 12, h: 0.5,
-    fontFace: "Calibri", fontSize: 16, color: "CADCFC",
+  cover.addText(`Disusun oleh: ${studentName}`, {
+    x: 0.6, y: H - 1.1, w: 12, h: 0.4,
+    fontFace: t.bodyFont, fontSize: 14, color: "FFFFFF",
+  });
+  cover.addText(
+    new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+    { x: 0.6, y: H - 0.7, w: 12, h: 0.35, fontFace: t.bodyFont, fontSize: 12, color: t.accentSoft },
+  );
+
+  // ===== Agenda =====
+  const agenda = pres.addSlide();
+  agenda.background = { color: t.surface };
+  agenda.addText("Agenda", {
+    x: 0.6, y: 0.55, w: 12, h: 0.8,
+    fontFace: t.headFont, fontSize: 36, bold: true, color: t.ink,
+  });
+  agenda.addShape(pres.shapes.RECTANGLE, {
+    x: 0.6, y: 1.35, w: 0.7, h: 0.08, fill: { color: t.accent }, line: { color: t.accent },
+  });
+  content.agenda.forEach((item, i) => {
+    const y = 1.9 + i * 0.85;
+    agenda.addShape(pres.shapes.OVAL, {
+      x: 0.7, y, w: 0.55, h: 0.55, fill: { color: t.accent }, line: { color: t.accent },
+    });
+    agenda.addText(String(i + 1).padStart(2, "0"), {
+      x: 0.7, y, w: 0.55, h: 0.55,
+      fontFace: t.headFont, fontSize: 14, bold: true, color: "FFFFFF", align: "center", valign: "middle",
+    });
+    agenda.addText(item, {
+      x: 1.5, y: y + 0.05, w: 11, h: 0.5,
+      fontFace: t.bodyFont, fontSize: 20, color: t.ink, valign: "middle",
+    });
   });
 
-  // Content slides
+  // ===== Content slides =====
+  const totalPages = 2 + content.slides.length + 1; // cover + agenda + slides + closing
+
   content.slides.forEach((slide, i) => {
     const s = pres.addSlide();
-    s.background = { color: "FFFFFF" };
+    const pageNo = 3 + i;
+
+    if (slide.layout === "section") {
+      s.background = { color: t.bg };
+      s.addText(`BAGIAN ${String(i + 1).padStart(2, "0")}`, {
+        x: 0.8, y: 2.6, w: 12, h: 0.5,
+        fontFace: t.headFont, fontSize: 16, bold: true, color: t.accentSoft, charSpacing: 6,
+      });
+      s.addText(slide.title, {
+        x: 0.8, y: 3.1, w: 12, h: 2,
+        fontFace: t.headFont, fontSize: 44, bold: true, color: "FFFFFF",
+      });
+      s.addShape(pres.shapes.RECTANGLE, {
+        x: 0.8, y: 5.2, w: 1.6, h: 0.08, fill: { color: t.accent }, line: { color: t.accent },
+      });
+      if (slide.notes) s.addNotes(slide.notes);
+      addFooter(s, pageNo, totalPages);
+      return;
+    }
+
+    // Common header for non-section slides
+    s.background = { color: t.surface };
     s.addText(slide.title, {
-      x: 0.6, y: 0.5, w: 12, h: 0.9,
-      fontFace: "Calibri", fontSize: 30, bold: true, color: ink,
+      x: 0.6, y: 0.5, w: W - 1.2, h: 0.8,
+      fontFace: t.headFont, fontSize: 28, bold: true, color: t.ink,
     });
-    s.addText(
-      slide.bullets.map((b) => ({ text: b, options: { bullet: true } })),
-      {
-        x: 0.8, y: 1.8, w: 11.5, h: 5,
-        fontFace: "Calibri", fontSize: 20, color: ink, valign: "top",
-        paraSpaceAfter: 10,
-      },
-    );
-    s.addText(`${i + 2}`, {
-      x: 12.4, y: 6.9, w: 0.6, h: 0.3,
-      fontFace: "Calibri", fontSize: 10, color: muted, align: "right",
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 0.6, y: 1.25, w: 0.7, h: 0.07, fill: { color: t.accent }, line: { color: t.accent },
     });
+
+    if (slide.layout === "two_column") {
+      const colW = (W - 1.4) / 2;
+      s.addText(
+        slide.bullets.map((b) => ({ text: b, options: { bullet: true } })),
+        {
+          x: 0.6, y: 1.7, w: colW, h: H - 2.5,
+          fontFace: t.bodyFont, fontSize: 18, color: t.ink, valign: "top", paraSpaceAfter: 8,
+        },
+      );
+      s.addText(
+        (slide.bullets_right ?? []).map((b) => ({ text: b, options: { bullet: true } })),
+        {
+          x: 0.6 + colW + 0.2, y: 1.7, w: colW, h: H - 2.5,
+          fontFace: t.bodyFont, fontSize: 18, color: t.ink, valign: "top", paraSpaceAfter: 8,
+        },
+      );
+    } else if (slide.layout === "stats") {
+      const stats = slide.stats ?? [];
+      const n = Math.max(1, stats.length);
+      const gap = 0.3;
+      const cardW = (W - 1.2 - gap * (n - 1)) / n;
+      stats.forEach((st, idx) => {
+        const x = 0.6 + idx * (cardW + gap);
+        s.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+          x, y: 2.1, w: cardW, h: 3.6, fill: { color: t.accentSoft }, line: { color: t.accentSoft }, rectRadius: 0.12,
+        });
+        s.addText(st.value, {
+          x, y: 2.4, w: cardW, h: 2,
+          fontFace: t.headFont, fontSize: 60, bold: true, color: t.accent, align: "center", valign: "middle",
+        });
+        s.addText(st.label, {
+          x: x + 0.2, y: 4.4, w: cardW - 0.4, h: 1.1,
+          fontFace: t.bodyFont, fontSize: 16, color: t.ink, align: "center", valign: "top",
+        });
+      });
+    } else if (slide.layout === "quote") {
+      s.addText(`"${slide.quote ?? slide.bullets.join(" ")}"`, {
+        x: 1.2, y: 2.2, w: W - 2.4, h: 3,
+        fontFace: t.headFont, fontSize: 30, italic: true, bold: true, color: t.ink, align: "center", valign: "middle",
+      });
+      if (slide.quote_source) {
+        s.addText(`— ${slide.quote_source}`, {
+          x: 1.2, y: 5.4, w: W - 2.4, h: 0.5,
+          fontFace: t.bodyFont, fontSize: 16, color: t.muted, align: "center",
+        });
+      }
+    } else {
+      // content (default)
+      s.addText(
+        slide.bullets.map((b) => ({ text: b, options: { bullet: true } })),
+        {
+          x: 0.7, y: 1.7, w: W - 1.4, h: H - 2.5,
+          fontFace: t.bodyFont, fontSize: 20, color: t.ink, valign: "top", paraSpaceAfter: 10,
+        },
+      );
+    }
+
     if (slide.notes) s.addNotes(slide.notes);
+    addFooter(s, pageNo, totalPages);
+  });
+
+  // ===== Closing =====
+  const closing = pres.addSlide();
+  closing.background = { color: t.bg };
+  closing.addText(content.closing.message || "Terima Kasih", {
+    x: 0.6, y: 2.8, w: 12, h: 1.4,
+    fontFace: t.headFont, fontSize: 60, bold: true, color: "FFFFFF", align: "center",
+  });
+  if (content.closing.cta) {
+    closing.addText(content.closing.cta, {
+      x: 1, y: 4.4, w: W - 2, h: 0.8,
+      fontFace: t.bodyFont, fontSize: 20, color: t.accentSoft, align: "center",
+    });
+  }
+  closing.addText(studentName, {
+    x: 0.6, y: H - 1, w: 12, h: 0.4,
+    fontFace: t.bodyFont, fontSize: 14, color: t.accentSoft, align: "center",
   });
 
   const out = (await pres.write({ outputType: "uint8array" })) as Uint8Array;
@@ -305,7 +498,7 @@ export const exportProject = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: project, error } = await context.supabase
       .from("projects")
-      .select("id,name,mission,ai_context")
+      .select("id,name,mission,ai_context,answers")
       .eq("id", data.id)
       .maybeSingle();
     if (error) throw new Error(error.message);
