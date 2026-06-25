@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Download, ArrowRight, FileText, Presentation } from "lucide-react";
-import type { Project } from "@/lib/mock-data";
+import { formatRelativeTime, type ProjectRow } from "@/lib/mock-data";
 
-export function ProjectCard({ project }: { project: Project }) {
+export function ProjectCard({ project }: { project: ProjectRow }) {
   const completed = project.progress >= 100;
   const Icon = project.mission === "paper" ? FileText : Presentation;
   const missionLabel = project.mission === "paper" ? "Paper" : "Presentasi";
@@ -18,7 +18,9 @@ export function ProjectCard({ project }: { project: Project }) {
             {missionLabel}
           </span>
         </div>
-        <span className="text-xs text-muted-foreground">{project.updatedAt}</span>
+        <span className="text-xs text-muted-foreground">
+          {formatRelativeTime(project.updated_at)}
+        </span>
       </div>
 
       <h3 className="mt-3 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground">
@@ -49,7 +51,7 @@ export function ProjectCard({ project }: { project: Project }) {
         ) : (
           <Link
             to="/mission/$id"
-            params={{ id: project.mission }}
+            params={{ id: project.id }}
             className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:underline"
           >
             Lanjutkan

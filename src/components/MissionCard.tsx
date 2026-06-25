@@ -2,28 +2,28 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Clock } from "lucide-react";
 
 interface MissionCardProps {
-  id: string;
+  missionType: "paper" | "presentation";
   icon: string;
   title: string;
   description: string;
   estimate: string;
   output: string;
+  onStart: (missionType: "paper" | "presentation") => void;
+  loading?: boolean;
 }
 
 export function MissionCard({
-  id,
+  missionType,
   icon,
   title,
   description,
   estimate,
   output,
+  onStart,
+  loading,
 }: MissionCardProps) {
   return (
-    <Link
-      to="/mission/$id"
-      params={{ id }}
-      className="group relative flex flex-col rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-[0_8px_30px_rgba(15,23,42,0.06)]"
-    >
+    <div className="group relative flex flex-col rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
       <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-2xl">
         {icon}
       </div>
@@ -39,10 +39,15 @@ export function MissionCard({
         <span>Output: {output}</span>
       </div>
 
-      <div className="mt-6 inline-flex w-fit items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-transform group-hover:translate-x-0.5">
-        Mulai Misi
+      <button
+        type="button"
+        onClick={() => onStart(missionType)}
+        disabled={loading}
+        className="mt-6 inline-flex w-fit items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-transform group-hover:translate-x-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {loading ? "Membuka…" : "Mulai Misi"}
         <ArrowRight className="h-4 w-4" />
-      </div>
-    </Link>
+      </button>
+    </div>
   );
 }
