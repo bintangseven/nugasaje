@@ -6,7 +6,14 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
-import { getProfile, updateProfile, upgradeToPro, TRIAL_LIMIT } from "@/lib/projects.functions";
+import {
+  getProfile,
+  updateProfile,
+  upgradeToPro,
+  BASIC_DAILY_LIMIT,
+  PRO_DAILY_LIMIT,
+  PRO_PRICE_IDR,
+} from "@/lib/projects.functions";
 import { useCurrentUser } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -65,8 +72,12 @@ function ProfilePage() {
   const isProActive =
     profile?.plan === "pro" &&
     (!profile.pro_until || new Date(profile.pro_until).getTime() > Date.now());
-  const used = profile?.generations_used ?? 0;
-  const remaining = Math.max(0, TRIAL_LIMIT - used);
+  const dailyLimit = isProActive ? PRO_DAILY_LIMIT : BASIC_DAILY_LIMIT;
+  const today = new Date().toISOString().slice(0, 10);
+  const usedToday =
+    profile?.generations_date === today ? profile?.generations_used ?? 0 : 0;
+  const remaining = Math.max(0, dailyLimit - usedToday);
+  const priceLabel = `Rp${PRO_PRICE_IDR.toLocaleString("id-ID")}/bulan`;
 
   const displayName = form.name || profile?.name || user?.email?.split("@")[0] || "Mahasiswa";
   const initials = displayName
@@ -105,20 +116,18 @@ function ProfilePage() {
                 ) : (
                   <Sparkles className="h-4 w-4 text-muted-foreground" />
                 )}
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {isProActive ? "Paket PRO" : "Paket Trial"}
-                </span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {isProActive ? "Paket PRO" : "Paket Basic"}
+              </span>
               </div>
-              <p className="mt-2 text-lg font-semibold text-foreground">
-                {isProActive
-                  ? "Generate dokumen tanpa batas"
-                  : `Sisa kuota: ${remaining} dari ${TRIAL_LIMIT} dokumen`}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {isProActive
-                  ? `Aktif sampai ${profile?.pro_until ? new Date(profile.pro_until).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "—"}.`
-                  : "Akun trial dibatasi 2 kali generate dokumen. Upgrade ke PRO untuk pemakaian tanpa batas, billing per bulan."}
-              </p>
+            <p className="mt-2 text-lg font-semibold text-foreground">
+              Sisa kuota hari ini: {remaining} dari {dailyLimit} generate
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {isProActive
+                ? `Paket PRO aktif sampai ${profile?.pro_until ? new Date(profile.pro_until).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "—"}. Kuota reset otomatis tiap hari.`
+                : `Paket Basic dibatasi ${BASIC_DAILY_LIMIT} generate per hari. Upgrade ke PRO untuk ${PRO_DAILY_LIMIT} generate/hari hanya ${priceLabel}.`}
+            </p>
             </div>
             {!isProActive && (
               <button
@@ -132,7 +141,7 @@ function ProfilePage() {
                 ) : (
                   <Crown className="h-4 w-4" />
                 )}
-                Upgrade ke PRO
+              Upgrade PRO • {priceLabel}
               </button>
             )}
           </div>

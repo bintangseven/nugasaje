@@ -105,14 +105,16 @@ export const getProfile = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("profiles")
-      .select("id,name,email,university,major,semester,plan,generations_used,pro_until")
+      .select("id,name,email,university,major,semester,plan,generations_used,generations_date,pro_until")
       .eq("id", context.userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
     return data;
   });
 
-export const TRIAL_LIMIT = 2;
+export const BASIC_DAILY_LIMIT = 1;
+export const PRO_DAILY_LIMIT = 10;
+export const PRO_PRICE_IDR = 30000;
 
 /**
  * Placeholder upgrade — TANPA pembayaran nyata.
