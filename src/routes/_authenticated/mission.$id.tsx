@@ -147,29 +147,26 @@ function Workspace({
 
   const interviewDone = qIndex >= questions.length;
 
-  // Simulated generation. Persists step_index/phase/progress as it advances.
+  // AI generation: step animation runs while a real Lovable AI call is in flight.
+  // When the server fn resolves it sets phase=done in the DB; we refetch the project.
+  const aiCallRef = useRef<Promise<unknown> | null>(null);
   useEffect(() => {
     if (phase !== "working") return;
+    if (!aiCallRef.current) return;
     const totalSteps = steps.length;
+    let cancelled = false;
     const interval = setInterval(() => {
+      if (cancelled) return;
       setStepIndex((i) => {
-        const next = i + 1;
-        if (next >= totalSteps) {
-          clearInterval(interval);
-          setPhase("done");
-          scheduleSave({ phase: "done", step_index: totalSteps, progress: 100 });
-          return totalSteps;
-        }
-        const nextProgress = Math.min(
-          95,
-          30 + Math.round((next / totalSteps) * 65),
-        );
-        scheduleSave({ step_index: next, progress: nextProgress });
+        const next = Math.min(i + 1, totalSteps - 1);
         return next;
       });
-    }, 1400);
-    return () => clearInterval(interval);
-  }, [phase, steps.length, scheduleSave]);
+    }, 1600);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [phase, steps.length]);
 
   const progress =
     phase === "done"
@@ -212,10 +209,52 @@ function Workspace({
     });
   }
 
-  function startGeneration() {
+  async function startGeneration() {
     setPhase("working");
-    setStepIndex(-1);
-    scheduleSave({ phase: "working", step_index: -1, progress: 30 });
+    setStepIndex(0);
+    scheduleSave({ phase: "working", step_index: 0, progress: 30 });
+    try {
+      const p = generateFn({ data: { id: project.id } });
+      aiCallRef.current = p;
+      await p;
+      setPhase("done");
+      setStepIndex(steps.length);
+      await queryClient.invalidateQueries({ queryKey: ["project", project.id] });
+      await queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Konten siap! Klik unduh untuk menyimpan file.");
+    } catch (err) {
+      setPhase("interview");
+      setStepIndex(-1);
+      scheduleSave({ phase: "interview", step_index: -1, progress: 25 });
+      toast.error(err instanceof Error ? err.message : "Gagal menjalankan AI");
+    } finally {
+      aiCallRef.current = null;
+    }
+  }
+
+  const [downloading, setDownloading] = useState(false);
+  async function handleDownload() {
+    if (phase !== "done") return;
+    setDownloading(true);
+    try {
+      const res = await exportFn({ data: { id: project.id } });
+      const bin = atob(res.base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], { type: res.mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = res.filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal mengekspor file");
+    } finally {
+      setDownloading(false);
+    }
   }
 
   return (
