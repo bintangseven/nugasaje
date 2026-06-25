@@ -287,11 +287,15 @@ function Workspace({
               <span className="text-xs text-muted-foreground">Sisa waktu {remaining}</span>
               <button
                 type="button"
-                disabled={phase !== "done"}
-                onClick={() => toast.info("Unduhan akan tersedia setelah fase generator file dipasang.")}
+                disabled={phase !== "done" || downloading}
+                onClick={handleDownload}
                 className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Download className="h-4 w-4" />
+                {downloading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
                 Unduh {missionType === "paper" ? ".docx" : ".pptx"}
               </button>
             </div>
