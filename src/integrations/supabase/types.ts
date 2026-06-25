@@ -14,7 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          major: string | null
+          name: string | null
+          semester: string | null
+          university: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          major?: string | null
+          name?: string | null
+          semester?: string | null
+          university?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          major?: string | null
+          name?: string | null
+          semester?: string | null
+          university?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          ai_context: Json
+          answers: Json
+          created_at: string
+          id: string
+          mission: Database["public"]["Enums"]["mission_type"]
+          name: string
+          phase: Database["public"]["Enums"]["project_phase"]
+          progress: number
+          question_index: number
+          step_index: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_context?: Json
+          answers?: Json
+          created_at?: string
+          id?: string
+          mission: Database["public"]["Enums"]["mission_type"]
+          name: string
+          phase?: Database["public"]["Enums"]["project_phase"]
+          progress?: number
+          question_index?: number
+          step_index?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_context?: Json
+          answers?: Json
+          created_at?: string
+          id?: string
+          mission?: Database["public"]["Enums"]["mission_type"]
+          name?: string
+          phase?: Database["public"]["Enums"]["project_phase"]
+          progress?: number
+          question_index?: number
+          step_index?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +100,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      mission_type: "paper" | "presentation"
+      project_phase: "interview" | "working" | "done"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +228,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      mission_type: ["paper", "presentation"],
+      project_phase: ["interview", "working", "done"],
+    },
   },
 } as const
