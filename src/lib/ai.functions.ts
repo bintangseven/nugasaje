@@ -142,10 +142,31 @@ const presentationTool = {
   },
 } as const;
 
+const TRIAL_LIMIT = 2;
+
 export const generateProjectContent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
+    // Cek kuota langganan
+    const { data: profile, error: profileErr } = await context.supabase
+      .from("profiles")
+      .select("plan,generations_used,pro_until")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (profileErr) throw new Error(profileErr.message);
+    const isProActive =
+      profile?.plan === "pro" &&
+      (!profile.pro_until || new Date(profile.pro_until).getTime() > Date.now());
+    if (!isProActive) {
+      const used = profile?.generations_used ?? 0;
+      if (used >= TRIAL_LIMIT) {
+        throw new Error(
+          `Kuota trial habis (${TRIAL_LIMIT}/${TRIAL_LIMIT} dokumen). Upgrade ke PRO untuk generate tanpa batas.`,
+        );
+      }
+    }
+
     const { data: project, error } = await context.supabase
       .from("projects")
       .select("id,name,mission,answers")
@@ -255,6 +276,14 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       })
       .eq("id", data.id);
     if (upErr) throw new Error(upErr.message);
+
+    // Catat pemakaian (hanya untuk trial — PRO tak dibatasi)
+    if (!isProActive) {
+      await context.supabase
+        .from("profiles")
+        .update({ generations_used: (profile?.generations_used ?? 0) + 1 })
+        .eq("id", context.userId);
+    }
 
     return { ok: true };
   });
