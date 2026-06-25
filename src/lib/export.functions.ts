@@ -99,7 +99,7 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
   ];
 
   const sectionBlocks = content.sections.flatMap((s) => {
-    const blocks: Paragraph[] = [h1(s.heading)];
+    const blocks: InstanceType<typeof Paragraph>[] = [h1(s.heading)];
     s.paragraphs.forEach((p) => blocks.push(bodyPara(p, { firstLine: true })));
     (s.subsections ?? []).forEach((sub) => {
       blocks.push(h2(sub.heading));
