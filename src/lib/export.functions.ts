@@ -299,7 +299,7 @@ async function buildPptx(
   const H = 7.5;
 
   type Slide = ReturnType<typeof pres.addSlide>;
-  const SHAPES = pptxgen.ShapeType;
+  const SHAPES = pres.ShapeType;
 
   const addFooter = (s: Slide, pageNo: number, totalNo: number) => {
     s.addShape(SHAPES.rect, {
