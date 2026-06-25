@@ -74,6 +74,21 @@ const presentationTool = {
       properties: {
         title: { type: "string" },
         subtitle: { type: "string" },
+        agenda: {
+          type: "array",
+          minItems: 3,
+          maxItems: 6,
+          items: { type: "string", description: "Satu poin agenda singkat (3-6 kata)." },
+        },
+        closing: {
+          type: "object",
+          properties: {
+            message: { type: "string", description: "Pesan penutup singkat, mis. 'Terima kasih atas perhatiannya'." },
+            cta: { type: "string", description: "Ajakan/kalimat penutup tambahan, opsional." },
+          },
+          required: ["message"],
+          additionalProperties: false,
+        },
         slides: {
           type: "array",
           minItems: 5,
@@ -81,19 +96,47 @@ const presentationTool = {
             type: "object",
             properties: {
               title: { type: "string" },
+              layout: {
+                type: "string",
+                enum: ["section", "content", "two_column", "quote", "stats"],
+                description:
+                  "section = pembatas bab; content = judul + bullet; two_column = dua kolom bullet; quote = kutipan tebal; stats = 2-4 angka highlight.",
+              },
               bullets: {
                 type: "array",
-                minItems: 2,
+                minItems: 1,
                 items: { type: "string" },
               },
+              bullets_right: {
+                type: "array",
+                description: "Hanya untuk layout two_column: bullet kolom kanan.",
+                items: { type: "string" },
+              },
+              stats: {
+                type: "array",
+                description: "Hanya untuk layout stats: 2-4 item.",
+                minItems: 2,
+                maxItems: 4,
+                items: {
+                  type: "object",
+                  properties: {
+                    value: { type: "string", description: "Angka/teks pendek, mis. '85%'." },
+                    label: { type: "string", description: "Label singkat di bawah angka." },
+                  },
+                  required: ["value", "label"],
+                  additionalProperties: false,
+                },
+              },
+              quote: { type: "string", description: "Hanya untuk layout quote: teks kutipan." },
+              quote_source: { type: "string", description: "Sumber kutipan, opsional." },
               notes: { type: "string", description: "Catatan pembicara, 2-3 kalimat." },
             },
-            required: ["title", "bullets", "notes"],
+            required: ["title", "layout", "bullets", "notes"],
             additionalProperties: false,
           },
         },
       },
-      required: ["title", "subtitle", "slides"],
+      required: ["title", "subtitle", "agenda", "closing", "slides"],
       additionalProperties: false,
     },
   },
@@ -136,7 +179,18 @@ export const generateProjectContent = createServerFn({ method: "POST" })
             "Setiap sub-bab minimal 1-2 paragraf utuh. Tambahkan abstrak 100-150 kata dan minimal 4 referensi APA.",
             "Gunakan heading 'BAB I PENDAHULUAN', 'BAB II PEMBAHASAN', 'BAB III PENUTUP' pada field 'heading' section.",
           ].join("\n")
-        : "Susun outline slide lengkap dengan judul, sub-judul, dan minimal 6 slide isi. Setiap slide harus punya 3-5 bullet ringkas dan catatan pembicara.",
+        : [
+            "Susun outline slide presentasi akademik dengan struktur standar:",
+            "- title & subtitle untuk cover (subtitle = mata kuliah / konteks singkat).",
+            "- agenda: 3-5 poin singkat sesuai isi slide.",
+            "- slides: minimal 6 slide isi, urutan logis (Pendahuluan → Pembahasan → Penutup).",
+            "- Sisipkan 1-2 slide layout 'section' sebagai pembatas bab besar.",
+            "- Mayoritas slide pakai layout 'content' (3-5 bullet ringkas, maks 12 kata per bullet).",
+            "- Gunakan 'two_column' untuk perbandingan, 'stats' untuk data angka, 'quote' untuk kutipan penting (opsional, hanya bila relevan).",
+            "- Setiap slide wajib punya catatan pembicara 2-3 kalimat.",
+            "- closing.message berisi ucapan terima kasih singkat.",
+            "Sesuaikan kedalaman dan gaya dengan jawaban mahasiswa (audiens, gaya, jumlah slide).",
+          ].join("\n"),
     ].join("\n");
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
