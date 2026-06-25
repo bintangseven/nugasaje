@@ -1,11 +1,37 @@
 import { Link } from "@tanstack/react-router";
-import { Download, ArrowRight, FileText, Presentation } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Download, ArrowRight, FileText, Presentation, Trash2 } from "lucide-react";
 import { formatRelativeTime, type ProjectRow } from "@/lib/mock-data";
+import { deleteProject } from "@/lib/projects.functions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function ProjectCard({ project }: { project: ProjectRow }) {
   const completed = project.progress >= 100;
   const Icon = project.mission === "paper" ? FileText : Presentation;
   const missionLabel = project.mission === "paper" ? "Paper" : "Presentasi";
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const deleteFn = useServerFn(deleteProject);
+  const qc = useQueryClient();
+  const del = useMutation({
+    mutationFn: () => deleteFn({ data: { id: project.id } }),
+    onSuccess: () => {
+      toast.success("Proyek dihapus");
+      qc.invalidateQueries({ queryKey: ["projects"] });
+    },
+    onError: (e: Error) => toast.error(e.message || "Gagal menghapus proyek"),
+  });
 
   return (
     <div className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors hover:border-foreground/20">
@@ -18,9 +44,19 @@ export function ProjectCard({ project }: { project: ProjectRow }) {
             {missionLabel}
           </span>
         </div>
-        <span className="text-xs text-muted-foreground">
-          {formatRelativeTime(project.updated_at)}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            {formatRelativeTime(project.updated_at)}
+          </span>
+          <button
+            type="button"
+            onClick={() => setConfirmOpen(true)}
+            aria-label="Hapus proyek"
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
 
       <h3 className="mt-3 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground">
@@ -59,6 +95,32 @@ export function ProjectCard({ project }: { project: ProjectRow }) {
           </Link>
         )}
       </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus proyek ini?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Proyek <span className="font-medium text-foreground">“{project.name}”</span> akan
+              dihapus selamanya beserta seluruh jawaban dan hasilnya. Tindakan ini tidak bisa
+              dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={del.isPending}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={del.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                del.mutate();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {del.isPending ? "Menghapus…" : "Hapus selamanya"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
