@@ -58,55 +58,111 @@ export function formatRelativeTime(iso: string): string {
 
 export const missionQuestions: Record<
   MissionType,
-  { id: string; question: string; placeholder: string }[]
+  {
+    id: string;
+    question: string;
+    type: "text" | "choice";
+    placeholder?: string;
+    options?: string[];
+  }[]
 > = {
   paper: [
     {
       id: "topic",
-      question: "Apa topik paper yang ingin kamu kerjakan?",
+      question: "Apa judul atau topik makalahnya?",
+      type: "text",
       placeholder: "Contoh: Pengaruh motivasi kerja terhadap produktivitas",
     },
     {
       id: "course",
       question: "Mata kuliah apa ini?",
+      type: "text",
       placeholder: "Contoh: Manajemen Sumber Daya Manusia",
     },
     {
+      id: "level",
+      question: "Untuk jenjang apa makalah ini?",
+      type: "choice",
+      options: ["SMA / SMK", "D3 / Diploma", "S1 / Sarjana", "S2 / Pascasarjana"],
+    },
+    {
       id: "length",
-      question: "Berapa target panjang paper?",
-      placeholder: "Contoh: 10 halaman, sekitar 2500 kata",
+      question: "Berapa target panjang makalah?",
+      type: "choice",
+      options: [
+        "Pendek (5–8 halaman)",
+        "Sedang (10–15 halaman)",
+        "Panjang (16–20 halaman)",
+      ],
     },
     {
       id: "style",
-      question: "Gaya penulisan seperti apa yang kamu inginkan?",
-      placeholder: "Contoh: Formal akademik dengan sitasi APA",
+      question: "Gaya penulisan yang diinginkan?",
+      type: "choice",
+      options: [
+        "Formal akademik (sitasi APA)",
+        "Formal sederhana (tanpa sitasi rumit)",
+        "Semi-formal (lebih naratif)",
+      ],
+    },
+    {
+      id: "depth",
+      question: "Seberapa dalam pembahasan yang diinginkan?",
+      type: "choice",
+      options: [
+        "Ringkas — poin-poin utama saja",
+        "Sedang — penjelasan + contoh",
+        "Mendalam — teori, contoh, & analisis",
+      ],
     },
     {
       id: "language",
       question: "Bahasa apa yang dipakai?",
-      placeholder: "Contoh: Bahasa Indonesia",
+      type: "choice",
+      options: ["Bahasa Indonesia", "Bahasa Inggris"],
     },
   ],
   presentation: [
     {
       id: "topic",
-      question: "Apa topik presentasinya?",
+      question: "Apa judul atau topik presentasinya?",
+      type: "text",
       placeholder: "Contoh: Strategi pemasaran digital UMKM",
     },
     {
       id: "course",
       question: "Untuk mata kuliah apa?",
+      type: "text",
       placeholder: "Contoh: Pemasaran Digital",
     },
     {
       id: "slides",
       question: "Berapa jumlah slide yang ideal?",
-      placeholder: "Contoh: 12 slide",
+      type: "choice",
+      options: ["Singkat (6–8 slide)", "Standar (10–12 slide)", "Lengkap (15–20 slide)"],
     },
     {
       id: "audience",
       question: "Siapa audiens presentasinya?",
-      placeholder: "Contoh: Dosen dan teman sekelas",
+      type: "choice",
+      options: [
+        "Dosen & teman sekelas",
+        "Seminar / sidang akademik",
+        "Workshop / pelatihan",
+        "Umum / publik",
+      ],
+    },
+    {
+      id: "style",
+      question: "Gaya slide yang diinginkan?",
+      type: "choice",
+      options: ["Formal akademik", "Semi-formal", "Kreatif & visual"],
+    },
+    {
+      id: "language",
+      question: "Bahasa yang dipakai?",
+      type: "choice",
+      options: ["Bahasa Indonesia", "Bahasa Inggris"],
     },
   ],
 };

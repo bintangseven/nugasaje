@@ -187,7 +187,12 @@ function Workspace({
   function submitAnswer(e: React.FormEvent) {
     e.preventDefault();
     if (!draft.trim() || interviewDone) return;
-    const newAnswers = { ...answers, [questions[qIndex].id]: draft.trim() };
+    commitAnswer(draft.trim());
+  }
+
+  function commitAnswer(value: string) {
+    if (interviewDone) return;
+    const newAnswers = { ...answers, [questions[qIndex].id]: value };
     const newQIndex = qIndex + 1;
     setAnswers(newAnswers);
     setQIndex(newQIndex);
@@ -196,7 +201,7 @@ function Workspace({
     // Auto-name the project from the topic answer.
     let nextName = name;
     if (questions[qIndex].id === "topic" && !project.answers?.topic) {
-      const topic = draft.trim().slice(0, 80);
+      const topic = value.slice(0, 80);
       nextName = `${missionType === "paper" ? "Paper" : "Presentasi"} - ${topic}`;
       setName(nextName);
     }
@@ -354,29 +359,49 @@ function Workspace({
           </div>
 
           {phase === "interview" && !interviewDone && (
-            <form onSubmit={submitAnswer} className="mt-4 border-t border-border pt-4">
-              <textarea
-                ref={inputRef}
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder={questions[qIndex].placeholder}
-                rows={3}
-                className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-foreground/30 focus:outline-none focus:ring-2 focus:ring-foreground/10"
-              />
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  Pertanyaan {qIndex + 1} dari {questions.length}
-                </span>
-                <button
-                  type="submit"
-                  disabled={!draft.trim()}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Lanjut
-                  <Send className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </form>
+            <div className="mt-4 border-t border-border pt-4">
+              {questions[qIndex].type === "choice" ? (
+                <div className="space-y-2">
+                  {(questions[qIndex].options ?? []).map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => commitAnswer(opt)}
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:border-foreground/30 hover:bg-secondary"
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                  <div className="pt-1 text-xs text-muted-foreground">
+                    Pertanyaan {qIndex + 1} dari {questions.length}
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={submitAnswer}>
+                  <textarea
+                    ref={inputRef}
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    placeholder={questions[qIndex].placeholder}
+                    rows={3}
+                    className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-foreground/30 focus:outline-none focus:ring-2 focus:ring-foreground/10"
+                  />
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      Pertanyaan {qIndex + 1} dari {questions.length}
+                    </span>
+                    <button
+                      type="submit"
+                      disabled={!draft.trim()}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Lanjut
+                      <Send className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           )}
 
           {phase === "interview" && interviewDone && (
