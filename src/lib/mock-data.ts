@@ -1,13 +1,6 @@
 export type MissionType = "paper" | "presentation";
+export type ProjectPhase = "interview" | "working" | "done";
 
-export interface Project {
-  id: string;
-  name: string;
-  mission: MissionType;
-  progress: number; // 0-100
-  updatedAt: string; // human readable
-  course?: string;
-}
 
 export const missions = [
   {

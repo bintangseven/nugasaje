@@ -11,7 +11,7 @@ import {
   type MissionType,
 } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/mission/$id")({
+export const Route = createFileRoute("/_authenticated/mission/$id")({
   head: () => ({
     meta: [
       { title: "Misi — Student OS" },

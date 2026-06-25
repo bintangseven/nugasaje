@@ -4,7 +4,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { ProjectCard } from "@/components/ProjectCard";
 import { mockProjects } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/projects")({
+export const Route = createFileRoute("/_authenticated/projects")({
   head: () => ({
     meta: [
       { title: "Proyek — Student OS" },
