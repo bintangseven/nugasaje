@@ -30,13 +30,13 @@ export function AppHeader() {
         .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border/60 glass">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link to="/" className="flex items-center gap-2 text-foreground">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-ocean text-white glow-ocean">
             <GraduationCap className="h-4 w-4" />
           </span>
-          <span className="text-[15px] font-semibold tracking-tight">Nugasinaje</span>
+          <span className="text-[15px] font-semibold tracking-tight text-gradient-ocean">Nugasinaje</span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
@@ -60,7 +60,7 @@ export function AppHeader() {
           <button
             type="button"
             onClick={() => navigate({ to: "/profile" })}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-ocean text-sm font-semibold text-white transition-transform hover:scale-105 glow-ocean"
             aria-label="Profil"
           >
             {initials}
@@ -68,7 +68,7 @@ export function AppHeader() {
         ) : (
           <Link
             to="/auth"
-            className="rounded-lg bg-foreground px-3 py-1.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+            className="rounded-lg bg-gradient-ocean px-3.5 py-1.5 text-sm font-medium text-white transition-transform hover:scale-105 glow-ocean"
           >
             Masuk
           </Link>
