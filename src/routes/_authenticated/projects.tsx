@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
@@ -35,11 +36,20 @@ function ProjectsPage() {
     <div className="min-h-screen bg-background">
       <AppHeader />
       <main className="mx-auto max-w-6xl px-6 pb-24 pt-12">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Proyek</h1>
-          <p className="text-sm text-muted-foreground">
-            Lanjutkan pekerjaan yang tertunda atau unduh hasil yang sudah selesai.
-          </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">Proyek</h1>
+            <p className="text-sm text-muted-foreground">
+              Lanjutkan pekerjaan yang tertunda atau unduh hasil yang sudah selesai.
+            </p>
+          </div>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 self-start rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+          >
+            <Plus className="h-4 w-4" />
+            Tambah Proyek
+          </Link>
         </div>
 
         <div className="mt-8 inline-flex rounded-lg border border-border bg-card p-1 text-sm">
