@@ -16,6 +16,8 @@ import {
   type ProjectRow,
 } from "@/lib/mock-data";
 import { getProject, updateProject } from "@/lib/projects.functions";
+import { generateProjectContent } from "@/lib/ai.functions";
+import { exportProject } from "@/lib/export.functions";
 
 export const Route = createFileRoute("/_authenticated/mission/$id")({
   head: () => ({
@@ -35,6 +37,8 @@ function MissionWorkspace() {
   const queryClient = useQueryClient();
   const getFn = useServerFn(getProject);
   const updateFn = useServerFn(updateProject);
+  const generateFn = useServerFn(generateProjectContent);
+  const exportFn = useServerFn(exportProject);
 
   const projectQuery = useQuery({
     queryKey: ["project", id],
@@ -62,17 +66,27 @@ function MissionWorkspace() {
   }
 
   return (
-    <Workspace project={projectQuery.data as ProjectRow} updateFn={updateFn} queryClient={queryClient} />
+    <Workspace
+      project={projectQuery.data as ProjectRow}
+      updateFn={updateFn}
+      generateFn={generateFn}
+      exportFn={exportFn}
+      queryClient={queryClient}
+    />
   );
 }
 
 function Workspace({
   project,
   updateFn,
+  generateFn,
+  exportFn,
   queryClient,
 }: {
   project: ProjectRow;
   updateFn: ReturnType<typeof useServerFn<typeof updateProject>>;
+  generateFn: ReturnType<typeof useServerFn<typeof generateProjectContent>>;
+  exportFn: ReturnType<typeof useServerFn<typeof exportProject>>;
   queryClient: ReturnType<typeof useQueryClient>;
 }) {
   const missionType: MissionType = project.mission;
@@ -133,29 +147,26 @@ function Workspace({
 
   const interviewDone = qIndex >= questions.length;
 
-  // Simulated generation. Persists step_index/phase/progress as it advances.
+  // AI generation: step animation runs while a real Lovable AI call is in flight.
+  // When the server fn resolves it sets phase=done in the DB; we refetch the project.
+  const aiCallRef = useRef<Promise<unknown> | null>(null);
   useEffect(() => {
     if (phase !== "working") return;
+    if (!aiCallRef.current) return;
     const totalSteps = steps.length;
+    let cancelled = false;
     const interval = setInterval(() => {
+      if (cancelled) return;
       setStepIndex((i) => {
-        const next = i + 1;
-        if (next >= totalSteps) {
-          clearInterval(interval);
-          setPhase("done");
-          scheduleSave({ phase: "done", step_index: totalSteps, progress: 100 });
-          return totalSteps;
-        }
-        const nextProgress = Math.min(
-          95,
-          30 + Math.round((next / totalSteps) * 65),
-        );
-        scheduleSave({ step_index: next, progress: nextProgress });
+        const next = Math.min(i + 1, totalSteps - 1);
         return next;
       });
-    }, 1400);
-    return () => clearInterval(interval);
-  }, [phase, steps.length, scheduleSave]);
+    }, 1600);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [phase, steps.length]);
 
   const progress =
     phase === "done"
@@ -198,10 +209,52 @@ function Workspace({
     });
   }
 
-  function startGeneration() {
+  async function startGeneration() {
     setPhase("working");
-    setStepIndex(-1);
-    scheduleSave({ phase: "working", step_index: -1, progress: 30 });
+    setStepIndex(0);
+    scheduleSave({ phase: "working", step_index: 0, progress: 30 });
+    try {
+      const p = generateFn({ data: { id: project.id } });
+      aiCallRef.current = p;
+      await p;
+      setPhase("done");
+      setStepIndex(steps.length);
+      await queryClient.invalidateQueries({ queryKey: ["project", project.id] });
+      await queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Konten siap! Klik unduh untuk menyimpan file.");
+    } catch (err) {
+      setPhase("interview");
+      setStepIndex(-1);
+      scheduleSave({ phase: "interview", step_index: -1, progress: 25 });
+      toast.error(err instanceof Error ? err.message : "Gagal menjalankan AI");
+    } finally {
+      aiCallRef.current = null;
+    }
+  }
+
+  const [downloading, setDownloading] = useState(false);
+  async function handleDownload() {
+    if (phase !== "done") return;
+    setDownloading(true);
+    try {
+      const res = await exportFn({ data: { id: project.id } });
+      const bin = atob(res.base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], { type: res.mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = res.filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal mengekspor file");
+    } finally {
+      setDownloading(false);
+    }
   }
 
   return (
@@ -234,11 +287,15 @@ function Workspace({
               <span className="text-xs text-muted-foreground">Sisa waktu {remaining}</span>
               <button
                 type="button"
-                disabled={phase !== "done"}
-                onClick={() => toast.info("Unduhan akan tersedia setelah fase generator file dipasang.")}
+                disabled={phase !== "done" || downloading}
+                onClick={handleDownload}
                 className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Download className="h-4 w-4" />
+                {downloading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
                 Unduh {missionType === "paper" ? ".docx" : ".pptx"}
               </button>
             </div>
