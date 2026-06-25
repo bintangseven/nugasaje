@@ -157,12 +157,16 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       throw new Error("Gagal mem-parsing hasil AI.");
     }
 
-    const aiContext = { kind: isPaper ? "paper" : "presentation", content: parsed, generated_at: new Date().toISOString() };
+    const aiContext = {
+      kind: isPaper ? "paper" : "presentation",
+      content: parsed,
+      generated_at: new Date().toISOString(),
+    };
 
     const { error: upErr } = await context.supabase
       .from("projects")
       .update({
-        ai_context: aiContext,
+        ai_context: aiContext as unknown as never,
         phase: "done",
         progress: 100,
         step_index: isPaper ? 7 : 6,
