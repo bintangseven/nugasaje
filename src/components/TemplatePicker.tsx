@@ -72,6 +72,59 @@ function TemplatePreview({ tpl }: { tpl: PptxTemplate }) {
   );
 
   switch (tpl.cover) {
+    case "ingoude":
+      return (
+        <Wrapper style={{ background: surface }}>
+          {/* top-right triangles */}
+          <div
+            className="absolute -right-1 -top-1 h-6 w-12"
+            style={{ background: baseBg, clipPath: "polygon(0 0, 100% 0, 100% 100%)" }}
+          />
+          <div
+            className="absolute right-0 -top-1 h-4 w-8"
+            style={{ background: accentSoft, clipPath: "polygon(0 0, 100% 0, 100% 100%)" }}
+          />
+          {/* bottom-left triangles */}
+          <div
+            className="absolute -left-1 -bottom-1 h-5 w-12"
+            style={{ background: accentSoft, clipPath: "polygon(0 100%, 0 0, 100% 100%)" }}
+          />
+          <div
+            className="absolute left-2 -bottom-1 h-3 w-10"
+            style={{ background: baseBg, clipPath: "polygon(0 100%, 0 0, 100% 100%)" }}
+          />
+          {/* navy banner */}
+          <div
+            className="absolute left-0 top-1.5 h-2.5 w-[55%]"
+            style={{
+              background: baseBg,
+              clipPath: "polygon(0 0, 100% 0, 95% 100%, 0 100%)",
+            }}
+          />
+          <div className="absolute left-1 top-2 text-[5px] font-bold tracking-[0.1em] text-white">
+            COMPANY
+          </div>
+          {/* title */}
+          <div
+            className="absolute left-2 top-5 right-12 text-[11px] font-extrabold leading-[1.05]"
+            style={{ color: baseBg }}
+          >
+            JUDUL
+          </div>
+          {/* amber subtitle bar */}
+          <div
+            className="absolute left-2 bottom-3 h-2 w-[45%] px-1 text-[5px] font-bold leading-[8px]"
+            style={{ background: accentSoft, color: baseBg }}
+          >
+            "Tagline"
+          </div>
+          {/* chevrons */}
+          <div
+            className="absolute right-2 bottom-1.5 h-2 w-2"
+            style={{ background: baseBg, clipPath: "polygon(0 0, 70% 50%, 0 100%)" }}
+          />
+        </Wrapper>
+      );
     case "gradient":
       return (
         <Wrapper style={{ background: `linear-gradient(135deg, ${baseBg}, ${bg2})` }}>
