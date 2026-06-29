@@ -742,7 +742,18 @@ export const exportProject = createServerFn({ method: "POST" })
     const studentName = profile?.name ?? "Mahasiswa";
 
     const ctx = project.ai_context as { kind?: string; content?: unknown } | null;
-    if (!ctx?.content) throw new Error("Konten AI belum dihasilkan.");
+    if (!ctx?.content) {
+      // Self-heal: project is marked done but the AI payload is missing
+      // (older row, partial write, or generation failure). Reset to interview
+      // so the user can click "Mulai kerjakan" again.
+      await context.supabase
+        .from("projects")
+        .update({ phase: "interview", step_index: -1, progress: 25 })
+        .eq("id", data.id);
+      throw new Error(
+        "Konten AI belum tersimpan untuk proyek ini. Klik 'Mulai kerjakan' sekali lagi untuk membuat ulang.",
+      );
+    }
 
     const baseName = sanitizeFilename(project.name);
 
