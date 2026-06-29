@@ -674,6 +674,7 @@ export const exportProject = createServerFn({ method: "POST" })
       course: answers.course,
       style: answers.style,
       audience: answers.audience,
+      templateId: answers.__template,
     });
     return {
       base64: toBase64(bytes),
