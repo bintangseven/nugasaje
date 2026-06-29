@@ -319,7 +319,7 @@ function Workspace({
               <button
                 type="button"
                 disabled={phase !== "done" || downloading}
-                onClick={handleDownload}
+                onClick={() => handleDownload(false)}
                 className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {downloading ? (
@@ -329,6 +329,17 @@ function Workspace({
                 )}
                 Unduh {missionType === "paper" ? ".docx" : ".pptx"}
               </button>
+              {missionType === "presentation" && (
+                <button
+                  type="button"
+                  disabled={phase !== "done" || downloading}
+                  onClick={() => handleDownload(true)}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Buka di Canva
+                </button>
+              )}
             </div>
           </div>
 
