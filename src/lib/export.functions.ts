@@ -558,6 +558,7 @@ async function buildPptx(
   // ===== Agenda =====
   const agenda = pres.addSlide();
   agenda.background = { color: t.surface };
+  if (isIngoude) decorateIngoude(agenda);
   agenda.addText("Agenda", {
     x: 0.6, y: 0.55, w: 12, h: 0.8,
     fontFace: t.headFont, fontSize: 36, bold: true, color: t.ink,
@@ -589,6 +590,18 @@ async function buildPptx(
 
     if (slide.layout === "section") {
       s.background = { color: t.bg };
+      if (isIngoude) {
+        // amber triangle corner accents on dark section slide
+        s.addShape(SHAPES.rtTriangle, {
+          x: W - 3.6, y: -0.2, w: 3.8, h: 1.5,
+          fill: { color: t.accentSoft }, line: { color: t.accentSoft }, flipH: true,
+        });
+        s.addShape(SHAPES.rtTriangle, {
+          x: -0.2, y: H - 1.4, w: 3.4, h: 1.5,
+          fill: { color: t.accentSoft }, line: { color: t.accentSoft },
+          rotate: 180, flipH: true,
+        });
+      }
       s.addText(`BAGIAN ${String(i + 1).padStart(2, "0")}`, {
         x: 0.8, y: 2.6, w: 12, h: 0.5,
         fontFace: t.headFont, fontSize: 16, bold: true, color: t.accentSoft, charSpacing: 6,
@@ -607,6 +620,7 @@ async function buildPptx(
 
     // Common header for non-section slides
     s.background = { color: t.surface };
+    if (isIngoude) decorateIngoude(s);
     s.addText(slide.title, {
       x: 0.6, y: 0.5, w: W - 1.2, h: 0.8,
       fontFace: t.headFont, fontSize: 28, bold: true, color: t.ink,
