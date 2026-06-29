@@ -254,7 +254,7 @@ function Workspace({
   }
 
   const [downloading, setDownloading] = useState(false);
-  async function handleDownload() {
+  async function handleDownload(openCanva = false) {
     if (phase !== "done") return;
     setDownloading(true);
     try {
@@ -271,6 +271,10 @@ function Workspace({
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+      if (openCanva) {
+        window.open("https://www.canva.com/import", "_blank", "noopener,noreferrer");
+        toast.success("File terunduh. Upload .pptx-nya di tab Canva yang baru terbuka.");
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Gagal mengekspor file";
       toast.error(msg);
