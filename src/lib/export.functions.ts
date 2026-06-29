@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { getTemplate, type PptxTemplate } from "./pptx-templates";
 
 type PaperContent = {
   title: string;
@@ -248,51 +249,16 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
   return new Uint8Array(buffer);
 }
 
-type Theme = {
-  bg: string;
-  surface: string;
-  ink: string;
-  inkInverse: string;
-  muted: string;
-  accent: string;
-  accentSoft: string;
-  headFont: string;
-  bodyFont: string;
-};
-
-function pickTheme(style: string | undefined): Theme {
-  const s = (style ?? "").toLowerCase();
-  if (s.includes("kreatif")) {
-    return {
-      bg: "0F172A", surface: "FFFFFF", ink: "0F172A", inkInverse: "FFFFFF",
-      muted: "64748B", accent: "F97316", accentSoft: "FED7AA",
-      headFont: "Calibri", bodyFont: "Calibri",
-    };
-  }
-  if (s.includes("semi")) {
-    return {
-      bg: "0E3A2F", surface: "FFFFFF", ink: "0F172A", inkInverse: "FFFFFF",
-      muted: "64748B", accent: "2E8B6B", accentSoft: "CFE9DE",
-      headFont: "Calibri", bodyFont: "Calibri",
-    };
-  }
-  // default: Formal akademik
-  return {
-    bg: "1E2761", surface: "FFFFFF", ink: "0F172A", inkInverse: "FFFFFF",
-    muted: "64748B", accent: "1E2761", accentSoft: "CADCFC",
-    headFont: "Calibri", bodyFont: "Calibri",
-  };
-}
-
 async function buildPptx(
   content: PresentationContent,
   studentName: string,
-  meta: { course?: string; style?: string; audience?: string },
+  meta: { course?: string; style?: string; audience?: string; templateId?: string },
 ): Promise<Uint8Array> {
   const pptxgen = (await import("pptxgenjs")).default;
   const pres = new pptxgen();
   pres.layout = "LAYOUT_WIDE";
-  const t = pickTheme(meta.style);
+  const tpl: PptxTemplate = getTemplate(meta.templateId);
+  const t = tpl.theme;
 
   // Slide dims (LAYOUT_WIDE = 13.333 x 7.5)
   const W = 13.333;
@@ -317,30 +283,205 @@ async function buildPptx(
 
   // ===== Cover =====
   const cover = pres.addSlide();
-  cover.background = { color: t.bg };
-  cover.addShape(SHAPES.rect, {
-    x: 0.6, y: 1.6, w: 1.4, h: 0.12, fill: { color: t.accentSoft }, line: { color: t.accentSoft },
+  const dateStr = new Date().toLocaleDateString("id-ID", {
+    day: "numeric", month: "long", year: "numeric",
   });
-  cover.addText("PRESENTASI", {
-    x: 0.6, y: 1.85, w: 12, h: 0.4,
-    fontFace: t.headFont, fontSize: 14, bold: true, color: t.accentSoft, charSpacing: 4,
-  });
-  cover.addText(content.title, {
-    x: 0.6, y: 2.4, w: 12, h: 2.2,
-    fontFace: t.headFont, fontSize: 48, bold: true, color: "FFFFFF", valign: "top",
-  });
-  cover.addText(content.subtitle || meta.course || "", {
-    x: 0.6, y: 4.8, w: 12, h: 0.7,
-    fontFace: t.bodyFont, fontSize: 22, color: t.accentSoft,
-  });
-  cover.addText(`Disusun oleh: ${studentName}`, {
-    x: 0.6, y: H - 1.1, w: 12, h: 0.4,
-    fontFace: t.bodyFont, fontSize: 14, color: "FFFFFF",
-  });
-  cover.addText(
-    new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
-    { x: 0.6, y: H - 0.7, w: 12, h: 0.35, fontFace: t.bodyFont, fontSize: 12, color: t.accentSoft },
-  );
+  const subtitle = content.subtitle || meta.course || "";
+
+  const renderCover = () => {
+    switch (tpl.cover) {
+      case "gradient": {
+        cover.background = { color: t.bg };
+        cover.addShape(SHAPES.rect, {
+          x: 0, y: 0, w: W, h: H,
+          fill: { type: "solid", color: t.bg2, transparency: 55 },
+          line: { color: t.bg2 },
+        });
+        cover.addText("PRESENTASI", {
+          x: 0.8, y: 1.6, w: 12, h: 0.4,
+          fontFace: t.headFont, fontSize: 14, bold: true, color: "FFFFFF", charSpacing: 6,
+        });
+        cover.addText(content.title, {
+          x: 0.8, y: 2.1, w: 12, h: 2.6,
+          fontFace: t.headFont, fontSize: 54, bold: true, color: "FFFFFF",
+        });
+        cover.addText(subtitle, {
+          x: 0.8, y: 5.0, w: 12, h: 0.7,
+          fontFace: t.bodyFont, fontSize: 22, color: "FFFFFF",
+        });
+        break;
+      }
+      case "split": {
+        cover.background = { color: t.surface };
+        cover.addShape(SHAPES.rect, {
+          x: 0, y: 0, w: W * 0.42, h: H,
+          fill: { color: t.bg }, line: { color: t.bg },
+        });
+        cover.addShape(SHAPES.ellipse, {
+          x: W * 0.42 - 1.2, y: H - 2.4, w: 2.4, h: 2.4,
+          fill: { color: t.bg2 }, line: { color: t.bg2 },
+        });
+        cover.addText("PRESENTASI", {
+          x: 0.5, y: 0.8, w: W * 0.42 - 1, h: 0.4,
+          fontFace: t.headFont, fontSize: 14, bold: true, color: "FFFFFF", charSpacing: 6,
+        });
+        cover.addText(content.title, {
+          x: W * 0.42 + 0.6, y: 2.4, w: W * 0.58 - 1.2, h: 2.6,
+          fontFace: t.headFont, fontSize: 42, bold: true, color: t.ink,
+        });
+        cover.addText(subtitle, {
+          x: W * 0.42 + 0.6, y: 5.0, w: W * 0.58 - 1.2, h: 0.6,
+          fontFace: t.bodyFont, fontSize: 20, color: t.muted,
+        });
+        break;
+      }
+      case "minimal": {
+        cover.background = { color: t.bg };
+        cover.addShape(SHAPES.rect, {
+          x: 0.8, y: 1.4, w: 0.8, h: 0.06, fill: { color: t.accent }, line: { color: t.accent },
+        });
+        cover.addText("PRESENTASI", {
+          x: 0.8, y: 1.55, w: 12, h: 0.4,
+          fontFace: t.headFont, fontSize: 13, bold: true, color: t.accent, charSpacing: 8,
+        });
+        cover.addText(content.title, {
+          x: 0.8, y: 2.2, w: 11.5, h: 3.0,
+          fontFace: t.headFont, fontSize: 60, bold: true, color: t.ink,
+        });
+        cover.addText(subtitle, {
+          x: 0.8, y: 5.4, w: 11.5, h: 0.6,
+          fontFace: t.bodyFont, fontSize: 20, color: t.muted,
+        });
+        break;
+      }
+      case "editorial": {
+        cover.background = { color: t.bg };
+        cover.addText("VOL. 01", {
+          x: 0.8, y: 0.7, w: 6, h: 0.4,
+          fontFace: t.headFont, fontSize: 12, bold: true, color: t.accent, charSpacing: 6,
+        });
+        cover.addText(dateStr.toUpperCase(), {
+          x: W - 6.8, y: 0.7, w: 6, h: 0.4,
+          fontFace: t.headFont, fontSize: 12, bold: true, color: t.accent, charSpacing: 6, align: "right",
+        });
+        cover.addShape(SHAPES.line, {
+          x: 0.8, y: 1.2, w: W - 1.6, h: 0,
+          line: { color: t.accent, width: 1 },
+        });
+        cover.addText(content.title, {
+          x: 0.8, y: 1.8, w: W - 1.6, h: 3.8,
+          fontFace: t.headFont, fontSize: 72, bold: true, italic: true, color: t.ink,
+        });
+        cover.addText(subtitle, {
+          x: 0.8, y: 5.9, w: W - 1.6, h: 0.6,
+          fontFace: t.bodyFont, fontSize: 18, italic: true, color: t.accent,
+        });
+        break;
+      }
+      case "band": {
+        cover.background = { color: t.surface };
+        cover.addShape(SHAPES.rect, {
+          x: 0, y: 2.4, w: W, h: 2.7, fill: { color: t.bg2 }, line: { color: t.bg2 },
+        });
+        cover.addText("PRESENTASI", {
+          x: 0.8, y: 2.7, w: 12, h: 0.4,
+          fontFace: t.headFont, fontSize: 13, bold: true, color: "FFFFFF", charSpacing: 6,
+        });
+        cover.addText(content.title, {
+          x: 0.8, y: 3.2, w: 12, h: 1.8,
+          fontFace: t.headFont, fontSize: 44, bold: true, color: "FFFFFF",
+        });
+        cover.addText(subtitle, {
+          x: 0.8, y: 5.4, w: 12, h: 0.6,
+          fontFace: t.bodyFont, fontSize: 20, color: t.ink,
+        });
+        break;
+      }
+      case "geometric": {
+        cover.background = { color: t.surface };
+        cover.addShape(SHAPES.ellipse, {
+          x: W - 3.2, y: -1.2, w: 4.4, h: 4.4,
+          fill: { color: t.accent }, line: { color: t.accent },
+        });
+        cover.addShape(SHAPES.ellipse, {
+          x: -1.2, y: H - 2.6, w: 3.2, h: 3.2,
+          fill: { color: t.accentSoft }, line: { color: t.accentSoft },
+        });
+        cover.addText("PRESENTASI", {
+          x: 0.8, y: 1.4, w: 8, h: 0.4,
+          fontFace: t.headFont, fontSize: 13, bold: true, color: t.accent, charSpacing: 6,
+        });
+        cover.addText(content.title, {
+          x: 0.8, y: 2.0, w: 9.5, h: 3.0,
+          fontFace: t.headFont, fontSize: 50, bold: true, color: t.ink,
+        });
+        cover.addText(subtitle, {
+          x: 0.8, y: 5.2, w: 9.5, h: 0.6,
+          fontFace: t.bodyFont, fontSize: 20, color: t.muted,
+        });
+        break;
+      }
+      case "duotone": {
+        cover.background = { color: t.bg };
+        cover.addShape(SHAPES.rect, {
+          x: W * 0.45, y: 0, w: W * 0.55, h: H,
+          fill: { color: t.bg2, transparency: 35 }, line: { color: t.bg2 },
+        });
+        cover.addShape(SHAPES.ellipse, {
+          x: W * 0.32, y: H * 0.25, w: 3.6, h: 3.6,
+          fill: { color: t.accent, transparency: 30 }, line: { color: t.accent },
+        });
+        cover.addText("PRESENTASI", {
+          x: 0.8, y: 1.4, w: 12, h: 0.4,
+          fontFace: t.headFont, fontSize: 13, bold: true, color: t.accentSoft, charSpacing: 8,
+        });
+        cover.addText(content.title, {
+          x: 0.8, y: 2.1, w: 12, h: 2.8,
+          fontFace: t.headFont, fontSize: 52, bold: true, color: "FFFFFF",
+        });
+        cover.addText(subtitle, {
+          x: 0.8, y: 5.2, w: 12, h: 0.7,
+          fontFace: t.bodyFont, fontSize: 22, color: t.accentSoft,
+        });
+        break;
+      }
+      case "solid":
+      default: {
+        cover.background = { color: t.bg };
+        cover.addShape(SHAPES.rect, {
+          x: 0.6, y: 1.6, w: 1.4, h: 0.12, fill: { color: t.accentSoft }, line: { color: t.accentSoft },
+        });
+        cover.addText("PRESENTASI", {
+          x: 0.6, y: 1.85, w: 12, h: 0.4,
+          fontFace: t.headFont, fontSize: 14, bold: true, color: t.accentSoft, charSpacing: 4,
+        });
+        cover.addText(content.title, {
+          x: 0.6, y: 2.4, w: 12, h: 2.2,
+          fontFace: t.headFont, fontSize: 48, bold: true, color: "FFFFFF", valign: "top",
+        });
+        cover.addText(subtitle, {
+          x: 0.6, y: 4.8, w: 12, h: 0.7,
+          fontFace: t.bodyFont, fontSize: 22, color: t.accentSoft,
+        });
+      }
+    }
+
+    // Footer credit shared across all cover styles
+    const isDarkCover = ["solid", "gradient", "duotone", "minimal"].includes(tpl.cover)
+      ? tpl.cover !== "minimal"
+      : false;
+    const creditColor = isDarkCover ? "FFFFFF" : t.ink;
+    const dateColor = isDarkCover ? t.accentSoft : t.muted;
+    cover.addText(`Disusun oleh: ${studentName}`, {
+      x: 0.8, y: H - 1.0, w: 12, h: 0.4,
+      fontFace: t.bodyFont, fontSize: 13, color: creditColor,
+    });
+    cover.addText(dateStr, {
+      x: 0.8, y: H - 0.6, w: 12, h: 0.35, fontFace: t.bodyFont, fontSize: 11, color: dateColor,
+    });
+  };
+
+  renderCover();
 
   // ===== Agenda =====
   const agenda = pres.addSlide();
