@@ -342,23 +342,29 @@ async function buildPptx(
           x: 5.4, y: 0.7, w: 0.9, h: 0.5,
           fill: { color: t.accentSoft, transparency: 40 }, line: { color: t.accentSoft },
         });
-        // Big bold title
+        // Big bold title — auto-shrink so judul panjang tidak overflow
+        const titleLen = content.title.length;
+        const titleSize = titleLen > 60 ? 36 : titleLen > 40 ? 44 : titleLen > 25 ? 52 : 60;
         cover.addText(content.title.toUpperCase(), {
-          x: 0.8, y: 2.2, w: 7.8, h: 2.8,
-          fontFace: t.headFont, fontSize: 60, bold: true, color: t.bg, valign: "top",
+          x: 0.8, y: 1.85, w: 8.4, h: 3.0,
+          fontFace: t.headFont, fontSize: titleSize, bold: true, color: t.bg,
+          valign: "top", paraSpaceAfter: 0, fit: "shrink",
         });
         // Amber highlight bar with quote / subtitle
+        const subText = `"${subtitle || "One Vision, One Mission"}"`;
+        const subW = Math.min(8.4, Math.max(3.5, subText.length * 0.13 + 0.6));
         cover.addShape(SHAPES.rect, {
-          x: 0.8, y: 5.05, w: 5.6, h: 0.55,
+          x: 0.8, y: 5.05, w: subW, h: 0.55,
           fill: { color: t.accentSoft }, line: { color: t.accentSoft },
         });
-        cover.addText(`"${subtitle || "One Vision, One Mission"}"`, {
-          x: 0.95, y: 5.05, w: 5.4, h: 0.55,
+        cover.addText(subText, {
+          x: 0.95, y: 5.05, w: subW - 0.3, h: 0.55,
           fontFace: t.headFont, fontSize: 16, bold: true, color: t.bg, valign: "middle",
+          fit: "shrink",
         });
         cover.addText(`Disusun oleh: ${studentName}  ·  ${dateStr}`, {
-          x: 0.8, y: 5.75, w: 8, h: 0.4,
-          fontFace: t.bodyFont, fontSize: 13, color: t.muted,
+          x: 0.8, y: 5.8, w: 8.4, h: 0.35,
+          fontFace: t.bodyFont, fontSize: 12, color: t.muted,
         });
         return; // skip generic footer credit below
       }
