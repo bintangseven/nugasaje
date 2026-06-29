@@ -18,6 +18,8 @@ import {
 import { getProject, updateProject } from "@/lib/projects.functions";
 import { generateProjectContent } from "@/lib/ai.functions";
 import { exportProject } from "@/lib/export.functions";
+import { TemplatePicker } from "@/components/TemplatePicker";
+import { DEFAULT_TEMPLATE_ID } from "@/lib/pptx-templates";
 
 export const Route = createFileRoute("/_authenticated/mission/$id")({
   head: () => ({
@@ -103,6 +105,9 @@ function Workspace({
   const [phase, setPhase] = useState<ProjectPhase>(project.phase);
   const [stepIndex, setStepIndex] = useState<number>(project.step_index ?? -1);
   const [draft, setDraft] = useState("");
+  const [templateId, setTemplateId] = useState<string>(
+    ((project.answers ?? {}) as Record<string, string>).__template ?? DEFAULT_TEMPLATE_ID,
+  );
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -217,7 +222,18 @@ function Workspace({
   async function startGeneration() {
     setPhase("working");
     setStepIndex(0);
-    scheduleSave({ phase: "working", step_index: 0, progress: 30 });
+    // Persist template choice (for presentation) along with phase change.
+    const nextAnswers =
+      missionType === "presentation"
+        ? { ...answers, __template: templateId }
+        : undefined;
+    if (nextAnswers) setAnswers(nextAnswers);
+    scheduleSave({
+      phase: "working",
+      step_index: 0,
+      progress: 30,
+      ...(nextAnswers ? { answers: nextAnswers } : {}),
+    });
     try {
       const p = generateFn({ data: { id: project.id } });
       aiCallRef.current = p;
@@ -405,13 +421,18 @@ function Workspace({
           )}
 
           {phase === "interview" && interviewDone && (
-            <button
-              type="button"
-              onClick={startGeneration}
-              className="mt-4 w-full rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
-            >
-              Mulai kerjakan
-            </button>
+            <div className="mt-4 space-y-4 border-t border-border pt-4">
+              {missionType === "presentation" && (
+                <TemplatePicker value={templateId} onChange={setTemplateId} />
+              )}
+              <button
+                type="button"
+                onClick={startGeneration}
+                className="w-full rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+              >
+                Mulai kerjakan
+              </button>
+            </div>
           )}
         </section>
 
