@@ -267,6 +267,41 @@ async function buildPptx(
   type Slide = ReturnType<typeof pres.addSlide>;
   const SHAPES = pres.ShapeType;
 
+  // ===== Ingoude-style triangle decorations =====
+  const isIngoude = tpl.cover === "ingoude";
+  const decorateIngoude = (s: Slide, variant: "light" | "dark" = "light") => {
+    // Top-right corner: large navy right-triangle + amber accent on top
+    s.addShape(SHAPES.rtTriangle, {
+      x: W - 4.2, y: -0.2, w: 4.4, h: 1.7,
+      fill: { color: t.bg }, line: { color: t.bg }, flipH: true,
+    });
+    s.addShape(SHAPES.rtTriangle, {
+      x: W - 2.6, y: -0.1, w: 2.8, h: 1.1,
+      fill: { color: t.accentSoft }, line: { color: t.accentSoft }, flipH: true,
+    });
+    // Bottom-left corner: amber + navy slivers
+    s.addShape(SHAPES.rtTriangle, {
+      x: -0.2, y: H - 1.5, w: 3.8, h: 1.6,
+      fill: { color: t.accentSoft }, line: { color: t.accentSoft },
+      rotate: 180, flipH: true,
+    });
+    s.addShape(SHAPES.rtTriangle, {
+      x: 1.0, y: H - 1.0, w: 4.6, h: 1.0,
+      fill: { color: t.bg }, line: { color: t.bg },
+      rotate: 180, flipH: true,
+    });
+    // Chevron arrow accent bottom-right
+    s.addShape(SHAPES.chevron, {
+      x: W - 1.0, y: H - 1.2, w: 0.55, h: 0.45,
+      fill: { color: t.bg }, line: { color: t.bg },
+    });
+    s.addShape(SHAPES.chevron, {
+      x: W - 0.7, y: H - 1.2, w: 0.55, h: 0.45,
+      fill: { color: t.bg }, line: { color: t.bg },
+    });
+    void variant;
+  };
+
   const addFooter = (s: Slide, pageNo: number, totalNo: number) => {
     s.addShape(SHAPES.rect, {
       x: 0, y: H - 0.35, w: W, h: 0.05, fill: { color: t.accent }, line: { color: t.accent },
@@ -290,6 +325,43 @@ async function buildPptx(
 
   const renderCover = () => {
     switch (tpl.cover) {
+      case "ingoude": {
+        cover.background = { color: t.surface };
+        decorateIngoude(cover);
+        // Navy banner top-left with company / course
+        cover.addShape(SHAPES.parallelogram, {
+          x: -0.4, y: 0.55, w: 5.6, h: 0.7,
+          fill: { color: t.bg }, line: { color: t.bg },
+        });
+        cover.addText((meta.course || studentName).toUpperCase(), {
+          x: 0.4, y: 0.6, w: 4.6, h: 0.6,
+          fontFace: t.headFont, fontSize: 16, bold: true, color: "FFFFFF", valign: "middle", charSpacing: 2,
+        });
+        // Dotted halftone accent
+        cover.addShape(SHAPES.rect, {
+          x: 5.4, y: 0.7, w: 0.9, h: 0.5,
+          fill: { color: t.accentSoft, transparency: 40 }, line: { color: t.accentSoft },
+        });
+        // Big bold title
+        cover.addText(content.title.toUpperCase(), {
+          x: 0.8, y: 2.2, w: 7.8, h: 2.8,
+          fontFace: t.headFont, fontSize: 60, bold: true, color: t.bg, valign: "top",
+        });
+        // Amber highlight bar with quote / subtitle
+        cover.addShape(SHAPES.rect, {
+          x: 0.8, y: 5.05, w: 5.6, h: 0.55,
+          fill: { color: t.accentSoft }, line: { color: t.accentSoft },
+        });
+        cover.addText(`"${subtitle || "One Vision, One Mission"}"`, {
+          x: 0.95, y: 5.05, w: 5.4, h: 0.55,
+          fontFace: t.headFont, fontSize: 16, bold: true, color: t.bg, valign: "middle",
+        });
+        cover.addText(`Disusun oleh: ${studentName}  ·  ${dateStr}`, {
+          x: 0.8, y: 5.75, w: 8, h: 0.4,
+          fontFace: t.bodyFont, fontSize: 13, color: t.muted,
+        });
+        return; // skip generic footer credit below
+      }
       case "gradient": {
         cover.background = { color: t.bg };
         cover.addShape(SHAPES.rect, {
@@ -486,6 +558,7 @@ async function buildPptx(
   // ===== Agenda =====
   const agenda = pres.addSlide();
   agenda.background = { color: t.surface };
+  if (isIngoude) decorateIngoude(agenda);
   agenda.addText("Agenda", {
     x: 0.6, y: 0.55, w: 12, h: 0.8,
     fontFace: t.headFont, fontSize: 36, bold: true, color: t.ink,
@@ -517,6 +590,18 @@ async function buildPptx(
 
     if (slide.layout === "section") {
       s.background = { color: t.bg };
+      if (isIngoude) {
+        // amber triangle corner accents on dark section slide
+        s.addShape(SHAPES.rtTriangle, {
+          x: W - 3.6, y: -0.2, w: 3.8, h: 1.5,
+          fill: { color: t.accentSoft }, line: { color: t.accentSoft }, flipH: true,
+        });
+        s.addShape(SHAPES.rtTriangle, {
+          x: -0.2, y: H - 1.4, w: 3.4, h: 1.5,
+          fill: { color: t.accentSoft }, line: { color: t.accentSoft },
+          rotate: 180, flipH: true,
+        });
+      }
       s.addText(`BAGIAN ${String(i + 1).padStart(2, "0")}`, {
         x: 0.8, y: 2.6, w: 12, h: 0.5,
         fontFace: t.headFont, fontSize: 16, bold: true, color: t.accentSoft, charSpacing: 6,
@@ -535,6 +620,7 @@ async function buildPptx(
 
     // Common header for non-section slides
     s.background = { color: t.surface };
+    if (isIngoude) decorateIngoude(s);
     s.addText(slide.title, {
       x: 0.6, y: 0.5, w: W - 1.2, h: 0.8,
       fontFace: t.headFont, fontSize: 28, bold: true, color: t.ink,

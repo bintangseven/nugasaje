@@ -19,7 +19,8 @@ export type CoverStyle =
   | "minimal"
   | "editorial"
   | "band"
-  | "duotone";
+  | "duotone"
+  | "ingoude";
 
 export type PptxTemplate = {
   id: string;
@@ -31,6 +32,19 @@ export type PptxTemplate = {
 };
 
 export const pptxTemplates: PptxTemplate[] = [
+  {
+    id: "ingoude",
+    name: "Ingoude Bold",
+    vibe: "Korporat · Triangle",
+    description: "Navy + amber dengan aksen segitiga. Cocok untuk kick-off, sidang, & rapat tim.",
+    cover: "ingoude",
+    theme: {
+      bg: "1E3A8A", bg2: "F5B82E", surface: "FFFFFF",
+      ink: "0F1E4D", inkInverse: "FFFFFF", muted: "5B6A8A",
+      accent: "1E3A8A", accentSoft: "F5B82E",
+      headFont: "Calibri", bodyFont: "Calibri",
+    },
+  },
   {
     id: "midnight",
     name: "Midnight Executive",
@@ -137,7 +151,7 @@ export const pptxTemplates: PptxTemplate[] = [
   },
 ];
 
-export const DEFAULT_TEMPLATE_ID = "midnight";
+export const DEFAULT_TEMPLATE_ID = "ingoude";
 
 export function getTemplate(id: string | undefined | null): PptxTemplate {
   return (
