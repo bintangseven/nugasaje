@@ -272,7 +272,13 @@ function Workspace({
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Gagal mengekspor file");
+      const msg = err instanceof Error ? err.message : "Gagal mengekspor file";
+      toast.error(msg);
+      if (msg.includes("Konten AI belum")) {
+        setPhase("interview");
+        setStepIndex(-1);
+        await queryClient.invalidateQueries({ queryKey: ["project", project.id] });
+      }
     } finally {
       setDownloading(false);
     }
