@@ -255,51 +255,88 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       });
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        tools: [tool],
-        tool_choice: { type: "function", function: { name: toolName } },
-      }),
-    });
+    // ===== Multi-stage generation (4 panggilan Gemini) =====
+    // Tiap stage memanggil tool yang sama; hasilnya jadi konteks untuk stage berikutnya
+    // supaya konten makin tebal, contoh konkret, dan catatan pembicara/paragraf
+    // makin substantif. Lebih lambat tapi hasil jauh lebih lengkap.
+    type ChatMsg = { role: "system" | "user" | "assistant"; content: unknown };
 
-    if (response.status === 429) {
-      throw new Error("Batas pemakaian AI tercapai. Coba lagi sebentar lagi.");
-    }
-    if (response.status === 402) {
-      throw new Error("Kredit AI workspace habis. Silakan tambahkan kredit.");
-    }
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`AI gateway error ${response.status}: ${text.slice(0, 200)}`);
-    }
-
-    const json = (await response.json()) as {
-      choices?: Array<{
-        message?: {
-          tool_calls?: Array<{ function?: { name?: string; arguments?: string } }>;
-        };
-      }>;
+    const callTool = async (messages: ChatMsg[]): Promise<Record<string, unknown>> => {
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages,
+          tools: [tool],
+          tool_choice: { type: "function", function: { name: toolName } },
+        }),
+      });
+      if (res.status === 429) throw new Error("Batas pemakaian AI tercapai. Coba lagi sebentar lagi.");
+      if (res.status === 402) throw new Error("Kredit AI workspace habis. Silakan tambahkan kredit.");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`AI gateway error ${res.status}: ${text.slice(0, 200)}`);
+      }
+      const j = (await res.json()) as {
+        choices?: Array<{
+          message?: { tool_calls?: Array<{ function?: { name?: string; arguments?: string } }> };
+        }>;
+      };
+      const argsText = j.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+      if (!argsText) throw new Error("AI tidak mengembalikan konten terstruktur.");
+      try {
+        return JSON.parse(argsText);
+      } catch {
+        throw new Error("Gagal mem-parsing hasil AI.");
+      }
     };
-    const call = json.choices?.[0]?.message?.tool_calls?.[0];
-    const argsText = call?.function?.arguments;
-    if (!argsText) throw new Error("AI tidak mengembalikan konten terstruktur.");
 
-    let parsed: Record<string, unknown>;
-    try {
-      parsed = JSON.parse(argsText);
-    } catch {
-      throw new Error("Gagal mem-parsing hasil AI.");
+    const stageInstruction = (stage: 1 | 2 | 3 | 4, prev: Record<string, unknown> | null): string => {
+      if (isPaper) {
+        switch (stage) {
+          case 1:
+            return "STAGE 1 (DRAFT): Susun kerangka makalah lengkap. Fokus struktur — BAB I/II/III + sub-bab, abstrak ringkas, dan minimal 1 paragraf substantif per sub-bab. Jangan tipis.";
+          case 2:
+            return `STAGE 2 (EXPAND): Ini draft awal kamu:\n\n${JSON.stringify(prev).slice(0, 8000)}\n\nPerluas SETIAP paragraf di BAB I & BAB II jadi 2-3x lebih panjang. Tambahkan definisi, contoh konkret, data/statistik (boleh estimasi wajar), dan kutipan dari referensi. Jangan kurangi sub-bab, justru lengkapi.`;
+          case 3:
+            return `STAGE 3 (ENRICH): Versi terkini:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nLengkapi BAB III, perkuat conclusion jadi minimal 2 paragraf utuh, tambah analisis kritis. Pastikan tiap sub-bab punya 2+ paragraf. Pastikan abstrak 130-160 kata dan padat.`;
+          case 4:
+            return `STAGE 4 (POLISH): Versi siap-poles:\n\n${JSON.stringify(prev).slice(0, 14000)}\n\nFinal pass: rapikan transisi antar paragraf, pastikan kata pengantar lengkap (3 paragraf: ucapan syukur, tujuan, terima kasih+harapan), referensi minimal 6 dengan format APA benar dan beragam (jurnal, buku, web). Periksa konsistensi istilah. Kembalikan paper FINAL utuh.`;
+        }
+      } else {
+        switch (stage) {
+          case 1:
+            return "STAGE 1 (DRAFT): Susun outline presentasi — title, subtitle, agenda, dan minimal 7 slide isi dengan judul + layout + 3 bullet draft + notes singkat. Fokus struktur dulu.";
+          case 2:
+            return `STAGE 2 (EXPAND BULLETS): Draft awal:\n\n${JSON.stringify(prev).slice(0, 8000)}\n\nPerluas SETIAP slide content: jadikan 4-6 bullet (maks 14 kata per bullet) yang lebih informatif dan substantif. Tambahkan 1-2 slide baru jika topik butuh (mis. studi kasus, data). Jangan tipis.`;
+          case 3:
+            return `STAGE 3 (ENRICH NOTES): Versi terkini:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nFokus catatan pembicara: tiap slide HARUS punya notes 4-6 kalimat yang detail — penjelasan konteks, contoh konkret, transisi ke slide berikut. Tambahkan minimal 1 slide layout 'stats' (3 angka) dan/atau 'two_column' jika belum ada.`;
+          case 4:
+            return `STAGE 4 (POLISH): Versi siap-poles:\n\n${JSON.stringify(prev).slice(0, 14000)}\n\nFinal pass: konsistensi gaya bullet, tidak ada slide kosong/tipis, agenda sinkron dengan urutan slide, closing.message + cta yang kuat. Pastikan ada 1-2 slide 'section' sebagai pembatas. Kembalikan presentasi FINAL utuh.`;
+        }
+      }
+      return "";
+    };
+
+    const baseMessages: ChatMsg[] = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userContent },
+    ];
+
+    let parsed: Record<string, unknown> | null = null;
+    for (const stage of [1, 2, 3, 4] as const) {
+      const stageMsg = stageInstruction(stage, parsed);
+      const messages: ChatMsg[] =
+        stage === 1
+          ? [...baseMessages, { role: "user", content: stageMsg }]
+          : [...baseMessages, { role: "user", content: stageMsg }];
+      parsed = await callTool(messages);
     }
+    if (!parsed) throw new Error("AI tidak menghasilkan konten.");
 
     const aiContext = {
       kind: isPaper ? "paper" : "presentation",
