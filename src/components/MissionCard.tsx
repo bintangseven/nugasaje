@@ -23,19 +23,20 @@ export function MissionCard({
   loading,
 }: MissionCardProps) {
   return (
-    <div className="group relative flex flex-col rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-[0_8px_30px_rgba(15,23,42,0.06)]">
-      <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-2xl">
+    <div className="group relative flex flex-col rounded-[10px] border border-border bg-card p-8 transition-all hover:-translate-y-1 hover:shadow-elegant">
+      <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-[9px] text-2xl" style={{ background: "var(--paper-deep)" }}>
         {icon}
       </div>
-      <h3 className="text-xl font-semibold tracking-tight text-foreground">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+      <span className="eyebrow mb-2">{missionType === "paper" ? "Makalah AI" : "PPT AI"}</span>
+      <h3 className="font-display text-2xl font-semibold text-foreground">{title}</h3>
+      <p className="mt-3 text-[0.98rem] leading-relaxed" style={{ color: "var(--graphite)" }}>{description}</p>
 
-      <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+      <div className="mt-5 flex flex-wrap items-center gap-3 text-xs" style={{ color: "var(--ink-soft)" }}>
         <span className="inline-flex items-center gap-1.5">
           <Clock className="h-3.5 w-3.5" />
           {estimate}
         </span>
-        <span className="h-1 w-1 rounded-full bg-border" />
+        <span className="h-1 w-1 rounded-full" style={{ background: "var(--line)" }} />
         <span>Output: {output}</span>
       </div>
 
@@ -43,7 +44,7 @@ export function MissionCard({
         type="button"
         onClick={() => onStart(missionType)}
         disabled={loading}
-        className="mt-6 inline-flex w-fit items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-transform group-hover:translate-x-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-7 inline-flex w-fit items-center gap-2 rounded-md bg-foreground px-5 py-3 text-sm font-bold text-background transition-all hover:-translate-y-0.5 hover:shadow-elegant disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? "Membuka…" : "Mulai Misi"}
         <ArrowRight className="h-4 w-4" />
