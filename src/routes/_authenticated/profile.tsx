@@ -9,11 +9,11 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   getProfile,
   updateProfile,
-  upgradeToPro,
   BASIC_DAILY_LIMIT,
   PRO_DAILY_LIMIT,
   PRO_PRICE_IDR,
 } from "@/lib/projects.functions";
+import { createProUpgradeInvoice } from "@/lib/payments.functions";
 import { useCurrentUser } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -32,7 +32,7 @@ function ProfilePage() {
   const queryClient = useQueryClient();
   const getFn = useServerFn(getProfile);
   const updateFn = useServerFn(updateProfile);
-  const upgradeFn = useServerFn(upgradeToPro);
+  const upgradeFn = useServerFn(createProUpgradeInvoice);
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
@@ -62,9 +62,12 @@ function ProfilePage() {
 
   const upgrade = useMutation({
     mutationFn: () => upgradeFn(),
-    onSuccess: () => {
-      toast.success("Akun di-upgrade ke PRO (30 hari)");
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    onSuccess: (res) => {
+      if (res?.invoice_url) {
+        window.location.href = res.invoice_url;
+      } else {
+        toast.error("Invoice tidak tersedia");
+      }
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Gagal upgrade"),
   });

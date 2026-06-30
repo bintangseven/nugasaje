@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          external_id: string
+          id: string
+          invoice_url: string | null
+          paid_at: string | null
+          provider: string
+          purpose: string
+          raw: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          external_id: string
+          id?: string
+          invoice_url?: string | null
+          paid_at?: string | null
+          provider?: string
+          purpose?: string
+          raw?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          external_id?: string
+          id?: string
+          invoice_url?: string | null
+          paid_at?: string | null
+          provider?: string
+          purpose?: string
+          raw?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
