@@ -460,6 +460,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
             title: p.title ?? "Presentasi",
             language: "id",
             imageSource: "ai",
+            ...(answers.__beautify_theme ? { themeId: answers.__beautify_theme } : {}),
             slides: slidesPayload,
           }),
         });
