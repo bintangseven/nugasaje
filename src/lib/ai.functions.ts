@@ -29,6 +29,25 @@ const paperTool = {
                 minItems: 2,
                 items: { type: "string", description: "Satu paragraf utuh." },
               },
+              blocks: {
+                type: "array",
+                description:
+                  "OPSIONAL tapi DIANJURKAN. Campuran paragraf & bullet list agar tulisan mengalir (target ~50% paragraf, ~50% bullet). Bila diisi, renderer pakai ini dan abaikan 'paragraphs'. Urutan blok = urutan tampil.",
+                items: {
+                  type: "object",
+                  properties: {
+                    kind: { type: "string", enum: ["paragraph", "bullets"] },
+                    text: { type: "string", description: "Untuk kind=paragraph: paragraf utuh." },
+                    items: {
+                      type: "array",
+                      description: "Untuk kind=bullets: 2-6 poin ringkas, tiap poin 1 kalimat.",
+                      items: { type: "string" },
+                    },
+                  },
+                  required: ["kind"],
+                  additionalProperties: false,
+                },
+              },
               subsections: {
                 type: "array",
                 description: "Sub-bab (mis. 1.1 Latar Belakang). Opsional tapi sangat dianjurkan untuk BAB Pendahuluan & Pembahasan.",
@@ -40,6 +59,21 @@ const paperTool = {
                       type: "array",
                       minItems: 1,
                       items: { type: "string" },
+                    },
+                    blocks: {
+                      type: "array",
+                      description:
+                        "OPSIONAL tapi DIANJURKAN. Campuran paragraf & bullet list (~50/50). Bila diisi, renderer pakai ini dan abaikan 'paragraphs'.",
+                      items: {
+                        type: "object",
+                        properties: {
+                          kind: { type: "string", enum: ["paragraph", "bullets"] },
+                          text: { type: "string" },
+                          items: { type: "array", items: { type: "string" } },
+                        },
+                        required: ["kind"],
+                        additionalProperties: false,
+                      },
                     },
                   },
                   required: ["heading", "paragraphs"],
@@ -214,7 +248,9 @@ export const generateProjectContent = createServerFn({ method: "POST" })
             "- BAB I PENDAHULUAN dengan sub-bab: 1.1 Latar Belakang, 1.2 Rumusan Masalah, 1.3 Tujuan Penulisan.",
             "- BAB II PEMBAHASAN dengan minimal 2-3 sub-bab sesuai topik (2.1, 2.2, dst).",
             "- BAB III PENUTUP boleh berisi ringkasan; isi kesimpulan utama di field 'conclusion'.",
-            "Setiap sub-bab minimal 1-2 paragraf utuh. Tambahkan abstrak 100-150 kata dan minimal 4 referensi APA.",
+            "Tiap sub-bab WAJIB pakai field 'blocks' dengan campuran ±50% paragraf & ±50% bullet list agar tulisan mengalir & enak dibaca. Pola umum: paragraf pembuka → bullet list (2-5 poin) → paragraf penghubung → bullet list lagi bila perlu → paragraf penutup. Jangan semua paragraf saja, jangan semua bullet saja.",
+            "Bullet dipakai untuk: enumerasi, ciri-ciri, langkah-langkah, perbandingan poin, kelebihan/kekurangan. Paragraf untuk: argumen, narasi, analisis, transisi.",
+            "Tambahkan abstrak 100-150 kata dan minimal 4 referensi APA.",
             "Gunakan heading 'BAB I PENDAHULUAN', 'BAB II PEMBAHASAN', 'BAB III PENUTUP' pada field 'heading' section.",
           ].join("\n")
         : [
@@ -299,13 +335,13 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       if (isPaper) {
         switch (stage) {
           case 1:
-            return "STAGE 1 (DRAFT): Susun kerangka makalah lengkap. Fokus struktur — BAB I/II/III + sub-bab, abstrak ringkas, dan minimal 1 paragraf substantif per sub-bab. Jangan tipis.";
+            return "STAGE 1 (DRAFT): Susun kerangka makalah lengkap. Fokus struktur — BAB I/II/III + sub-bab, abstrak ringkas, dan tiap sub-bab WAJIB sudah pakai 'blocks' dengan minimal 1 paragraf + 1 bullet list (target ±50/50 paragraf/bullet supaya mengalir). Jangan tipis.";
           case 2:
-            return `STAGE 2 (EXPAND): Ini draft awal kamu:\n\n${JSON.stringify(prev).slice(0, 8000)}\n\nPerluas SETIAP paragraf di BAB I & BAB II jadi 2-3x lebih panjang. Tambahkan definisi, contoh konkret, data/statistik (boleh estimasi wajar), dan kutipan dari referensi. Jangan kurangi sub-bab, justru lengkapi.`;
+            return `STAGE 2 (EXPAND): Ini draft awal kamu:\n\n${JSON.stringify(prev).slice(0, 8000)}\n\nPerluas SETIAP paragraf di BAB I & BAB II jadi 2-3x lebih panjang. Tambahkan definisi, contoh konkret, data/statistik (boleh estimasi wajar), dan kutipan dari referensi. Pertahankan ATAU tambahkan bullet list di tempat yang cocok (enumerasi, langkah, ciri, perbandingan) — target ±50% paragraf, ±50% bullet di tiap sub-bab. Jangan kurangi sub-bab.`;
           case 3:
-            return `STAGE 3 (ENRICH): Versi terkini:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nLengkapi BAB III, perkuat conclusion jadi minimal 2 paragraf utuh, tambah analisis kritis. Pastikan tiap sub-bab punya 2+ paragraf. Pastikan abstrak 130-160 kata dan padat.`;
+            return `STAGE 3 (ENRICH): Versi terkini:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nLengkapi BAB III, perkuat conclusion jadi minimal 2 paragraf utuh, tambah analisis kritis. Pastikan tiap sub-bab punya 'blocks' yang seimbang: ±50% paragraf, ±50% bullet — pola ideal paragraf→bullet→paragraf→bullet→paragraf penutup. Pastikan abstrak 130-160 kata dan padat.`;
           case 4:
-            return `STAGE 4 (POLISH): Versi siap-poles:\n\n${JSON.stringify(prev).slice(0, 14000)}\n\nFinal pass: rapikan transisi antar paragraf, pastikan kata pengantar lengkap (3 paragraf: ucapan syukur, tujuan, terima kasih+harapan), referensi minimal 6 dengan format APA benar dan beragam (jurnal, buku, web). Periksa konsistensi istilah. Kembalikan paper FINAL utuh.`;
+            return `STAGE 4 (POLISH): Versi siap-poles:\n\n${JSON.stringify(prev).slice(0, 14000)}\n\nFinal pass: rapikan transisi antar paragraf, pastikan tiap sub-bab benar-benar campuran ±50/50 paragraf & bullet (tidak ada sub-bab yang 100% paragraf atau 100% bullet), kata pengantar lengkap 3 paragraf, referensi minimal 6 dengan format APA benar dan beragam (jurnal, buku, web). Periksa konsistensi istilah. Kembalikan paper FINAL utuh.`;
         }
       } else {
         switch (stage) {
