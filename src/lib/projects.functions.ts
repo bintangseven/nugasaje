@@ -114,7 +114,7 @@ export const getProfile = createServerFn({ method: "GET" })
 
 export const BASIC_DAILY_LIMIT = 2;
 export const PRO_DAILY_LIMIT = 10;
-export const PRO_PRICE_IDR = 30000;
+export const PRO_PRICE_IDR = 50000;
 
 /**
  * Placeholder upgrade — TANPA pembayaran nyata.
