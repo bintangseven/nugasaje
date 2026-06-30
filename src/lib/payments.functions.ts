@@ -75,7 +75,7 @@ export const createProUpgradeInvoice = createServerFn({ method: "POST" })
       currency: "IDR",
       status: "PENDING",
       purpose: "pro_upgrade",
-      raw: json as Record<string, unknown>,
+      raw: json as never,
     });
     if (insErr) throw new Error(insErr.message);
 
