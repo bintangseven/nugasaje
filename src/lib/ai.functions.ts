@@ -375,6 +375,9 @@ export const generateProjectContent = createServerFn({ method: "POST" })
     if (!parsed) throw new Error("AI tidak menghasilkan konten.");
 
     // ===== Beautiful.ai: bikin presentasi nyata (PPT desain auto) =====
+    // Catatan: kita HANYA panggil createPresentation di sini. Export PPTX
+    // dijalankan terpisah lewat finalizeBeautifulExport (atau on-demand saat
+    // user mengunduh) supaya UI tidak menunggu render image AI ~60 detik.
     let beautiful: {
       presentationId: string;
       playerUrl?: string;
@@ -473,39 +476,9 @@ export const generateProjectContent = createServerFn({ method: "POST" })
           playerUrl?: string;
         };
 
-        // Jeda 60 detik supaya Beautiful.ai selesai render image AI sebelum diexport
-        await new Promise((resolve) => setTimeout(resolve, 60_000));
-
-        const expRes = await fetch("https://www.beautiful.ai/api/v1/exportPresentation", {
-          method: "POST",
-          headers: {
-            "X-Api-Key": bKey,
-            "content-type": "application/json",
-            accept: "application/json",
-          },
-          body: JSON.stringify({
-            presentationId: createJson.presentationId,
-            format: "pptx",
-          }),
-        });
-        if (!expRes.ok) {
-          const t = await expRes.text();
-          throw new Error(`exportPresentation ${expRes.status}: ${t.slice(0, 200)}`);
-        }
-        const expJson = (await expRes.json()) as {
-          downloadUrl: string;
-          fileName: string;
-          expiresAt: string;
-          format: string;
-        };
-
         beautiful = {
           presentationId: createJson.presentationId,
           playerUrl: createJson.playerUrl,
-          downloadUrl: expJson.downloadUrl,
-          fileName: expJson.fileName,
-          expiresAt: expJson.expiresAt,
-          format: expJson.format,
         };
       } catch (e) {
         // Jangan gagalkan generate kalau Beautiful.ai down — fallback ke pptxgenjs
@@ -541,4 +514,87 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       .eq("id", context.userId);
 
     return { ok: true };
+  });
+
+// ===== Background-style finalize: export PPTX dari Beautiful.ai =====
+// Dipanggil client setelah jeda ~60 detik (atau on-demand dari exportProject).
+// Tidak mengubah phase project — hanya menyimpan downloadUrl agar unduh cepat.
+export const finalizeBeautifulExport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const bKey = process.env.BEAUTIFULAI_API_KEY;
+    if (!bKey) return { ok: false as const, reason: "no_key" };
+
+    const { data: project, error } = await context.supabase
+      .from("projects")
+      .select("id,ai_context")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!project) throw new Error("Proyek tidak ditemukan");
+
+    const ctx = (project.ai_context ?? {}) as {
+      kind?: string;
+      content?: unknown;
+      beautiful?: {
+        presentationId?: string;
+        playerUrl?: string;
+        downloadUrl?: string;
+        fileName?: string;
+        expiresAt?: string;
+        format?: string;
+      } | null;
+      generated_at?: string;
+    };
+    const presentationId = ctx.beautiful?.presentationId;
+    if (!presentationId) return { ok: false as const, reason: "no_presentation" };
+
+    // Sudah punya downloadUrl yang masih valid >5 menit → tidak perlu export ulang.
+    const existing = ctx.beautiful;
+    const stillValid = existing?.expiresAt
+      ? new Date(existing.expiresAt).getTime() > Date.now() + 5 * 60_000
+      : false;
+    if (existing?.downloadUrl && stillValid) {
+      return { ok: true as const, cached: true };
+    }
+
+    const expRes = await fetch("https://www.beautiful.ai/api/v1/exportPresentation", {
+      method: "POST",
+      headers: {
+        "X-Api-Key": bKey,
+        "content-type": "application/json",
+        accept: "application/json",
+      },
+      body: JSON.stringify({ presentationId, format: "pptx" }),
+    });
+    if (!expRes.ok) {
+      const t = await expRes.text();
+      throw new Error(`exportPresentation ${expRes.status}: ${t.slice(0, 200)}`);
+    }
+    const expJson = (await expRes.json()) as {
+      downloadUrl: string;
+      fileName: string;
+      expiresAt: string;
+      format: string;
+    };
+
+    const nextCtx = {
+      ...ctx,
+      beautiful: {
+        ...(ctx.beautiful ?? {}),
+        presentationId,
+        downloadUrl: expJson.downloadUrl,
+        fileName: expJson.fileName,
+        expiresAt: expJson.expiresAt,
+        format: expJson.format,
+      },
+    };
+    const { error: upErr } = await context.supabase
+      .from("projects")
+      .update({ ai_context: nextCtx as unknown as never })
+      .eq("id", data.id);
+    if (upErr) throw new Error(upErr.message);
+
+    return { ok: true as const, cached: false };
   });
