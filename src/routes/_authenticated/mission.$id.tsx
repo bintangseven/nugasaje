@@ -20,6 +20,7 @@ import { generateProjectContent } from "@/lib/ai.functions";
 import { exportProject } from "@/lib/export.functions";
 import { TemplatePicker } from "@/components/TemplatePicker";
 import { DEFAULT_TEMPLATE_ID } from "@/lib/pptx-templates";
+import { BeautifulThemePicker } from "@/components/BeautifulThemePicker";
 
 export const Route = createFileRoute("/_authenticated/mission/$id")({
   head: () => ({
@@ -107,6 +108,9 @@ function Workspace({
   const [draft, setDraft] = useState("");
   const [templateId, setTemplateId] = useState<string>(
     ((project.answers ?? {}) as Record<string, string>).__template ?? DEFAULT_TEMPLATE_ID,
+  );
+  const [beautifyTheme, setBeautifyTheme] = useState<string>(
+    ((project.answers ?? {}) as Record<string, string>).__beautify_theme ?? "",
   );
   const [attachment, setAttachment] = useState<{ name: string; mime: string; base64: string; size: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -227,7 +231,7 @@ function Workspace({
     // Persist template choice (for presentation) along with phase change.
     const nextAnswers =
       missionType === "presentation"
-        ? { ...answers, __template: templateId }
+        ? { ...answers, __template: templateId, __beautify_theme: beautifyTheme }
         : undefined;
     if (nextAnswers) setAnswers(nextAnswers);
     scheduleSave({
@@ -484,7 +488,10 @@ function Workspace({
           {phase === "interview" && interviewDone && (
             <div className="mt-4 space-y-4 border-t border-border pt-4">
               {missionType === "presentation" && (
-                <TemplatePicker value={templateId} onChange={setTemplateId} />
+                <>
+                  <BeautifulThemePicker value={beautifyTheme} onChange={setBeautifyTheme} />
+                  <TemplatePicker value={templateId} onChange={setTemplateId} />
+                </>
               )}
               <div className="space-y-2">
                 <div className="text-xs font-medium text-foreground">Lampiran (opsional)</div>
