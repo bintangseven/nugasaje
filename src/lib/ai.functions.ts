@@ -29,6 +29,25 @@ const paperTool = {
                 minItems: 2,
                 items: { type: "string", description: "Satu paragraf utuh." },
               },
+              blocks: {
+                type: "array",
+                description:
+                  "OPSIONAL tapi DIANJURKAN. Campuran paragraf & bullet list agar tulisan mengalir (target ~50% paragraf, ~50% bullet). Bila diisi, renderer pakai ini dan abaikan 'paragraphs'. Urutan blok = urutan tampil.",
+                items: {
+                  type: "object",
+                  properties: {
+                    kind: { type: "string", enum: ["paragraph", "bullets"] },
+                    text: { type: "string", description: "Untuk kind=paragraph: paragraf utuh." },
+                    items: {
+                      type: "array",
+                      description: "Untuk kind=bullets: 2-6 poin ringkas, tiap poin 1 kalimat.",
+                      items: { type: "string" },
+                    },
+                  },
+                  required: ["kind"],
+                  additionalProperties: false,
+                },
+              },
               subsections: {
                 type: "array",
                 description: "Sub-bab (mis. 1.1 Latar Belakang). Opsional tapi sangat dianjurkan untuk BAB Pendahuluan & Pembahasan.",
@@ -40,6 +59,21 @@ const paperTool = {
                       type: "array",
                       minItems: 1,
                       items: { type: "string" },
+                    },
+                    blocks: {
+                      type: "array",
+                      description:
+                        "OPSIONAL tapi DIANJURKAN. Campuran paragraf & bullet list (~50/50). Bila diisi, renderer pakai ini dan abaikan 'paragraphs'.",
+                      items: {
+                        type: "object",
+                        properties: {
+                          kind: { type: "string", enum: ["paragraph", "bullets"] },
+                          text: { type: "string" },
+                          items: { type: "array", items: { type: "string" } },
+                        },
+                        required: ["kind"],
+                        additionalProperties: false,
+                      },
                     },
                   },
                   required: ["heading", "paragraphs"],
@@ -214,7 +248,9 @@ export const generateProjectContent = createServerFn({ method: "POST" })
             "- BAB I PENDAHULUAN dengan sub-bab: 1.1 Latar Belakang, 1.2 Rumusan Masalah, 1.3 Tujuan Penulisan.",
             "- BAB II PEMBAHASAN dengan minimal 2-3 sub-bab sesuai topik (2.1, 2.2, dst).",
             "- BAB III PENUTUP boleh berisi ringkasan; isi kesimpulan utama di field 'conclusion'.",
-            "Setiap sub-bab minimal 1-2 paragraf utuh. Tambahkan abstrak 100-150 kata dan minimal 4 referensi APA.",
+            "Tiap sub-bab WAJIB pakai field 'blocks' dengan campuran ±50% paragraf & ±50% bullet list agar tulisan mengalir & enak dibaca. Pola umum: paragraf pembuka → bullet list (2-5 poin) → paragraf penghubung → bullet list lagi bila perlu → paragraf penutup. Jangan semua paragraf saja, jangan semua bullet saja.",
+            "Bullet dipakai untuk: enumerasi, ciri-ciri, langkah-langkah, perbandingan poin, kelebihan/kekurangan. Paragraf untuk: argumen, narasi, analisis, transisi.",
+            "Tambahkan abstrak 100-150 kata dan minimal 4 referensi APA.",
             "Gunakan heading 'BAB I PENDAHULUAN', 'BAB II PEMBAHASAN', 'BAB III PENUTUP' pada field 'heading' section.",
           ].join("\n")
         : [
