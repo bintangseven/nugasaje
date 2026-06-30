@@ -542,7 +542,7 @@ function Workspace({
         <section className="flex flex-col gap-6 lg:col-span-3">
           <div className="flex min-h-[360px] flex-col rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">Pratinjau</h2>
+              <h2 className="text-sm font-semibold text-foreground">Preview</h2>
               <span className="text-xs text-muted-foreground">
                 {missionType === "paper" ? "Dokumen Word" : "Slide PowerPoint"}
               </span>
@@ -616,7 +616,7 @@ function EmptyPreview({ missionType }: { missionType: MissionType }) {
     <div className="flex flex-1 flex-col items-center justify-center text-center">
       <div className="rounded-xl border border-dashed border-border bg-background/50 px-8 py-10">
         <p className="text-sm text-muted-foreground">
-          Pratinjau akan muncul di sini saat aku mulai menyusun
+          Preview akan muncul di sini saat aku mulai menyusun
           {missionType === "paper" ? " paper" : " slide"}.
         </p>
       </div>
