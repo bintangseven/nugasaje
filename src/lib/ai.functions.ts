@@ -473,6 +473,9 @@ export const generateProjectContent = createServerFn({ method: "POST" })
           playerUrl?: string;
         };
 
+        // Jeda 60 detik supaya Beautiful.ai selesai render image AI sebelum diexport
+        await new Promise((resolve) => setTimeout(resolve, 60_000));
+
         const expRes = await fetch("https://www.beautiful.ai/api/v1/exportPresentation", {
           method: "POST",
           headers: {
