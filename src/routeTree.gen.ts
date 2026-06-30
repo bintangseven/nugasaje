@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProjectsRouteImport } from './routes/_authenticated/projects'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedMissionIdRouteImport } from './routes/_authenticated/mission.$id'
+import { Route as ApiPublicXenditWebhookRouteImport } from './routes/api/public/xendit.webhook'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -57,6 +58,11 @@ const AuthenticatedMissionIdRoute = AuthenticatedMissionIdRouteImport.update({
   path: '/mission/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicXenditWebhookRoute = ApiPublicXenditWebhookRouteImport.update({
+  id: '/api/public/xendit/webhook',
+  path: '/api/public/xendit/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/projects': typeof AuthenticatedProjectsRoute
   '/mission/$id': typeof AuthenticatedMissionIdRoute
+  '/api/public/xendit/webhook': typeof ApiPublicXenditWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/projects': typeof AuthenticatedProjectsRoute
   '/mission/$id': typeof AuthenticatedMissionIdRoute
+  '/api/public/xendit/webhook': typeof ApiPublicXenditWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/projects': typeof AuthenticatedProjectsRoute
   '/_authenticated/mission/$id': typeof AuthenticatedMissionIdRoute
+  '/api/public/xendit/webhook': typeof ApiPublicXenditWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/projects'
     | '/mission/$id'
+    | '/api/public/xendit/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/projects'
     | '/mission/$id'
+    | '/api/public/xendit/webhook'
   id:
     | '__root__'
     | '/'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/projects'
     | '/_authenticated/mission/$id'
+    | '/api/public/xendit/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -124,6 +136,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
+  ApiPublicXenditWebhookRoute: typeof ApiPublicXenditWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMissionIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/xendit/webhook': {
+      id: '/api/public/xendit/webhook'
+      path: '/api/public/xendit/webhook'
+      fullPath: '/api/public/xendit/webhook'
+      preLoaderRoute: typeof ApiPublicXenditWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -208,6 +228,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
+  ApiPublicXenditWebhookRoute: ApiPublicXenditWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
