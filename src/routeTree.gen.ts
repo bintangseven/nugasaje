@@ -14,6 +14,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PaymentSuccessRouteImport } from './routes/payment.success'
 import { Route as AuthenticatedProjectsRouteImport } from './routes/_authenticated/projects'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedMissionIdRouteImport } from './routes/_authenticated/mission.$id'
@@ -41,6 +42,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
+  id: '/payment/success',
+  path: '/payment/success',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedProjectsRoute = AuthenticatedProjectsRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/projects': typeof AuthenticatedProjectsRoute
+  '/payment/success': typeof PaymentSuccessRoute
   '/mission/$id': typeof AuthenticatedMissionIdRoute
   '/api/public/xendit/webhook': typeof ApiPublicXenditWebhookRoute
 }
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/projects': typeof AuthenticatedProjectsRoute
+  '/payment/success': typeof PaymentSuccessRoute
   '/mission/$id': typeof AuthenticatedMissionIdRoute
   '/api/public/xendit/webhook': typeof ApiPublicXenditWebhookRoute
 }
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/projects': typeof AuthenticatedProjectsRoute
+  '/payment/success': typeof PaymentSuccessRoute
   '/_authenticated/mission/$id': typeof AuthenticatedMissionIdRoute
   '/api/public/xendit/webhook': typeof ApiPublicXenditWebhookRoute
 }
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/profile'
     | '/projects'
+    | '/payment/success'
     | '/mission/$id'
     | '/api/public/xendit/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/profile'
     | '/projects'
+    | '/payment/success'
     | '/mission/$id'
     | '/api/public/xendit/webhook'
   id:
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_authenticated/profile'
     | '/_authenticated/projects'
+    | '/payment/success'
     | '/_authenticated/mission/$id'
     | '/api/public/xendit/webhook'
   fileRoutesById: FileRoutesById
@@ -136,6 +148,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
+  PaymentSuccessRoute: typeof PaymentSuccessRoute
   ApiPublicXenditWebhookRoute: typeof ApiPublicXenditWebhookRoute
 }
 
@@ -174,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment/success': {
+      id: '/payment/success'
+      path: '/payment/success'
+      fullPath: '/payment/success'
+      preLoaderRoute: typeof PaymentSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/projects': {
@@ -228,6 +248,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
+  PaymentSuccessRoute: PaymentSuccessRoute,
   ApiPublicXenditWebhookRoute: ApiPublicXenditWebhookRoute,
 }
 export const routeTree = rootRouteImport
