@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Check, Download, Loader2, Send, Sparkles, Cloud } from "lucide-react";
+import { ArrowLeft, Check, Download, Loader2, Paperclip, Send, Sparkles, Cloud, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/AppHeader";
@@ -108,6 +108,8 @@ function Workspace({
   const [templateId, setTemplateId] = useState<string>(
     ((project.answers ?? {}) as Record<string, string>).__template ?? DEFAULT_TEMPLATE_ID,
   );
+  const [attachment, setAttachment] = useState<{ name: string; mime: string; base64: string; size: number } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -235,7 +237,14 @@ function Workspace({
       ...(nextAnswers ? { answers: nextAnswers } : {}),
     });
     try {
-      const p = generateFn({ data: { id: project.id } });
+      const p = generateFn({
+        data: {
+          id: project.id,
+          ...(attachment
+            ? { attachment: { name: attachment.name, mime: attachment.mime, base64: attachment.base64 } }
+            : {}),
+        },
+      });
       aiCallRef.current = p;
       await p;
       setPhase("done");
@@ -251,6 +260,37 @@ function Workspace({
     } finally {
       aiCallRef.current = null;
     }
+  }
+
+  async function handleFilePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const MAX = 10 * 1024 * 1024;
+    if (file.size > MAX) {
+      toast.error("Ukuran file maks 10MB.");
+      return;
+    }
+    const allowed = [
+      "application/pdf",
+      "text/plain",
+      "text/markdown",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+    const mime = file.type || "application/octet-stream";
+    if (!allowed.includes(mime)) {
+      toast.error("Format didukung: PDF, TXT, MD, JPG, PNG, WEBP.");
+      return;
+    }
+    const buf = await file.arrayBuffer();
+    let bin = "";
+    const bytes = new Uint8Array(buf);
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    const base64 = btoa(bin);
+    setAttachment({ name: file.name, mime, base64, size: file.size });
+    toast.success(`Lampiran "${file.name}" siap dipakai.`);
   }
 
   const [downloading, setDownloading] = useState(false);
@@ -446,6 +486,48 @@ function Workspace({
               {missionType === "presentation" && (
                 <TemplatePicker value={templateId} onChange={setTemplateId} />
               )}
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-foreground">Lampiran (opsional)</div>
+                <p className="text-[11px] text-muted-foreground">
+                  Unggah materi referensi (PDF, TXT, MD, atau gambar, maks 10MB). AI akan
+                  menjadikannya bahan utama.
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.txt,.md,image/jpeg,image/png,image/webp"
+                  onChange={handleFilePick}
+                  className="hidden"
+                />
+                {attachment ? (
+                  <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs">
+                    <span className="flex min-w-0 items-center gap-2 text-foreground">
+                      <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{attachment.name}</span>
+                      <span className="shrink-0 text-muted-foreground">
+                        {(attachment.size / 1024).toFixed(0)} KB
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAttachment(null)}
+                      className="text-muted-foreground hover:text-foreground"
+                      aria-label="Hapus lampiran"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-background px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+                  >
+                    <Paperclip className="h-3.5 w-3.5" />
+                    Pilih file
+                  </button>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={startGeneration}
