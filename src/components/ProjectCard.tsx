@@ -3,9 +3,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Download, ArrowRight, FileText, Presentation, Trash2 } from "lucide-react";
+import { Download, ArrowRight, FileText, Presentation, Trash2, Loader2, FolderOpen } from "lucide-react";
 import { formatRelativeTime, type ProjectRow } from "@/lib/mock-data";
 import { deleteProject } from "@/lib/projects.functions";
+import { exportProject } from "@/lib/export.functions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +24,8 @@ export function ProjectCard({ project }: { project: ProjectRow }) {
   const missionLabel = project.mission === "paper" ? "Paper" : "Presentasi";
   const [confirmOpen, setConfirmOpen] = useState(false);
   const deleteFn = useServerFn(deleteProject);
+  const exportFn = useServerFn(exportProject);
+  const [downloading, setDownloading] = useState(false);
   const qc = useQueryClient();
   const del = useMutation({
     mutationFn: () => deleteFn({ data: { id: project.id } }),
@@ -32,6 +35,30 @@ export function ProjectCard({ project }: { project: ProjectRow }) {
     },
     onError: (e: Error) => toast.error(e.message || "Gagal menghapus proyek"),
   });
+
+  async function handleDownload() {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      const res = await exportFn({ data: { id: project.id } });
+      const bin = atob(res.base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], { type: res.mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = res.filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal mengunduh file");
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   return (
     <div className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors hover:border-foreground/20">
@@ -75,15 +102,31 @@ export function ProjectCard({ project }: { project: ProjectRow }) {
         </span>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-5 flex flex-wrap items-center gap-2">
         {completed ? (
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
-          >
-            <Download className="h-3.5 w-3.5" />
-            Unduh
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={downloading}
+              className="inline-flex items-center gap-2 rounded-lg bg-foreground px-3 py-1.5 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {downloading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
+              Unduh
+            </button>
+            <Link
+              to="/mission/$id"
+              params={{ id: project.id }}
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+            >
+              <FolderOpen className="h-3.5 w-3.5" />
+              Buka proyek
+            </Link>
+          </>
         ) : (
           <Link
             to="/mission/$id"

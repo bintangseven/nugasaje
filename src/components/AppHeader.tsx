@@ -47,21 +47,26 @@ export function AppHeader() {
           Nugasin<span style={{ color: "var(--stamp)" }}>aje</span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex text-[0.92rem] font-semibold" style={{ color: "var(--ink-soft)" }}>
-          {[
-            { to: "/", label: "Beranda" },
-            { to: "/projects", label: "Proyek" },
-            { to: "/profile", label: "Profil" },
-          ].map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              activeOptions={{ exact: item.to === "/" }}
-              className="transition-colors hover:text-foreground data-[status=active]:text-foreground"
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav className="hidden items-center gap-7 md:flex text-[0.92rem] font-semibold" style={{ color: "var(--ink-soft)" }}>
+          <Link
+            to="/"
+            activeOptions={{ exact: true }}
+            className="relative transition-colors hover:text-foreground data-[status=active]:text-foreground"
+          >
+            Beranda
+          </Link>
+          <Link to="/" hash="harga" className="transition-colors hover:text-foreground">
+            Harga
+          </Link>
+          <Link to="/" hash="faq" className="transition-colors hover:text-foreground">
+            FAQ
+          </Link>
+          <Link
+            to="/projects"
+            className="transition-colors hover:text-foreground data-[status=active]:text-foreground"
+          >
+            Proyek
+          </Link>
         </nav>
 
         {user ? (

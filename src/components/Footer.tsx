@@ -28,17 +28,17 @@ export function Footer() {
           <div>
             <span className="eyebrow">Sumber</span>
             <ul className="mt-4 space-y-2 text-sm" style={{ color: "var(--ink-soft)" }}>
-              <li><a href="#" className="hover:text-foreground">Panduan</a></li>
-              <li><a href="#" className="hover:text-foreground">Pertanyaan umum</a></li>
-              <li><a href="#" className="hover:text-foreground">Kontak</a></li>
+              <li><Link to="/" hash="cara" className="hover:text-foreground">Panduan</Link></li>
+              <li><Link to="/" hash="faq" className="hover:text-foreground">Pertanyaan umum</Link></li>
+              <li><a href="mailto:halo@nugasinaje.id" className="hover:text-foreground">Kontak</a></li>
             </ul>
           </div>
 
           <div>
             <span className="eyebrow">Legal</span>
             <ul className="mt-4 space-y-2 text-sm" style={{ color: "var(--ink-soft)" }}>
-              <li><a href="#" className="hover:text-foreground">Syarat layanan</a></li>
-              <li><a href="#" className="hover:text-foreground">Kebijakan privasi</a></li>
+              <li><Link to="/terms" className="hover:text-foreground">Syarat layanan</Link></li>
+              <li><Link to="/privacy" className="hover:text-foreground">Kebijakan privasi</Link></li>
             </ul>
           </div>
         </div>

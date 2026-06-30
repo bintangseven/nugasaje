@@ -421,6 +421,58 @@ function Index() {
 
         {/* FINAL CTA */}
         <section className="mt-24">
+          <Reveal className="mb-12 max-w-2xl" >
+            <span className="eyebrow">FAQ</span>
+            <h2 id="faq" className="mt-3 scroll-mt-24 font-display text-3xl font-semibold md:text-4xl">
+              Pertanyaan yang sering ditanya
+            </h2>
+          </Reveal>
+          <div className="mb-24 grid gap-4 md:grid-cols-2">
+            {[
+              {
+                q: "Apakah hasilnya bisa diedit?",
+                a: "Bisa. File .docx bisa dibuka di Word/Google Docs, dan .pptx bisa diedit di PowerPoint, Keynote, atau Canva. Semua isi bebas kamu ubah.",
+              },
+              {
+                q: "Apakah hasilnya akan terdeteksi AI?",
+                a: "Kami menyusun struktur dan kalimat ala mahasiswa, bukan hasil mentah model. Tapi tetap baca ulang, tambahkan referensi pribadi, dan sesuaikan gaya kamu sendiri sebelum dikumpulkan.",
+              },
+              {
+                q: "Bagaimana kalau hasilnya kurang sesuai?",
+                a: "Kamu bisa ulangi dengan brief yang lebih spesifik (tambah outline, gaya bahasa, atau lampirkan PDF referensi). Tiap submission gratis di paket Basic dan murah di Pro.",
+              },
+              {
+                q: "Apakah datanya aman?",
+                a: "Brief, jawaban, dan hasilmu hanya bisa diakses oleh akunmu sendiri. Lihat halaman kebijakan privasi untuk detail penyimpanan dan retensi.",
+              },
+              {
+                q: "Bagaimana cara upgrade ke Pro?",
+                a: "Masuk ke menu Profil dan tekan Upgrade. Selama masa promo, paket Pro hanya Rp50.000/bulan dengan 10 submission/hari.",
+              },
+              {
+                q: "Bisa dipakai untuk skripsi/jurnal?",
+                a: "Bisa untuk bab pendukung, ringkasan, dan kerangka. Untuk karya akhir, gunakan sebagai asisten — referensi dan analisis utama tetap perlu kamu validasi.",
+              },
+            ].map((item, i) => (
+              <Reveal key={item.q} delay={i * 60}>
+                <details className="group rounded-[10px] border border-border bg-card p-5 transition-all hover:shadow-elegant">
+                  <summary className="flex cursor-pointer list-none items-start justify-between gap-3 font-display text-base font-semibold">
+                    <span>{item.q}</span>
+                    <span
+                      className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-sm transition-transform group-open:rotate-45"
+                      style={{ borderColor: "var(--line)", color: "var(--graphite)" }}
+                    >
+                      +
+                    </span>
+                  </summary>
+                  <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--graphite)" }}>
+                    {item.a}
+                  </p>
+                </details>
+              </Reveal>
+            ))}
+          </div>
+
           <Reveal>
             <div
               className="relative overflow-hidden rounded-[14px] p-10 md:p-14"
