@@ -176,7 +176,7 @@ const presentationTool = {
   },
 } as const;
 
-const BASIC_DAILY_LIMIT = 1;
+const BASIC_DAILY_LIMIT = 2;
 const PRO_DAILY_LIMIT = 10;
 
 export const generateProjectContent = createServerFn({ method: "POST" })

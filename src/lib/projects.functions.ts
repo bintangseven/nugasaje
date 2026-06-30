@@ -112,7 +112,7 @@ export const getProfile = createServerFn({ method: "GET" })
     return data;
   });
 
-export const BASIC_DAILY_LIMIT = 1;
+export const BASIC_DAILY_LIMIT = 2;
 export const PRO_DAILY_LIMIT = 10;
 export const PRO_PRICE_IDR = 30000;
 
