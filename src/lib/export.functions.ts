@@ -355,15 +355,6 @@ async function buildPptx(
           x: 0.8, y: 5.1, w: 9, h: 0.8,
           fontFace: t.bodyFont, fontSize: 18, color: "B8B6C8",
         });
-        // CTA pill
-        cover.addShape(SHAPES.roundRect, {
-          x: 0.8, y: 6.05, w: 1.9, h: 0.55,
-          fill: { color: t.accent }, line: { color: t.accent }, rectRadius: 0.28,
-        });
-        cover.addText("Get Started", {
-          x: 0.8, y: 6.05, w: 1.9, h: 0.55,
-          fontFace: t.headFont, fontSize: 14, bold: true, color: "FFFFFF", align: "center", valign: "middle",
-        });
         break;
       }
       case "ingoude": {
