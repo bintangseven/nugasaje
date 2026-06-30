@@ -374,9 +374,145 @@ export const generateProjectContent = createServerFn({ method: "POST" })
     }
     if (!parsed) throw new Error("AI tidak menghasilkan konten.");
 
+    // ===== Beautiful.ai: bikin presentasi nyata (PPT desain auto) =====
+    let beautiful: {
+      presentationId: string;
+      playerUrl?: string;
+      downloadUrl?: string;
+      fileName?: string;
+      expiresAt?: string;
+      format?: string;
+    } | null = null;
+    const bKey = process.env.BEAUTIFULAI_API_KEY;
+    if (!isPaper && bKey) {
+      try {
+        const p = parsed as {
+          title?: string;
+          subtitle?: string;
+          agenda?: string[];
+          closing?: { message?: string; cta?: string };
+          slides?: Array<{
+            title: string;
+            layout: string;
+            bullets?: string[];
+            bullets_right?: string[];
+            stats?: Array<{ value: string; label: string }>;
+            quote?: string;
+            quote_source?: string;
+            notes?: string;
+          }>;
+        };
+        const mapType = (layout: string): string => {
+          switch (layout) {
+            case "section": return "title";
+            case "quote": return "quote";
+            case "stats": return "boxes-with-text";
+            case "two_column": return "boxes-with-text";
+            default: return "bullet-list";
+          }
+        };
+        const slidesPayload: Array<{ title: string; summary: string; type: string }> = [];
+        // Cover
+        slidesPayload.push({
+          title: p.title ?? "Presentasi",
+          summary: p.subtitle ?? "",
+          type: "title",
+        });
+        // Agenda
+        if (p.agenda?.length) {
+          slidesPayload.push({
+            title: "Agenda",
+            summary: p.agenda.map((a, i) => `${i + 1}. ${a}`).join("\n"),
+            type: "agenda",
+          });
+        }
+        // Content slides
+        for (const s of p.slides ?? []) {
+          const parts: string[] = [];
+          if (s.bullets?.length) parts.push(s.bullets.map((b) => `• ${b}`).join("\n"));
+          if (s.bullets_right?.length) parts.push(s.bullets_right.map((b) => `• ${b}`).join("\n"));
+          if (s.stats?.length) parts.push(s.stats.map((st) => `${st.value} — ${st.label}`).join("\n"));
+          if (s.quote) parts.push(`"${s.quote}"${s.quote_source ? ` — ${s.quote_source}` : ""}`);
+          if (s.notes) parts.push(s.notes);
+          slidesPayload.push({
+            title: s.title,
+            summary: parts.join("\n\n").slice(0, 1500) || s.title,
+            type: mapType(s.layout),
+          });
+        }
+        // Closing
+        if (p.closing?.message) {
+          slidesPayload.push({
+            title: p.closing.message,
+            summary: p.closing.cta ?? "Terima kasih atas perhatiannya.",
+            type: "conclusion",
+          });
+        }
+
+        const createRes = await fetch("https://www.beautiful.ai/api/v1/createPresentation", {
+          method: "POST",
+          headers: {
+            "X-Api-Key": bKey,
+            "content-type": "application/json",
+            accept: "application/json",
+          },
+          body: JSON.stringify({
+            title: p.title ?? "Presentasi",
+            language: "id",
+            imageSource: "ai",
+            slides: slidesPayload,
+          }),
+        });
+        if (!createRes.ok) {
+          const t = await createRes.text();
+          throw new Error(`createPresentation ${createRes.status}: ${t.slice(0, 200)}`);
+        }
+        const createJson = (await createRes.json()) as {
+          presentationId: string;
+          playerUrl?: string;
+        };
+
+        const expRes = await fetch("https://www.beautiful.ai/api/v1/exportPresentation", {
+          method: "POST",
+          headers: {
+            "X-Api-Key": bKey,
+            "content-type": "application/json",
+            accept: "application/json",
+          },
+          body: JSON.stringify({
+            presentationId: createJson.presentationId,
+            format: "pptx",
+          }),
+        });
+        if (!expRes.ok) {
+          const t = await expRes.text();
+          throw new Error(`exportPresentation ${expRes.status}: ${t.slice(0, 200)}`);
+        }
+        const expJson = (await expRes.json()) as {
+          downloadUrl: string;
+          fileName: string;
+          expiresAt: string;
+          format: string;
+        };
+
+        beautiful = {
+          presentationId: createJson.presentationId,
+          playerUrl: createJson.playerUrl,
+          downloadUrl: expJson.downloadUrl,
+          fileName: expJson.fileName,
+          expiresAt: expJson.expiresAt,
+          format: expJson.format,
+        };
+      } catch (e) {
+        // Jangan gagalkan generate kalau Beautiful.ai down — fallback ke pptxgenjs
+        console.error("[beautiful.ai] gagal:", e);
+      }
+    }
+
     const aiContext = {
       kind: isPaper ? "paper" : "presentation",
       content: parsed,
+      beautiful,
       generated_at: new Date().toISOString(),
     };
 
