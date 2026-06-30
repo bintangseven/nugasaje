@@ -2,9 +2,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { useEffect, useRef, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { MissionCard } from "@/components/MissionCard";
 import { ProjectCard } from "@/components/ProjectCard";
+import { Reveal } from "@/components/Reveal";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { defaultProjectName, missions, type MissionType, type ProjectRow } from "@/lib/mock-data";
 import { createProject, listProjects } from "@/lib/projects.functions";
@@ -34,6 +36,27 @@ function Index() {
   const queryClient = useQueryClient();
   const listFn = useServerFn(listProjects);
   const createFn = useServerFn(createProject);
+  const paperRef = useRef<HTMLDivElement | null>(null);
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0 });
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  function handleMove(e: React.MouseEvent<HTMLDivElement>) {
+    const el = paperRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    setTilt({ rx: -y * 8, ry: x * 10 });
+  }
+  function handleLeave() {
+    setTilt({ rx: 0, ry: 0 });
+  }
 
   const projectsQuery = useQuery({
     queryKey: ["projects"],
@@ -67,7 +90,7 @@ function Index() {
       <AppHeader />
       <main className="mx-auto max-w-6xl px-6 pb-24 pt-20">
         <section className="grid items-center gap-14 md:grid-cols-[1.05fr_0.95fr]">
-          <div>
+          <Reveal>
             <span className="eyebrow">AI penyusun tugas kuliah</span>
             <h1 className="mt-5 font-display font-semibold" style={{ fontSize: "clamp(2.4rem, 4.6vw, 3.6rem)" }}>
               Makalah &amp; PPT kelar <span className="mark-highlight">dalam satu klik.</span>
@@ -84,13 +107,21 @@ function Index() {
               untuk menyimpan proyekmu dan melanjutkannya dari perangkat manapun.
             </p>
           )}
-          </div>
+          </Reveal>
 
-          <div className="relative flex min-h-[420px] items-center justify-center">
+          <div
+            className="relative flex min-h-[420px] items-center justify-center"
+            style={{ perspective: "1200px" }}
+            onMouseMove={handleMove}
+            onMouseLeave={handleLeave}
+          >
             <div
+              ref={paperRef}
               className="relative w-[300px] rounded-[4px] bg-white p-8 shadow-elegant"
               style={{
-                transform: "rotate(-2.4deg)",
+                transform: `translateY(${scrollY * -0.06}px) rotate(${-2.4 + tilt.ry * 0.2}deg) rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
+                transition: "transform 200ms cubic-bezier(.22,.61,.36,1)",
+                transformStyle: "preserve-3d",
                 backgroundImage:
                   "repeating-linear-gradient(#FFFFFF 0px, #FFFFFF 27px, var(--line) 28px)",
               }}
@@ -123,8 +154,8 @@ function Index() {
               {["92%", "78%", "85%", "60%", "92%", "78%"].map((w, i) => (
                 <div
                   key={i}
-                  className="my-3.5 h-2 rounded-[2px]"
-                  style={{ width: w, background: "#E7E1D2" }}
+                  className="my-3.5 h-2 rounded-[2px] animate-pulse"
+                  style={{ width: w, background: "#E7E1D2", animationDelay: `${i * 120}ms`, animationDuration: "2.6s" }}
                 />
               ))}
               <svg
@@ -146,32 +177,33 @@ function Index() {
         </section>
 
         <section className="mt-20">
-          <div className="mb-10 max-w-2xl">
+          <Reveal className="mb-10 max-w-2xl">
             <span className="eyebrow">Dua alat, satu alur kerja</span>
             <h2 className="mt-3 font-display text-3xl font-semibold md:text-4xl">
               Dari topik kosong sampai file siap kumpul
             </h2>
-          </div>
+          </Reveal>
           <div className="grid gap-6 md:grid-cols-2">
-          {missions.map((m) => (
-            <MissionCard
-              key={m.id}
-              missionType={m.id}
-              icon={m.icon}
-              title={m.title}
-              description={m.description}
-              estimate={m.estimate}
-              output={m.output}
-              loading={create.isPending && create.variables === m.id}
-              onStart={handleStart}
-            />
+          {missions.map((m, i) => (
+            <Reveal key={m.id} delay={i * 90}>
+              <MissionCard
+                missionType={m.id}
+                icon={m.icon}
+                title={m.title}
+                description={m.description}
+                estimate={m.estimate}
+                output={m.output}
+                loading={create.isPending && create.variables === m.id}
+                onStart={handleStart}
+              />
+            </Reveal>
           ))}
           </div>
         </section>
 
         {user && (
         <section className="mt-20">
-          <div className="flex items-end justify-between">
+          <Reveal className="flex items-end justify-between">
             <div>
               <span className="eyebrow">Riwayat</span>
               <h2 className="mt-2 font-display text-2xl font-semibold text-foreground">
@@ -187,7 +219,7 @@ function Index() {
             >
               Lihat semua →
             </Link>
-          </div>
+          </Reveal>
           {projectsQuery.isLoading ? (
             <div className="mt-5 grid gap-4 md:grid-cols-3">
               {[0, 1, 2].map((i) => (
@@ -205,8 +237,10 @@ function Index() {
             </div>
           ) : (
             <div className="mt-5 grid gap-4 md:grid-cols-3">
-              {recent.map((p) => (
-                <ProjectCard key={p.id} project={p} />
+              {recent.map((p, i) => (
+                <Reveal key={p.id} delay={i * 90}>
+                  <ProjectCard project={p} />
+                </Reveal>
               ))}
             </div>
           )}

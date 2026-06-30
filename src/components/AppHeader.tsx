@@ -5,6 +5,7 @@ import type { User } from "@supabase/supabase-js";
 
 export function AppHeader() {
   const [user, setUser] = useState<User | null>(null);
+  const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -13,6 +14,17 @@ export function AppHeader() {
       setUser(session?.user ?? null);
     });
     return () => sub.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      setProgress(max > 0 ? (h.scrollTop / max) * 100 : 0);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const displayName =
@@ -72,6 +84,20 @@ export function AppHeader() {
             Coba gratis
           </Link>
         )}
+      </div>
+      <div
+        aria-hidden
+        className="h-[2px] w-full"
+        style={{ background: "transparent" }}
+      >
+        <div
+          style={{
+            width: `${progress}%`,
+            height: "100%",
+            background: "linear-gradient(90deg, var(--stamp), var(--highlighter))",
+            transition: "width 120ms linear",
+          }}
+        />
       </div>
     </header>
   );
