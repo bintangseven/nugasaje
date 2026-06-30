@@ -126,7 +126,7 @@ function ProfilePage() {
             <p className="mt-1 text-sm text-muted-foreground">
               {isProActive
                 ? `Paket PRO aktif sampai ${profile?.pro_until ? new Date(profile.pro_until).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "—"}. Kuota reset otomatis tiap hari.`
-                : `Paket Basic dibatasi ${BASIC_DAILY_LIMIT} generate per hari. Upgrade ke PRO untuk ${PRO_DAILY_LIMIT} generate/hari hanya ${priceLabel}.`}
+                : `Paket Basic dibatasi ${BASIC_DAILY_LIMIT} generate per hari. Upgrade ke PRO untuk ${PRO_DAILY_LIMIT} generate/hari — promo dari Rp100.000 jadi ${priceLabel}.`}
             </p>
             </div>
             {!isProActive && (
