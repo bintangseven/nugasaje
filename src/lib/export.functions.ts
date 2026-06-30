@@ -11,11 +11,16 @@ type PaperContent = {
   sections: {
     heading: string;
     paragraphs: string[];
-    subsections?: { heading: string; paragraphs: string[] }[];
+    blocks?: PaperBlock[];
+    subsections?: { heading: string; paragraphs: string[]; blocks?: PaperBlock[] }[];
   }[];
   conclusion: string;
   references: string[];
 };
+
+type PaperBlock =
+  | { kind: "paragraph"; text: string }
+  | { kind: "bullets"; items: string[] };
 
 type PresentationContent = {
   title: string;
@@ -65,6 +70,34 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
       indent: opts.firstLine ? { firstLine: 720 } : undefined,
       children: [new TextRun({ text, font: FONT, size: BODY, italics: opts.italic })],
     });
+
+  const bulletPara = (text: string) =>
+    new Paragraph({
+      alignment: AlignmentType.JUSTIFIED,
+      spacing: { after: 80, line: 340 },
+      bullet: { level: 0 },
+      children: [new TextRun({ text, font: FONT, size: BODY })],
+    });
+
+  const renderBlocks = (
+    blocks: PaperBlock[] | undefined,
+    fallbackParas: string[],
+  ): InstanceType<typeof Paragraph>[] => {
+    if (blocks && blocks.length > 0) {
+      const out: InstanceType<typeof Paragraph>[] = [];
+      for (const b of blocks) {
+        if (b.kind === "paragraph" && b.text?.trim()) {
+          out.push(bodyPara(b.text, { firstLine: true }));
+        } else if (b.kind === "bullets" && Array.isArray(b.items)) {
+          for (const it of b.items) {
+            if (it?.trim()) out.push(bulletPara(it));
+          }
+        }
+      }
+      if (out.length > 0) return out;
+    }
+    return fallbackParas.map((p) => bodyPara(p, { firstLine: true }));
+  };
 
   const centerPara = (text: string, size: number, bold = false, spacing: { before?: number; after?: number } = {}) =>
     new Paragraph({
@@ -164,10 +197,10 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
     } else {
       blocks.push(h1(s.heading));
     }
-    s.paragraphs.forEach((p) => blocks.push(bodyPara(p, { firstLine: true })));
+    renderBlocks(s.blocks, s.paragraphs).forEach((b) => blocks.push(b));
     (s.subsections ?? []).forEach((sub) => {
       blocks.push(h2(sub.heading));
-      sub.paragraphs.forEach((p) => blocks.push(bodyPara(p, { firstLine: true })));
+      renderBlocks(sub.blocks, sub.paragraphs).forEach((b) => blocks.push(b));
     });
     return blocks;
   });
