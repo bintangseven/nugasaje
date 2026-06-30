@@ -72,6 +72,33 @@ function TemplatePreview({ tpl }: { tpl: PptxTemplate }) {
   );
 
   switch (tpl.cover) {
+    case "lovable":
+      return (
+        <Wrapper style={{ background: baseBg }}>
+          {/* concentric circles right */}
+          <div
+            className="absolute -right-3 -top-3 h-14 w-14 rounded-full opacity-60"
+            style={{ background: accentSoft }}
+          />
+          <div
+            className="absolute -right-1 top-1 h-10 w-10 rounded-full opacity-70"
+            style={{ background: accent }}
+          />
+          <div
+            className="absolute right-2 top-3 h-6 w-6 rounded-full"
+            style={{ background: bg2 }}
+          />
+          <div className="absolute left-2 top-2 text-[5px] font-bold tracking-[0.18em]" style={{ color: accent }}>
+            PRODUCT LAUNCH
+          </div>
+          <div className="absolute left-2 top-4 right-14 text-[11px] font-extrabold leading-[1.05] text-white">
+            Build beautiful products, faster.
+          </div>
+          <div className="absolute left-2 bottom-2 text-[5px]" style={{ color: "#B8B6C8" }}>
+            Your Company · 2026
+          </div>
+        </Wrapper>
+      );
     case "ingoude":
       return (
         <Wrapper style={{ background: surface }}>

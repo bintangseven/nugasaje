@@ -20,7 +20,8 @@ export type CoverStyle =
   | "editorial"
   | "band"
   | "duotone"
-  | "ingoude";
+  | "ingoude"
+  | "lovable";
 
 export type PptxTemplate = {
   id: string;
@@ -32,6 +33,19 @@ export type PptxTemplate = {
 };
 
 export const pptxTemplates: PptxTemplate[] = [
+  {
+    id: "lovable",
+    name: "Lovable Launch",
+    vibe: "Modern · Dark",
+    description: "Dark deck dengan aksen pink + ungu, tipografi besar. Vibe product launch & startup.",
+    cover: "lovable",
+    theme: {
+      bg: "0E0E16", bg2: "16151F", surface: "F5F3FB",
+      ink: "16151F", inkInverse: "FFFFFF", muted: "6B6A7C",
+      accent: "FF3D7F", accentSoft: "7C5CFC",
+      headFont: "Calibri", bodyFont: "Calibri",
+    },
+  },
   {
     id: "ingoude",
     name: "Ingoude Bold",
@@ -151,7 +165,7 @@ export const pptxTemplates: PptxTemplate[] = [
   },
 ];
 
-export const DEFAULT_TEMPLATE_ID = "ingoude";
+export const DEFAULT_TEMPLATE_ID = "lovable";
 
 export function getTemplate(id: string | undefined | null): PptxTemplate {
   return (

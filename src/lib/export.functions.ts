@@ -325,6 +325,38 @@ async function buildPptx(
 
   const renderCover = () => {
     switch (tpl.cover) {
+      case "lovable": {
+        cover.background = { color: t.bg };
+        // decorative concentric circles on the right
+        cover.addShape(SHAPES.ellipse, {
+          x: W - 3.6, y: -1.4, w: 5.4, h: 5.4,
+          fill: { color: t.accentSoft, transparency: 55 }, line: { color: t.accentSoft, transparency: 55 },
+        });
+        cover.addShape(SHAPES.ellipse, {
+          x: W - 2.6, y: -0.5, w: 3.6, h: 3.6,
+          fill: { color: t.accent, transparency: 65 }, line: { color: t.accent, transparency: 65 },
+        });
+        cover.addShape(SHAPES.ellipse, {
+          x: W - 1.8, y: 0.4, w: 2.0, h: 2.0,
+          fill: { color: t.bg2 }, line: { color: t.bg2 },
+        });
+        // pink eyebrow
+        cover.addText((meta.course || "PRESENTASI").toUpperCase(), {
+          x: 0.8, y: 1.2, w: 9, h: 0.5,
+          fontFace: t.headFont, fontSize: 14, bold: true, color: t.accent, charSpacing: 8,
+        });
+        // huge title
+        cover.addText(content.title, {
+          x: 0.8, y: 2.0, w: 9, h: 3.0,
+          fontFace: t.headFont, fontSize: 56, bold: true, color: "FFFFFF", valign: "top",
+        });
+        // subtitle
+        cover.addText(subtitle, {
+          x: 0.8, y: 5.1, w: 9, h: 0.8,
+          fontFace: t.bodyFont, fontSize: 18, color: "B8B6C8",
+        });
+        break;
+      }
       case "ingoude": {
         cover.background = { color: t.surface };
         decorateIngoude(cover);
@@ -545,7 +577,7 @@ async function buildPptx(
     }
 
     // Footer credit shared across all cover styles
-    const isDarkCover = ["solid", "gradient", "duotone", "minimal"].includes(tpl.cover)
+    const isDarkCover = ["solid", "gradient", "duotone", "lovable"].includes(tpl.cover)
       ? tpl.cover !== "minimal"
       : false;
     const creditColor = isDarkCover ? "FFFFFF" : t.ink;
