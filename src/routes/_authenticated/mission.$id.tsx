@@ -16,7 +16,7 @@ import {
   type ProjectRow,
 } from "@/lib/mock-data";
 import { getProject, updateProject } from "@/lib/projects.functions";
-import { generateProjectContent } from "@/lib/ai.functions";
+import { generateProjectContent, finalizeBeautifulExport } from "@/lib/ai.functions";
 import { exportProject } from "@/lib/export.functions";
 import { TemplatePicker } from "@/components/TemplatePicker";
 import { DEFAULT_TEMPLATE_ID } from "@/lib/pptx-templates";
@@ -42,6 +42,7 @@ function MissionWorkspace() {
   const updateFn = useServerFn(updateProject);
   const generateFn = useServerFn(generateProjectContent);
   const exportFn = useServerFn(exportProject);
+  const finalizeFn = useServerFn(finalizeBeautifulExport);
 
   const projectQuery = useQuery({
     queryKey: ["project", id],
@@ -255,7 +256,18 @@ function Workspace({
       setStepIndex(steps.length);
       await queryClient.invalidateQueries({ queryKey: ["project", project.id] });
       await queryClient.invalidateQueries({ queryKey: ["projects"] });
-      toast.success("Konten siap! Klik unduh untuk menyimpan file.");
+      if (missionType === "presentation") {
+        toast.success("Konten siap! Slide sedang difinalisasi di background…");
+        // Background finalize: tunggu ±60 detik agar Beautiful.ai selesai
+        // render image AI, lalu minta downloadUrl. UI tidak menunggu ini.
+        setTimeout(() => {
+          finalizeFn({ data: { id: project.id } })
+            .then(() => toast.success("Slide siap diunduh ✨"))
+            .catch((e) => console.error("[finalize] gagal:", e));
+        }, 60_000);
+      } else {
+        toast.success("Konten siap! Klik unduh untuk menyimpan file.");
+      }
     } catch (err) {
       setPhase("interview");
       setStepIndex(-1);
