@@ -63,31 +63,96 @@ function Index() {
   const recent = ((projectsQuery.data ?? []) as ProjectRow[]).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-background mesh-bg noise-overlay">
+    <div className="min-h-screen bg-background noise-overlay">
       <AppHeader />
-      <main className="mx-auto max-w-6xl px-6 pb-24 pt-16">
-        <section className="mx-auto max-w-3xl text-center animate-fade-in">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-gradient-ocean">
-            Ruang kerja akademik
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight md:text-5xl">
-            Mau <span className="text-gradient-ocean">menyelesaikan apa</span> hari ini?
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
-            Pilih satu misi. Jawab beberapa pertanyaan singkat. Nugasinaje akan
-            mengerjakan sisanya hingga file final siap dikumpulkan.
-          </p>
+      <main className="mx-auto max-w-6xl px-6 pb-24 pt-20">
+        <section className="grid items-center gap-14 md:grid-cols-[1.05fr_0.95fr]">
+          <div>
+            <span className="eyebrow">AI penyusun tugas kuliah</span>
+            <h1 className="mt-5 font-display font-semibold" style={{ fontSize: "clamp(2.4rem, 4.6vw, 3.6rem)" }}>
+              Makalah &amp; PPT kelar <span className="mark-highlight">dalam satu klik.</span>
+            </h1>
+            <p className="mt-6 max-w-[46ch] text-[1.08rem] leading-relaxed" style={{ color: "var(--graphite)" }}>
+              Pilih satu misi, jawab beberapa pertanyaan singkat, dan biarkan Nugasinaje menyusun
+              struktur, isi, sampai daftar pustaka. Tinggal unduh, tinggal kumpulkan.
+            </p>
           {loaded && !user && (
-            <p className="mt-4 text-sm text-muted-foreground">
+            <p className="mt-5 text-sm" style={{ color: "var(--graphite)" }}>
               <Link to="/auth" className="font-medium text-foreground hover:underline">
                 Masuk
               </Link>{" "}
               untuk menyimpan proyekmu dan melanjutkannya dari perangkat manapun.
             </p>
           )}
+          </div>
+
+          <div className="relative flex min-h-[420px] items-center justify-center">
+            <div
+              className="relative w-[300px] rounded-[4px] bg-white p-8 shadow-elegant"
+              style={{
+                transform: "rotate(-2.4deg)",
+                backgroundImage:
+                  "repeating-linear-gradient(#FFFFFF 0px, #FFFFFF 27px, var(--line) 28px)",
+              }}
+            >
+              <div
+                className="absolute font-hand"
+                style={{
+                  top: "-18px",
+                  left: "-30px",
+                  transform: "rotate(-7deg)",
+                  background: "var(--highlighter)",
+                  color: "var(--stamp-deep)",
+                  padding: "8px 14px",
+                  fontSize: "1.05rem",
+                  fontWeight: 600,
+                  boxShadow: "0 8px 16px -8px rgba(0,0,0,0.25)",
+                }}
+              >
+                Revisi bab 3 malam ini? aman.
+              </div>
+              <span
+                className="font-mono-eyebrow inline-block bg-white"
+                style={{ fontSize: "0.66rem", color: "var(--graphite)" }}
+              >
+                BAB I — PENDAHULUAN
+              </span>
+              <div className="mt-2 inline-block bg-white font-display text-[1.05rem] font-semibold">
+                Pengaruh Literasi Digital terhadap Minat Baca Mahasiswa
+              </div>
+              {["92%", "78%", "85%", "60%", "92%", "78%"].map((w, i) => (
+                <div
+                  key={i}
+                  className="my-3.5 h-2 rounded-[2px]"
+                  style={{ width: w, background: "#E7E1D2" }}
+                />
+              ))}
+              <svg
+                className="absolute"
+                style={{ right: "-26px", bottom: "-22px", width: 128, height: 128, transform: "rotate(-11deg)" }}
+                viewBox="0 0 200 200"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g fill="none" stroke="#B23A2F" strokeWidth="3.4" opacity="0.92">
+                  <circle cx="100" cy="100" r="86" />
+                  <circle cx="100" cy="100" r="74" />
+                </g>
+                <text x="100" y="92" textAnchor="middle" fontFamily="Space Mono, monospace" fontSize="22" fontWeight="700" fill="#B23A2F">ACC</text>
+                <text x="100" y="120" textAnchor="middle" fontFamily="Space Mono, monospace" fontSize="11" letterSpacing="2" fill="#B23A2F">NUGASINAJE</text>
+                <path d="M70 132 L92 150 L132 108" stroke="#B23A2F" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </div>
         </section>
 
-        <section className="mx-auto mt-12 grid max-w-4xl gap-5 md:grid-cols-2">
+        <section className="mt-20">
+          <div className="mb-10 max-w-2xl">
+            <span className="eyebrow">Dua alat, satu alur kerja</span>
+            <h2 className="mt-3 font-display text-3xl font-semibold md:text-4xl">
+              Dari topik kosong sampai file siap kumpul
+            </h2>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2">
           {missions.map((m) => (
             <MissionCard
               key={m.id}
@@ -101,16 +166,18 @@ function Index() {
               onStart={handleStart}
             />
           ))}
+          </div>
         </section>
 
         {user && (
         <section className="mt-20">
           <div className="flex items-end justify-between">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight text-foreground">
+              <span className="eyebrow">Riwayat</span>
+              <h2 className="mt-2 font-display text-2xl font-semibold text-foreground">
                 Proyek Terbaru
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-sm" style={{ color: "var(--graphite)" }}>
                 Tersinkron otomatis di seluruh perangkatmu.
               </p>
             </div>
