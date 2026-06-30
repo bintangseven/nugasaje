@@ -98,36 +98,47 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(0.985 0 0);
-  --foreground: oklch(0.21 0.04 265);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.04 265);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.04 265);
-  --primary: oklch(0.48 0.18 245);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.97 0.005 250);
-  --secondary-foreground: oklch(0.21 0.04 265);
-  --muted: oklch(0.965 0.005 250);
-  --muted-foreground: oklch(0.55 0.03 257);
-  --accent: oklch(0.96 0.01 255);
-  --accent-foreground: oklch(0.21 0.04 265);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.92 0.008 255);
-  --input: oklch(0.92 0.008 255);
-  --ring: oklch(0.48 0.18 245);
+  --radius: 0.5rem;
+  /* Garapin paper/ink palette */
+  --paper: #FAF6EC;
+  --paper-deep: #F1EADA;
+  --line: #DCD2B8;
+  --ink: #1B2A4A;
+  --ink-soft: #3C4A6B;
+  --stamp: #B23A2F;
+  --stamp-deep: #8E2C22;
+  --highlighter: #F4D35E;
+  --graphite: #55524C;
+
+  --background: #FAF6EC;
+  --foreground: #1B2A4A;
+  --card: #FFFFFF;
+  --card-foreground: #1B2A4A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1B2A4A;
+  --primary: #1B2A4A;
+  --primary-foreground: #FAF6EC;
+  --secondary: #F1EADA;
+  --secondary-foreground: #1B2A4A;
+  --muted: #F1EADA;
+  --muted-foreground: #55524C;
+  --accent: #F4D35E;
+  --accent-foreground: #1B2A4A;
+  --destructive: #B23A2F;
+  --destructive-foreground: #FAF6EC;
+  --border: #DCD2B8;
+  --input: #DCD2B8;
+  --ring: #1B2A4A;
   --success: oklch(0.72 0.18 145);
-  --warning: oklch(0.75 0.16 60);
-  /* Ocean Depth brand palette */
-  --ocean-cyan: oklch(0.78 0.13 210);
-  --ocean-blue: oklch(0.55 0.2 250);
-  --ocean-deep: oklch(0.32 0.15 265);
-  --gradient-ocean: linear-gradient(135deg, oklch(0.78 0.13 210) 0%, oklch(0.55 0.2 250) 50%, oklch(0.32 0.15 265) 100%);
-  --gradient-ocean-soft: linear-gradient(135deg, oklch(0.78 0.13 210 / 0.15) 0%, oklch(0.55 0.2 250 / 0.15) 50%, oklch(0.32 0.15 265 / 0.15) 100%);
-  --shadow-glow: 0 0 40px oklch(0.55 0.2 250 / 0.35);
-  --shadow-elegant: 0 20px 60px -20px oklch(0.32 0.15 265 / 0.35);
+  --warning: #F4D35E;
+  /* Legacy ocean aliases remapped to paper/ink so existing utilities still read */
+  --ocean-cyan: #F4D35E;
+  --ocean-blue: #B23A2F;
+  --ocean-deep: #1B2A4A;
+  --gradient-ocean: linear-gradient(135deg, #1B2A4A 0%, #3C4A6B 100%);
+  --gradient-ocean-soft: linear-gradient(135deg, rgba(244,211,94,0.25) 0%, rgba(178,58,47,0.18) 100%);
+  --shadow-glow: 0 10px 30px -16px rgba(27,42,74,0.35);
+  --shadow-elegant: 0 18px 40px -20px rgba(27,42,74,0.35);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
