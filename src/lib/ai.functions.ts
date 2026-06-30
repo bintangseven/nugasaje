@@ -147,7 +147,20 @@ const PRO_DAILY_LIMIT = 10;
 
 export const generateProjectContent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        attachment: z
+          .object({
+            name: z.string().max(200),
+            mime: z.string().max(120),
+            base64: z.string().max(15_000_000), // ~11MB binary
+          })
+          .optional(),
+      })
+      .parse(input),
+  )
   .handler(async ({ data, context }) => {
     // Cek kuota langganan harian
     const { data: profile, error: profileErr } = await context.supabase
@@ -218,6 +231,30 @@ export const generateProjectContent = createServerFn({ method: "POST" })
           ].join("\n"),
     ].join("\n");
 
+    const att = data.attachment;
+    const userContent: Array<Record<string, unknown>> = [{ type: "text", text: userPrompt }];
+    if (att) {
+      const mime = att.mime || "application/octet-stream";
+      if (mime.startsWith("image/")) {
+        userContent.push({
+          type: "image_url",
+          image_url: { url: `data:${mime};base64,${att.base64}` },
+        });
+      } else {
+        userContent.push({
+          type: "file",
+          file: {
+            filename: att.name,
+            file_data: `data:${mime};base64,${att.base64}`,
+          },
+        });
+      }
+      userContent.push({
+        type: "text",
+        text: `Gunakan isi file terlampir "${att.name}" sebagai bahan utama. Ekstrak poin-poin penting, kutipan, dan data yang relevan; jangan menyalin mentah-mentah.`,
+      });
+    }
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -228,7 +265,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          { role: "user", content: userContent },
         ],
         tools: [tool],
         tool_choice: { type: "function", function: { name: toolName } },
