@@ -75,6 +75,7 @@ function MissionWorkspace() {
       updateFn={updateFn}
       generateFn={generateFn}
       exportFn={exportFn}
+      finalizeFn={finalizeFn}
       queryClient={queryClient}
     />
   );
@@ -85,12 +86,14 @@ function Workspace({
   updateFn,
   generateFn,
   exportFn,
+  finalizeFn,
   queryClient,
 }: {
   project: ProjectRow;
   updateFn: ReturnType<typeof useServerFn<typeof updateProject>>;
   generateFn: ReturnType<typeof useServerFn<typeof generateProjectContent>>;
   exportFn: ReturnType<typeof useServerFn<typeof exportProject>>;
+  finalizeFn: ReturnType<typeof useServerFn<typeof finalizeBeautifulExport>>;
   queryClient: ReturnType<typeof useQueryClient>;
 }) {
   const missionType: MissionType = project.mission;
@@ -263,7 +266,7 @@ function Workspace({
         setTimeout(() => {
           finalizeFn({ data: { id: project.id } })
             .then(() => toast.success("Slide siap diunduh ✨"))
-            .catch((e) => console.error("[finalize] gagal:", e));
+            .catch((e: unknown) => console.error("[finalize] gagal:", e));
         }, 60_000);
       } else {
         toast.success("Konten siap! Klik unduh untuk menyimpan file.");
