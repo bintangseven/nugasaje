@@ -269,6 +269,7 @@ async function buildPptx(
 
   // ===== Ingoude-style triangle decorations =====
   const isIngoude = tpl.cover === "ingoude";
+  const isLovable = tpl.cover === "lovable";
   const decorateIngoude = (s: Slide, variant: "light" | "dark" = "light") => {
     // Top-right corner: large navy right-triangle + amber accent on top
     s.addShape(SHAPES.rtTriangle, {
@@ -300,6 +301,55 @@ async function buildPptx(
       fill: { color: t.bg }, line: { color: t.bg },
     });
     void variant;
+  };
+
+  // ===== Lovable-style decorations (dark navy + pink/purple) =====
+  const decorateLovable = (s: Slide, mode: "light" | "dark") => {
+    if (mode === "dark") {
+      // soft purple glow bottom-left
+      s.addShape(SHAPES.ellipse, {
+        x: -1.8, y: H - 2.4, w: 3.8, h: 3.8,
+        fill: { color: t.accentSoft, transparency: 70 },
+        line: { color: t.accentSoft, transparency: 100 },
+      });
+      // pink ring top-right (donut via overlay)
+      s.addShape(SHAPES.ellipse, {
+        x: W - 1.05, y: 0.35, w: 0.6, h: 0.6,
+        fill: { color: t.accent }, line: { color: t.accent },
+      });
+      s.addShape(SHAPES.ellipse, {
+        x: W - 0.9, y: 0.5, w: 0.3, h: 0.3,
+        fill: { color: t.bg }, line: { color: t.bg },
+      });
+      // tiny purple square accent
+      s.addShape(SHAPES.rect, {
+        x: W - 1.55, y: 0.55, w: 0.18, h: 0.18,
+        fill: { color: t.accentSoft }, line: { color: t.accentSoft },
+      });
+    } else {
+      // top-right dot cluster
+      s.addShape(SHAPES.ellipse, {
+        x: W - 0.75, y: 0.45, w: 0.38, h: 0.38,
+        fill: { color: t.accent }, line: { color: t.accent },
+      });
+      s.addShape(SHAPES.ellipse, {
+        x: W - 1.18, y: 0.62, w: 0.2, h: 0.2,
+        fill: { color: t.accentSoft }, line: { color: t.accentSoft },
+      });
+      s.addShape(SHAPES.ellipse, {
+        x: W - 1.45, y: 0.5, w: 0.1, h: 0.1,
+        fill: { color: t.accent, transparency: 40 }, line: { color: t.accent, transparency: 40 },
+      });
+      // bottom-left two-tone slash (sits just above footer bar)
+      s.addShape(SHAPES.rect, {
+        x: 0, y: H - 0.42, w: 1.4, h: 0.07,
+        fill: { color: t.accent }, line: { color: t.accent },
+      });
+      s.addShape(SHAPES.rect, {
+        x: 1.45, y: H - 0.42, w: 0.5, h: 0.07,
+        fill: { color: t.accentSoft }, line: { color: t.accentSoft },
+      });
+    }
   };
 
   const addFooter = (s: Slide, pageNo: number, totalNo: number) => {
@@ -597,6 +647,7 @@ async function buildPptx(
   const agenda = pres.addSlide();
   agenda.background = { color: t.surface };
   if (isIngoude) decorateIngoude(agenda);
+  if (isLovable) decorateLovable(agenda, "light");
   agenda.addText("Agenda", {
     x: 0.6, y: 0.55, w: 12, h: 0.8,
     fontFace: t.headFont, fontSize: 36, bold: true, color: t.ink,
@@ -640,6 +691,7 @@ async function buildPptx(
           rotate: 180, flipH: true,
         });
       }
+      if (isLovable) decorateLovable(s, "dark");
       s.addText(`BAGIAN ${String(i + 1).padStart(2, "0")}`, {
         x: 0.8, y: 2.6, w: 12, h: 0.5,
         fontFace: t.headFont, fontSize: 16, bold: true, color: t.accentSoft, charSpacing: 6,
@@ -659,6 +711,7 @@ async function buildPptx(
     // Common header for non-section slides
     s.background = { color: t.surface };
     if (isIngoude) decorateIngoude(s);
+    if (isLovable) decorateLovable(s, "light");
     s.addText(slide.title, {
       x: 0.6, y: 0.5, w: W - 1.2, h: 0.8,
       fontFace: t.headFont, fontSize: 28, bold: true, color: t.ink,
@@ -731,6 +784,15 @@ async function buildPptx(
   // ===== Closing =====
   const closing = pres.addSlide();
   closing.background = { color: t.bg };
+  if (isLovable) {
+    decorateLovable(closing, "dark");
+    // extra: faint pink ring centered behind title
+    closing.addShape(SHAPES.ellipse, {
+      x: W / 2 - 2.2, y: 2.0, w: 4.4, h: 4.4,
+      fill: { color: t.bg, transparency: 100 },
+      line: { color: t.accent, transparency: 60, width: 1.5 },
+    });
+  }
   closing.addText(content.closing.message || "Terima Kasih", {
     x: 0.6, y: 2.8, w: 12, h: 1.4,
     fontFace: t.headFont, fontSize: 60, bold: true, color: "FFFFFF", align: "center",
