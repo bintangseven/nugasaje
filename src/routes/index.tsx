@@ -12,6 +12,7 @@ import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { defaultProjectName, missions, type MissionType, type ProjectRow } from "@/lib/mock-data";
 import { createProject, listProjects } from "@/lib/projects.functions";
+import logoAsset from "@/assets/nugasinaje-logo.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -93,6 +94,7 @@ function Index() {
       <main className="mx-auto max-w-6xl px-6 pb-24 pt-20">
         <section className="grid items-center gap-14 md:grid-cols-[1.05fr_0.95fr]">
           <Reveal>
+            <img src={logoAsset.url} alt="Nugasinaje" className="mb-6 h-16 w-auto" />
             <span className="eyebrow">AI penyusun tugas kuliah</span>
             <h1 className="mt-5 font-display font-semibold" style={{ fontSize: "clamp(2.4rem, 4.6vw, 3.6rem)" }}>
               Makalah &amp; PPT kelar <span className="mark-highlight">dalam satu klik.</span>

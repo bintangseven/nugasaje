@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import logoAsset from "@/assets/nugasinaje-logo.png.asset.json";
 
 export function AppHeader() {
   const [user, setUser] = useState<User | null>(null);
@@ -43,8 +44,8 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 glass">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <Link to="/" className="flex items-center gap-2 text-foreground font-display text-[1.25rem] font-bold tracking-tight">
-          Nugasin<span style={{ color: "var(--stamp)" }}>aje</span>
+        <Link to="/" className="flex items-center gap-2 text-foreground font-display text-[1.25rem] font-bold tracking-tight" aria-label="Nugasinaje">
+          <img src={logoAsset.url} alt="Nugasinaje" className="h-8 w-auto" />
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex text-[0.92rem] font-semibold" style={{ color: "var(--ink-soft)" }}>

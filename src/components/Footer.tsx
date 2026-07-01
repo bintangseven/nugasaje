@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import logoAsset from "@/assets/nugasinaje-logo.png.asset.json";
 
 export function Footer() {
   return (
@@ -6,8 +7,8 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-6 py-14">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <Link to="/" className="font-display text-2xl font-bold">
-              Nugasin<span style={{ color: "var(--stamp)" }}>aje</span>
+            <Link to="/" className="inline-flex items-center" aria-label="Nugasinaje">
+              <img src={logoAsset.url} alt="Nugasinaje" className="h-10 w-auto" />
             </Link>
             <p className="mt-3 max-w-[34ch] text-sm leading-relaxed" style={{ color: "var(--graphite)" }}>
               Ruang kerja akademik untuk mahasiswa Indonesia. Selesaikan makalah dan
