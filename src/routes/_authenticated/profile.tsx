@@ -13,7 +13,6 @@ import {
   PRO_DAILY_LIMIT,
   PRO_PRICE_IDR,
 } from "@/lib/projects.functions";
-import { createProUpgradeInvoice } from "@/lib/payments.functions";
 import { useCurrentUser } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/profile")({

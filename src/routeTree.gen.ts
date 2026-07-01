@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PaymentSuccessRouteImport } from './routes/payment.success'
+import { Route as PaymentQrRouteImport } from './routes/payment.qr'
 import { Route as PaymentFailedRouteImport } from './routes/payment.failed'
 import { Route as AuthenticatedProjectsRouteImport } from './routes/_authenticated/projects'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -49,6 +50,11 @@ const IndexRoute = IndexRouteImport.update({
 const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
   id: '/payment/success',
   path: '/payment/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentQrRoute = PaymentQrRouteImport.update({
+  id: '/payment/qr',
+  path: '/payment/qr',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaymentFailedRoute = PaymentFailedRouteImport.update({
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/projects': typeof AuthenticatedProjectsRoute
   '/payment/failed': typeof PaymentFailedRoute
+  '/payment/qr': typeof PaymentQrRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/mission/$id': typeof AuthenticatedMissionIdRoute
   '/api/public/pakasir/webhook': typeof ApiPublicPakasirWebhookRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/projects': typeof AuthenticatedProjectsRoute
   '/payment/failed': typeof PaymentFailedRoute
+  '/payment/qr': typeof PaymentQrRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/mission/$id': typeof AuthenticatedMissionIdRoute
   '/api/public/pakasir/webhook': typeof ApiPublicPakasirWebhookRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/projects': typeof AuthenticatedProjectsRoute
   '/payment/failed': typeof PaymentFailedRoute
+  '/payment/qr': typeof PaymentQrRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/_authenticated/mission/$id': typeof AuthenticatedMissionIdRoute
   '/api/public/pakasir/webhook': typeof ApiPublicPakasirWebhookRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/projects'
     | '/payment/failed'
+    | '/payment/qr'
     | '/payment/success'
     | '/mission/$id'
     | '/api/public/pakasir/webhook'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/projects'
     | '/payment/failed'
+    | '/payment/qr'
     | '/payment/success'
     | '/mission/$id'
     | '/api/public/pakasir/webhook'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/projects'
     | '/payment/failed'
+    | '/payment/qr'
     | '/payment/success'
     | '/_authenticated/mission/$id'
     | '/api/public/pakasir/webhook'
@@ -173,6 +185,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   PaymentFailedRoute: typeof PaymentFailedRoute
+  PaymentQrRoute: typeof PaymentQrRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
   ApiPublicPakasirWebhookRoute: typeof ApiPublicPakasirWebhookRoute
   ApiPublicXenditWebhookRoute: typeof ApiPublicXenditWebhookRoute
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/payment/success'
       fullPath: '/payment/success'
       preLoaderRoute: typeof PaymentSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment/qr': {
+      id: '/payment/qr'
+      path: '/payment/qr'
+      fullPath: '/payment/qr'
+      preLoaderRoute: typeof PaymentQrRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/payment/failed': {
@@ -289,6 +309,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   PaymentFailedRoute: PaymentFailedRoute,
+  PaymentQrRoute: PaymentQrRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,
   ApiPublicPakasirWebhookRoute: ApiPublicPakasirWebhookRoute,
   ApiPublicXenditWebhookRoute: ApiPublicXenditWebhookRoute,
