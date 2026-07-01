@@ -15,13 +15,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PaymentSuccessRouteImport } from './routes/payment.success'
-import { Route as PaymentQrRouteImport } from './routes/payment.qr'
 import { Route as PaymentFailedRouteImport } from './routes/payment.failed'
 import { Route as AuthenticatedProjectsRouteImport } from './routes/_authenticated/projects'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedMissionIdRouteImport } from './routes/_authenticated/mission.$id'
 import { Route as ApiPublicXenditWebhookRouteImport } from './routes/api/public/xendit.webhook'
-import { Route as ApiPublicPakasirWebhookRouteImport } from './routes/api/public/pakasir.webhook'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -52,11 +50,6 @@ const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
   path: '/payment/success',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PaymentQrRoute = PaymentQrRouteImport.update({
-  id: '/payment/qr',
-  path: '/payment/qr',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PaymentFailedRoute = PaymentFailedRouteImport.update({
   id: '/payment/failed',
   path: '/payment/failed',
@@ -82,11 +75,6 @@ const ApiPublicXenditWebhookRoute = ApiPublicXenditWebhookRouteImport.update({
   path: '/api/public/xendit/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicPakasirWebhookRoute = ApiPublicPakasirWebhookRouteImport.update({
-  id: '/api/public/pakasir/webhook',
-  path: '/api/public/pakasir/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,10 +84,8 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/projects': typeof AuthenticatedProjectsRoute
   '/payment/failed': typeof PaymentFailedRoute
-  '/payment/qr': typeof PaymentQrRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/mission/$id': typeof AuthenticatedMissionIdRoute
-  '/api/public/pakasir/webhook': typeof ApiPublicPakasirWebhookRoute
   '/api/public/xendit/webhook': typeof ApiPublicXenditWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -110,10 +96,8 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/projects': typeof AuthenticatedProjectsRoute
   '/payment/failed': typeof PaymentFailedRoute
-  '/payment/qr': typeof PaymentQrRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/mission/$id': typeof AuthenticatedMissionIdRoute
-  '/api/public/pakasir/webhook': typeof ApiPublicPakasirWebhookRoute
   '/api/public/xendit/webhook': typeof ApiPublicXenditWebhookRoute
 }
 export interface FileRoutesById {
@@ -126,10 +110,8 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/projects': typeof AuthenticatedProjectsRoute
   '/payment/failed': typeof PaymentFailedRoute
-  '/payment/qr': typeof PaymentQrRoute
   '/payment/success': typeof PaymentSuccessRoute
   '/_authenticated/mission/$id': typeof AuthenticatedMissionIdRoute
-  '/api/public/pakasir/webhook': typeof ApiPublicPakasirWebhookRoute
   '/api/public/xendit/webhook': typeof ApiPublicXenditWebhookRoute
 }
 export interface FileRouteTypes {
@@ -142,10 +124,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/projects'
     | '/payment/failed'
-    | '/payment/qr'
     | '/payment/success'
     | '/mission/$id'
-    | '/api/public/pakasir/webhook'
     | '/api/public/xendit/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -156,10 +136,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/projects'
     | '/payment/failed'
-    | '/payment/qr'
     | '/payment/success'
     | '/mission/$id'
-    | '/api/public/pakasir/webhook'
     | '/api/public/xendit/webhook'
   id:
     | '__root__'
@@ -171,10 +149,8 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/projects'
     | '/payment/failed'
-    | '/payment/qr'
     | '/payment/success'
     | '/_authenticated/mission/$id'
-    | '/api/public/pakasir/webhook'
     | '/api/public/xendit/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -185,9 +161,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   TermsRoute: typeof TermsRoute
   PaymentFailedRoute: typeof PaymentFailedRoute
-  PaymentQrRoute: typeof PaymentQrRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
-  ApiPublicPakasirWebhookRoute: typeof ApiPublicPakasirWebhookRoute
   ApiPublicXenditWebhookRoute: typeof ApiPublicXenditWebhookRoute
 }
 
@@ -235,13 +209,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PaymentSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/payment/qr': {
-      id: '/payment/qr'
-      path: '/payment/qr'
-      fullPath: '/payment/qr'
-      preLoaderRoute: typeof PaymentQrRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/payment/failed': {
       id: '/payment/failed'
       path: '/payment/failed'
@@ -277,13 +244,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicXenditWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/pakasir/webhook': {
-      id: '/api/public/pakasir/webhook'
-      path: '/api/public/pakasir/webhook'
-      fullPath: '/api/public/pakasir/webhook'
-      preLoaderRoute: typeof ApiPublicPakasirWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -309,11 +269,19 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   TermsRoute: TermsRoute,
   PaymentFailedRoute: PaymentFailedRoute,
-  PaymentQrRoute: PaymentQrRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,
-  ApiPublicPakasirWebhookRoute: ApiPublicPakasirWebhookRoute,
   ApiPublicXenditWebhookRoute: ApiPublicXenditWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

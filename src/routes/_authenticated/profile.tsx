@@ -13,8 +13,8 @@ import {
   PRO_DAILY_LIMIT,
   PRO_PRICE_IDR,
 } from "@/lib/projects.functions";
+import { createProUpgradeInvoice } from "@/lib/payments.functions";
 import { useCurrentUser } from "@/hooks/use-auth";
-import { createProUpgradePakasirQris } from "@/lib/pakasir.functions";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -32,7 +32,7 @@ function ProfilePage() {
   const queryClient = useQueryClient();
   const getFn = useServerFn(getProfile);
   const updateFn = useServerFn(updateProfile);
-  const upgradeFn = useServerFn(createProUpgradePakasirQris);
+  const upgradeFn = useServerFn(createProUpgradeInvoice);
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
@@ -63,10 +63,10 @@ function ProfilePage() {
   const upgrade = useMutation({
     mutationFn: () => upgradeFn(),
     onSuccess: (res) => {
-      if (res?.order_id) {
-        navigate({ to: "/payment/qr", search: { order_id: res.order_id } });
+      if (res?.invoice_url) {
+        window.location.href = res.invoice_url;
       } else {
-        toast.error("Order tidak tersedia");
+        toast.error("Invoice tidak tersedia");
       }
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Gagal upgrade"),
