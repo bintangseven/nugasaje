@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { LogOut, Loader2, Sparkles, Crown } from "lucide-react";
+import { LogOut, Loader2, Sparkles, Crown, Receipt, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/AppHeader";
@@ -13,7 +13,7 @@ import {
   PRO_DAILY_LIMIT,
   PRO_PRICE_IDR,
 } from "@/lib/projects.functions";
-import { createProUpgradeInvoice } from "@/lib/payments.functions";
+import { createProUpgradeInvoice, listMyPayments } from "@/lib/payments.functions";
 import { useCurrentUser } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -33,10 +33,16 @@ function ProfilePage() {
   const getFn = useServerFn(getProfile);
   const updateFn = useServerFn(updateProfile);
   const upgradeFn = useServerFn(createProUpgradeInvoice);
+  const paymentsFn = useServerFn(listMyPayments);
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
     queryFn: () => getFn(),
+  });
+
+  const { data: payments, isLoading: paymentsLoading } = useQuery({
+    queryKey: ["payments"],
+    queryFn: () => paymentsFn(),
   });
 
   const [form, setForm] = useState({ name: "", university: "", major: "", semester: "" });
@@ -207,6 +213,83 @@ function ProfilePage() {
           <LogOut className="h-4 w-4" />
           Keluar
         </button>
+
+        {/* Riwayat pembayaran */}
+        <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <div className="flex items-center gap-2">
+            <Receipt className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Riwayat pembayaran
+            </h2>
+          </div>
+
+          <div className="mt-4">
+            {paymentsLoading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> Memuat…
+              </div>
+            ) : !payments || payments.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Belum ada transaksi. Upgrade PRO untuk mulai berlangganan.
+              </p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {payments.map((p) => {
+                  const status = String(p.status).toUpperCase();
+                  const badge =
+                    status === "PAID" || status === "COMPLETED"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : status === "PENDING"
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-rose-100 text-rose-700";
+                  const when = p.paid_at ?? p.created_at;
+                  return (
+                    <li key={p.id} className="flex items-center justify-between gap-3 py-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {p.purpose === "pro_upgrade" ? "Upgrade PRO" : p.purpose}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {when
+                            ? new Date(when).toLocaleString("id-ID", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : "—"}{" "}
+                          • {p.external_id}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-semibold text-foreground">
+                          {p.currency === "IDR" ? "Rp" : `${p.currency} `}
+                          {p.amount.toLocaleString("id-ID")}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge}`}
+                        >
+                          {status}
+                        </span>
+                        {status === "PENDING" && p.invoice_url && (
+                          <a
+                            href={p.invoice_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-foreground underline-offset-2 hover:underline"
+                          >
+                            Bayar <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );
