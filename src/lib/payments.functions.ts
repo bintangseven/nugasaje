@@ -38,3 +38,19 @@ export const createProUpgradeInvoice = createServerFn({ method: "POST" })
 
     return { invoice_url: invoiceUrl, external_id: orderId };
   });
+
+/**
+ * Ambil riwayat pembayaran user yang sedang login (urut terbaru).
+ */
+export const listMyPayments = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("payments")
+      .select("id, amount, currency, status, purpose, invoice_url, paid_at, created_at, external_id")
+      .eq("user_id", context.userId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
