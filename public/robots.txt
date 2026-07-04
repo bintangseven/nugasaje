@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /payment/
+Disallow: /profile
+Disallow: /mission/
+Disallow: /projects
+
+Sitemap: https://nugasaje.lovable.app/sitemap.xml

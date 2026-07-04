@@ -1,0 +1,12 @@
+# Nugasinaje
+
+> Ruang kerja akademik berbasis AI untuk mahasiswa Indonesia — pilih misi, jawab beberapa pertanyaan, dan tugas kuliah (paper, makalah, presentasi) siap dikerjakan.
+
+Nugasinaje adalah platform produktivitas AI yang membantu mahasiswa dan profesional membuat presentasi dan makalah akademik berkualitas tinggi secara otomatis.
+
+## Pages
+
+- [Beranda](/): Landing page, daftar misi (paper, presentasi), dan pengenalan produk.
+- [Masuk / Daftar](/auth): Halaman autentikasi akun Nugasinaje.
+- [Syarat Layanan](/terms): Ketentuan penggunaan layanan.
+- [Kebijakan Privasi](/privacy): Bagaimana data pengguna dikumpulkan dan dilindungi.
