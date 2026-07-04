@@ -6,8 +6,21 @@ export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
       { title: "Kebijakan Privasi — Nugasinaje" },
-      { name: "description", content: "Bagaimana Nugasinaje mengumpulkan, memakai, dan melindungi datamu." },
+      {
+        name: "description",
+        content:
+          "Pelajari bagaimana Nugasinaje mengumpulkan, memakai, dan melindungi data pribadi serta proyek akademikmu.",
+      },
+      { property: "og:title", content: "Kebijakan Privasi — Nugasinaje" },
+      {
+        property: "og:description",
+        content:
+          "Detail lengkap kebijakan privasi Nugasinaje: data yang dikumpulkan, penggunaan, retensi, dan hak pengguna.",
+      },
+      { property: "og:url", content: "https://nugasaje.lovable.app/privacy" },
+      { property: "og:type", content: "website" },
     ],
+    links: [{ rel: "canonical", href: "https://nugasaje.lovable.app/privacy" }],
   }),
   component: PrivacyPage,
 });
