@@ -2,7 +2,23 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/payment/success")({
-  head: () => ({ meta: [{ title: "Pembayaran berhasil — Nugasinaje" }] }),
+  head: () => ({
+    meta: [
+      { title: "Pembayaran berhasil — Nugasinaje" },
+      {
+        name: "description",
+        content:
+          "Pembayaran langganan PRO Nugasinaje berhasil diproses. Akunmu sedang diaktifkan ke paket PRO.",
+      },
+      { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Pembayaran berhasil — Nugasinaje" },
+      {
+        property: "og:description",
+        content: "Konfirmasi pembayaran langganan PRO Nugasinaje berhasil.",
+      },
+      { property: "og:type", content: "website" },
+    ],
+  }),
   component: SuccessPage,
 });
 
