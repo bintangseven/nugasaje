@@ -20,7 +20,18 @@ export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
       { title: "Profil — Nugasinaje" },
-      { name: "description", content: "Profil akun Nugasinaje." },
+      {
+        name: "description",
+        content:
+          "Kelola informasi profil, status langganan PRO, dan riwayat penggunaan kuota harian di Nugasinaje.",
+      },
+      { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Profil — Nugasinaje" },
+      {
+        property: "og:description",
+        content: "Halaman profil akun Nugasinaje: langganan, kuota harian, dan riwayat pembayaran.",
+      },
+      { property: "og:type", content: "website" },
     ],
   }),
   component: ProfilePage,

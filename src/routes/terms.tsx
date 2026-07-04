@@ -6,8 +6,21 @@ export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
       { title: "Syarat Layanan — Nugasinaje" },
-      { name: "description", content: "Syarat layanan penggunaan Nugasinaje." },
+      {
+        name: "description",
+        content:
+          "Baca syarat dan ketentuan penggunaan layanan Nugasinaje untuk memahami hak dan kewajibanmu sebagai pengguna.",
+      },
+      { property: "og:title", content: "Syarat Layanan — Nugasinaje" },
+      {
+        property: "og:description",
+        content:
+          "Ketentuan penggunaan Nugasinaje: hak, kewajiban, dan tanggung jawab pengguna platform.",
+      },
+      { property: "og:url", content: "https://nugasaje.lovable.app/terms" },
+      { property: "og:type", content: "website" },
     ],
+    links: [{ rel: "canonical", href: "https://nugasaje.lovable.app/terms" }],
   }),
   component: TermsPage,
 });

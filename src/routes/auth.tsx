@@ -9,8 +9,21 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Masuk — Nugasinaje" },
-      { name: "description", content: "Masuk ke ruang kerja akademik Nugasinaje." },
+      {
+        name: "description",
+        content:
+          "Masuk ke akun Nugasinaje untuk menyimpan proyek akademik dan mengakses fitur AI penyusun tugas kuliah.",
+      },
+      { property: "og:title", content: "Masuk — Nugasinaje" },
+      {
+        property: "og:description",
+        content:
+          "Masuk atau daftar akun Nugasinaje untuk mulai menyusun makalah dan presentasi dengan bantuan AI.",
+      },
+      { property: "og:url", content: "https://nugasaje.lovable.app/auth" },
+      { property: "og:type", content: "website" },
     ],
+    links: [{ rel: "canonical", href: "https://nugasaje.lovable.app/auth" }],
   }),
   component: AuthPage,
 });

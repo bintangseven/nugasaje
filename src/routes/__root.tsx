@@ -82,12 +82,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "NugasinAje" },
       { name: "description", content: "Nugasinaje is an AI-powered productivity platform designed to help students and professionals create high-quality presentations and academic papers automaticall" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "NugasinAje" },
+      { property: "og:title", content: "Nugasinaje — AI Workspace untuk Mahasiswa Indonesia" },
+      { property: "og:site_name", content: "Nugasinaje" },
       { property: "og:description", content: "Nugasinaje is an AI-powered productivity platform designed to help students and professionals create high-quality presentations and academic papers automaticall" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "NugasinAje" },
+      { name: "twitter:title", content: "Nugasinaje — AI Workspace untuk Mahasiswa Indonesia" },
       { name: "twitter:description", content: "Nugasinaje is an AI-powered productivity platform designed to help students and professionals create high-quality presentations and academic papers automaticall" },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b1186eb0-6b03-4be6-9097-d56626fb8cb0/id-preview-1c42ffb8--69aa74d3-c60c-4a11-9f38-8c05acbcf556.lovable.app-1783036951221.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b1186eb0-6b03-4be6-9097-d56626fb8cb0/id-preview-1c42ffb8--69aa74d3-c60c-4a11-9f38-8c05acbcf556.lovable.app-1783036951221.png" },
@@ -102,6 +103,46 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500;1,9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap",
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Nugasinaje",
+          url: "https://nugasaje.lovable.app",
+          description:
+            "Ruang kerja akademik berbasis AI untuk mahasiswa Indonesia — menyusun makalah dan presentasi secara otomatis.",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Nugasinaje",
+          url: "https://nugasaje.lovable.app",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          name: "Nugasinaje",
+          url: "https://nugasaje.lovable.app",
+          applicationCategory: "EducationalApplication",
+          operatingSystem: "Web",
+          description:
+            "AI workspace untuk menyusun makalah dan presentasi akademik mahasiswa Indonesia.",
+          offers: {
+            "@type": "Offer",
+            price: "0",
+            priceCurrency: "IDR",
+          },
+        }),
       },
     ],
   }),

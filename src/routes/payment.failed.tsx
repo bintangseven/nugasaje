@@ -2,7 +2,23 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/payment/failed")({
-  head: () => ({ meta: [{ title: "Pembayaran gagal — Nugasinaje" }] }),
+  head: () => ({
+    meta: [
+      { title: "Pembayaran gagal — Nugasinaje" },
+      {
+        name: "description",
+        content:
+          "Pembayaran langganan PRO Nugasinaje tidak berhasil atau dibatalkan. Kamu bisa mencoba kembali dari halaman Profil.",
+      },
+      { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Pembayaran gagal — Nugasinaje" },
+      {
+        property: "og:description",
+        content: "Pembayaran langganan PRO Nugasinaje gagal diproses.",
+      },
+      { property: "og:type", content: "website" },
+    ],
+  }),
   component: FailedPage,
 });
 
