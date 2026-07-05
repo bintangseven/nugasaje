@@ -16,11 +16,10 @@ import {
   type ProjectRow,
 } from "@/lib/mock-data";
 import { getProject, updateProject } from "@/lib/projects.functions";
-import { generateProjectContent, finalizeBeautifulExport } from "@/lib/ai.functions";
+import { generateProjectContent } from "@/lib/ai.functions";
 import { exportProject } from "@/lib/export.functions";
 import { TemplatePicker } from "@/components/TemplatePicker";
 import { DEFAULT_TEMPLATE_ID } from "@/lib/pptx-templates";
-import { BeautifulThemePicker } from "@/components/BeautifulThemePicker";
 
 export const Route = createFileRoute("/_authenticated/mission/$id")({
   head: () => ({
@@ -42,7 +41,6 @@ function MissionWorkspace() {
   const updateFn = useServerFn(updateProject);
   const generateFn = useServerFn(generateProjectContent);
   const exportFn = useServerFn(exportProject);
-  const finalizeFn = useServerFn(finalizeBeautifulExport);
 
   const projectQuery = useQuery({
     queryKey: ["project", id],
@@ -75,7 +73,6 @@ function MissionWorkspace() {
       updateFn={updateFn}
       generateFn={generateFn}
       exportFn={exportFn}
-      finalizeFn={finalizeFn}
       queryClient={queryClient}
     />
   );
@@ -86,14 +83,12 @@ function Workspace({
   updateFn,
   generateFn,
   exportFn,
-  finalizeFn,
   queryClient,
 }: {
   project: ProjectRow;
   updateFn: ReturnType<typeof useServerFn<typeof updateProject>>;
   generateFn: ReturnType<typeof useServerFn<typeof generateProjectContent>>;
   exportFn: ReturnType<typeof useServerFn<typeof exportProject>>;
-  finalizeFn: ReturnType<typeof useServerFn<typeof finalizeBeautifulExport>>;
   queryClient: ReturnType<typeof useQueryClient>;
 }) {
   const missionType: MissionType = project.mission;
@@ -112,9 +107,6 @@ function Workspace({
   const [draft, setDraft] = useState("");
   const [templateId, setTemplateId] = useState<string>(
     ((project.answers ?? {}) as Record<string, string>).__template ?? DEFAULT_TEMPLATE_ID,
-  );
-  const [beautifyTheme, setBeautifyTheme] = useState<string>(
-    ((project.answers ?? {}) as Record<string, string>).__beautify_theme ?? "",
   );
   const [attachment, setAttachment] = useState<{ name: string; mime: string; base64: string; size: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -235,7 +227,7 @@ function Workspace({
     // Persist template choice (for presentation) along with phase change.
     const nextAnswers =
       missionType === "presentation"
-        ? { ...answers, __template: templateId, __beautify_theme: beautifyTheme }
+        ? { ...answers, __template: templateId }
         : undefined;
     if (nextAnswers) setAnswers(nextAnswers);
     scheduleSave({
@@ -260,14 +252,7 @@ function Workspace({
       await queryClient.invalidateQueries({ queryKey: ["project", project.id] });
       await queryClient.invalidateQueries({ queryKey: ["projects"] });
       if (missionType === "presentation") {
-        toast.success("Konten siap! Slide sedang difinalisasi di background…");
-        // Background finalize: tunggu ±60 detik agar Beautiful.ai selesai
-        // render image AI, lalu minta downloadUrl. UI tidak menunggu ini.
-        setTimeout(() => {
-          finalizeFn({ data: { id: project.id } })
-            .then(() => toast.success("Slide siap diunduh ✨"))
-            .catch((e: unknown) => console.error("[finalize] gagal:", e));
-        }, 60_000);
+        toast.success("Slide siap diunduh ✨");
       } else {
         toast.success("Konten siap! Klik unduh untuk menyimpan file.");
       }
@@ -504,7 +489,6 @@ function Workspace({
             <div className="mt-4 space-y-4 border-t border-border pt-4">
               {missionType === "presentation" && (
                 <>
-                  <BeautifulThemePicker value={beautifyTheme} onChange={setBeautifyTheme} />
                   <TemplatePicker value={templateId} onChange={setTemplateId} />
                 </>
               )}
