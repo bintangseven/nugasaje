@@ -877,12 +877,6 @@ export const exportProject = createServerFn({ method: "POST" })
     const ctx = project.ai_context as {
       kind?: string;
       content?: unknown;
-      beautiful?: {
-        downloadUrl?: string;
-        fileName?: string;
-        expiresAt?: string;
-        presentationId?: string;
-      } | null;
     } | null;
     if (!ctx?.content) {
       // Self-heal: project is marked done but the AI payload is missing
@@ -908,62 +902,7 @@ export const exportProject = createServerFn({ method: "POST" })
       };
     }
 
-    // Coba ambil PPTX dari Beautiful.ai jika tersedia & belum expired
-    const b = ctx.beautiful;
-    const stillValid = b?.expiresAt ? new Date(b.expiresAt).getTime() > Date.now() + 60_000 : false;
-    const bKey = process.env.BEAUTIFULAI_API_KEY;
-    async function fetchBeautifulPptx(url: string): Promise<Uint8Array> {
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(`Beautiful.ai download gagal: ${r.status}`);
-      return new Uint8Array(await r.arrayBuffer());
-    }
-    if (b?.downloadUrl && stillValid) {
-      try {
-        const bytes = await fetchBeautifulPptx(b.downloadUrl);
-        return {
-          base64: toBase64(bytes),
-          filename: b.fileName ?? `${baseName}.pptx`,
-          mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        };
-      } catch (e) {
-        console.error("[beautiful.ai] download gagal, fallback ke pptxgenjs:", e);
-      }
-    } else if (b?.presentationId && bKey) {
-      // Re-export bila link sudah expired
-      try {
-        const expRes = await fetch("https://www.beautiful.ai/api/v1/exportPresentation", {
-          method: "POST",
-          headers: {
-            "X-Api-Key": bKey,
-            "content-type": "application/json",
-            accept: "application/json",
-          },
-          body: JSON.stringify({ presentationId: b.presentationId, format: "pptx" }),
-        });
-        if (expRes.ok) {
-          const j = (await expRes.json()) as { downloadUrl: string; fileName: string; expiresAt: string };
-          const bytes = await fetchBeautifulPptx(j.downloadUrl);
-          // Update ai_context dengan link baru
-          await context.supabase
-            .from("projects")
-            .update({
-              ai_context: {
-                ...(project.ai_context as Record<string, unknown>),
-                beautiful: { ...b, downloadUrl: j.downloadUrl, fileName: j.fileName, expiresAt: j.expiresAt },
-              } as unknown as never,
-            })
-            .eq("id", data.id);
-          return {
-            base64: toBase64(bytes),
-            filename: j.fileName ?? `${baseName}.pptx`,
-            mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-          };
-        }
-      } catch (e) {
-        console.error("[beautiful.ai] re-export gagal, fallback ke pptxgenjs:", e);
-      }
-    }
-
+    // Presentasi selalu di-render via pptxgenjs (Beautiful.ai nonaktif sementara).
     const answers = (project.answers ?? {}) as Record<string, string>;
     const bytes = await buildPptx(ctx.content as PresentationContent, studentName, {
       course: answers.course,
