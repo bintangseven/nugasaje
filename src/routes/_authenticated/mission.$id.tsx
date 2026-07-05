@@ -16,11 +16,10 @@ import {
   type ProjectRow,
 } from "@/lib/mock-data";
 import { getProject, updateProject } from "@/lib/projects.functions";
-import { generateProjectContent, finalizeBeautifulExport } from "@/lib/ai.functions";
+import { generateProjectContent } from "@/lib/ai.functions";
 import { exportProject } from "@/lib/export.functions";
 import { TemplatePicker } from "@/components/TemplatePicker";
 import { DEFAULT_TEMPLATE_ID } from "@/lib/pptx-templates";
-import { BeautifulThemePicker } from "@/components/BeautifulThemePicker";
 
 export const Route = createFileRoute("/_authenticated/mission/$id")({
   head: () => ({
@@ -42,7 +41,6 @@ function MissionWorkspace() {
   const updateFn = useServerFn(updateProject);
   const generateFn = useServerFn(generateProjectContent);
   const exportFn = useServerFn(exportProject);
-  const finalizeFn = useServerFn(finalizeBeautifulExport);
 
   const projectQuery = useQuery({
     queryKey: ["project", id],
@@ -75,7 +73,6 @@ function MissionWorkspace() {
       updateFn={updateFn}
       generateFn={generateFn}
       exportFn={exportFn}
-      finalizeFn={finalizeFn}
       queryClient={queryClient}
     />
   );
@@ -86,14 +83,12 @@ function Workspace({
   updateFn,
   generateFn,
   exportFn,
-  finalizeFn,
   queryClient,
 }: {
   project: ProjectRow;
   updateFn: ReturnType<typeof useServerFn<typeof updateProject>>;
   generateFn: ReturnType<typeof useServerFn<typeof generateProjectContent>>;
   exportFn: ReturnType<typeof useServerFn<typeof exportProject>>;
-  finalizeFn: ReturnType<typeof useServerFn<typeof finalizeBeautifulExport>>;
   queryClient: ReturnType<typeof useQueryClient>;
 }) {
   const missionType: MissionType = project.mission;
@@ -112,9 +107,6 @@ function Workspace({
   const [draft, setDraft] = useState("");
   const [templateId, setTemplateId] = useState<string>(
     ((project.answers ?? {}) as Record<string, string>).__template ?? DEFAULT_TEMPLATE_ID,
-  );
-  const [beautifyTheme, setBeautifyTheme] = useState<string>(
-    ((project.answers ?? {}) as Record<string, string>).__beautify_theme ?? "",
   );
   const [attachment, setAttachment] = useState<{ name: string; mime: string; base64: string; size: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
