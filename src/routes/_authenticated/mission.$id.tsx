@@ -227,7 +227,7 @@ function Workspace({
     // Persist template choice (for presentation) along with phase change.
     const nextAnswers =
       missionType === "presentation"
-        ? { ...answers, __template: templateId, __beautify_theme: beautifyTheme }
+        ? { ...answers, __template: templateId }
         : undefined;
     if (nextAnswers) setAnswers(nextAnswers);
     scheduleSave({
@@ -252,14 +252,7 @@ function Workspace({
       await queryClient.invalidateQueries({ queryKey: ["project", project.id] });
       await queryClient.invalidateQueries({ queryKey: ["projects"] });
       if (missionType === "presentation") {
-        toast.success("Konten siap! Slide sedang difinalisasi di background…");
-        // Background finalize: tunggu ±60 detik agar Beautiful.ai selesai
-        // render image AI, lalu minta downloadUrl. UI tidak menunggu ini.
-        setTimeout(() => {
-          finalizeFn({ data: { id: project.id } })
-            .then(() => toast.success("Slide siap diunduh ✨"))
-            .catch((e: unknown) => console.error("[finalize] gagal:", e));
-        }, 60_000);
+        toast.success("Slide siap diunduh ✨");
       } else {
         toast.success("Konten siap! Klik unduh untuk menyimpan file.");
       }
@@ -496,7 +489,6 @@ function Workspace({
             <div className="mt-4 space-y-4 border-t border-border pt-4">
               {missionType === "presentation" && (
                 <>
-                  <BeautifulThemePicker value={beautifyTheme} onChange={setBeautifyTheme} />
                   <TemplatePicker value={templateId} onChange={setTemplateId} />
                 </>
               )}
