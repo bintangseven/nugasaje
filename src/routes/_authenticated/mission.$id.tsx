@@ -20,6 +20,7 @@ import { generateProjectContent } from "@/lib/ai.functions";
 import { exportProject } from "@/lib/export.functions";
 import { TemplatePicker } from "@/components/TemplatePicker";
 import { DEFAULT_TEMPLATE_ID } from "@/lib/pptx-templates";
+import { PaperContentPreview, SlidesContentPreview } from "@/components/ContentPreview";
 
 export const Route = createFileRoute("/_authenticated/mission/$id")({
   head: () => ({
@@ -557,11 +558,23 @@ function Workspace({
             {phase === "interview" && <EmptyPreview missionType={missionType} />}
 
             {phase !== "interview" && missionType === "paper" && (
-              <PaperPreview answers={answers} phase={phase} stepIndex={stepIndex} />
+              phase === "done" && project.ai_context && (project.ai_context as { content?: unknown }).content ? (
+                <PaperContentPreview
+                  content={(project.ai_context as { content: Parameters<typeof PaperContentPreview>[0]["content"] }).content}
+                />
+              ) : (
+                <PaperPreview answers={answers} phase={phase} stepIndex={stepIndex} />
+              )
             )}
 
             {phase !== "interview" && missionType === "presentation" && (
-              <SlidesPreview answers={answers} phase={phase} stepIndex={stepIndex} />
+              phase === "done" && project.ai_context && (project.ai_context as { content?: unknown }).content ? (
+                <SlidesContentPreview
+                  content={(project.ai_context as { content: Parameters<typeof SlidesContentPreview>[0]["content"] }).content}
+                />
+              ) : (
+                <SlidesPreview answers={answers} phase={phase} stepIndex={stepIndex} />
+              )
             )}
           </div>
 
