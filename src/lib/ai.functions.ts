@@ -234,9 +234,30 @@ export const generateProjectContent = createServerFn({ method: "POST" })
     const tool = isPaper ? paperTool : presentationTool;
     const toolName = tool.function.name;
 
+    // Terjemahkan pilihan user jadi instruksi konkret untuk AI
+    const toneRaw = (answers.style ?? "").toLowerCase();
+    const toneInstruction = toneRaw.includes("populer")
+      ? "Gaya bahasa POPULER & mudah dibaca: kalimat pendek-menengah, hindari jargon, gunakan analogi sederhana, tetap sopan-akademik tapi ramah untuk pembaca awam."
+      : toneRaw.includes("teknis")
+        ? "Gaya bahasa TEKNIS PADAT DATA: banyak istilah teknis, angka/statistik, definisi presisi, kalimat efisien, minim kata pengisi."
+        : "Gaya bahasa FORMAL AKADEMIK (skripsi/tesis): kalimat lengkap SPOK, kata baku KBBI, hindari kata sapaan, konsisten memakai istilah ilmiah.";
+
+    const citRaw = (answers.citation_style ?? "").toLowerCase();
+    const citationStyle: "apa" | "ieee" | "none" = citRaw.includes("ieee")
+      ? "ieee"
+      : citRaw.includes("tanpa")
+        ? "none"
+        : "apa";
+    const citationInstruction =
+      citationStyle === "ieee"
+        ? "GUNAKAN SITASI IEEE. Sisipkan sitasi dalam teks memakai nomor kurung siku seperti [1], [2], [3] setiap kali mengutip fakta/data/definisi (target minimal 4-6 sitasi tersebar). Field 'references' WAJIB diurut sesuai nomor sitasi pertama, format IEEE: [1] A. Penulis, \"Judul,\" Jurnal, vol. X, no. Y, hlm. Z-Z, Thn. Referensi minimal 6, campur jurnal + buku + web."
+        : citationStyle === "none"
+          ? "TANPA sitasi formal dalam teks. Tetap sediakan 4-6 item di 'references' sebagai daftar bacaan pendukung dengan format bebas namun konsisten."
+          : "GUNAKAN SITASI APA. Sisipkan sitasi dalam teks memakai format (Nama, Tahun) atau Nama (Tahun) setiap kali mengutip fakta/data/definisi (target minimal 4-6 sitasi tersebar). Field 'references' format APA edisi 7: Nama, A. B. (Tahun). Judul. Penerbit/Jurnal, vol(no), hlm. Referensi minimal 6, campur jurnal + buku + web.";
+
     const systemPrompt = isPaper
-      ? "Kamu adalah asisten akademik untuk mahasiswa Indonesia. Tugasmu menyusun paper berbahasa Indonesia yang rapi, runtut, dan dapat langsung diserahkan. Gunakan gaya formal akademik. Selalu panggil fungsi submit_paper."
-      : "Kamu adalah asisten akademik untuk mahasiswa Indonesia. Tugasmu menyusun slide presentasi berbahasa Indonesia yang jelas dan terstruktur. Selalu panggil fungsi submit_presentation.";
+      ? `Kamu adalah asisten akademik untuk mahasiswa Indonesia. Tugasmu menyusun paper berbahasa Indonesia yang rapi, runtut, dan dapat langsung diserahkan. ${toneInstruction} ${citationInstruction} Selalu panggil fungsi submit_paper.`
+      : `Kamu adalah asisten akademik untuk mahasiswa Indonesia. Tugasmu menyusun slide presentasi berbahasa Indonesia yang jelas dan terstruktur. ${toneInstruction} Selalu panggil fungsi submit_presentation.`;
 
     const userPrompt = [
       `Mahasiswa memberikan informasi berikut untuk ${isPaper ? "paper" : "presentasi"}:`,
@@ -341,7 +362,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
           case 3:
             return `STAGE 3 (ENRICH): Versi terkini:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nLengkapi BAB III, perkuat conclusion jadi minimal 2 paragraf utuh, tambah analisis kritis. Pastikan tiap sub-bab punya 'blocks' yang seimbang: ±50% paragraf, ±50% bullet — pola ideal paragraf→bullet→paragraf→bullet→paragraf penutup. Pastikan abstrak 130-160 kata dan padat.`;
           case 4:
-            return `STAGE 4 (POLISH): Versi siap-poles:\n\n${JSON.stringify(prev).slice(0, 14000)}\n\nFinal pass: rapikan transisi antar paragraf, pastikan tiap sub-bab benar-benar campuran ±50/50 paragraf & bullet (tidak ada sub-bab yang 100% paragraf atau 100% bullet), kata pengantar lengkap 3 paragraf, referensi minimal 6 dengan format APA benar dan beragam (jurnal, buku, web). Periksa konsistensi istilah. Kembalikan paper FINAL utuh.`;
+            return `STAGE 4 (POLISH): Versi siap-poles:\n\n${JSON.stringify(prev).slice(0, 14000)}\n\nFinal pass: rapikan transisi antar paragraf, pastikan tiap sub-bab benar-benar campuran ±50/50 paragraf & bullet (tidak ada sub-bab yang 100% paragraf atau 100% bullet), kata pengantar lengkap 3 paragraf, dan referensi minimal 6 mengikuti FORMAT SITASI yang diminta di system prompt (APA / IEEE / tanpa sitasi) — jangan campur gaya sitasi. Periksa konsistensi istilah. Kembalikan paper FINAL utuh.`;
         }
       } else {
         switch (stage) {
