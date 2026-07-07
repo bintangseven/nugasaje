@@ -97,12 +97,22 @@ export const missionQuestions: Record<
     },
     {
       id: "style",
-      question: "Gaya penulisan yang diinginkan?",
+      question: "Gaya bahasa yang diinginkan?",
       type: "choice",
       options: [
-        "Formal akademik (sitasi APA)",
-        "Formal sederhana (tanpa sitasi rumit)",
-        "Semi-formal (lebih naratif)",
+        "Formal skripsi/tesis",
+        "Populer & mudah dibaca",
+        "Teknis padat data",
+      ],
+    },
+    {
+      id: "citation_style",
+      question: "Format sitasi & daftar pustaka?",
+      type: "choice",
+      options: [
+        "APA (Nama, Tahun)",
+        "IEEE (nomor [1])",
+        "Tanpa sitasi formal",
       ],
     },
     {
@@ -154,9 +164,13 @@ export const missionQuestions: Record<
     },
     {
       id: "style",
-      question: "Gaya slide yang diinginkan?",
+      question: "Gaya bahasa slide?",
       type: "choice",
-      options: ["Formal akademik", "Semi-formal", "Kreatif & visual"],
+      options: [
+        "Formal skripsi/tesis",
+        "Populer & mudah dibaca",
+        "Teknis padat data",
+      ],
     },
     {
       id: "language",
