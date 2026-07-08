@@ -326,7 +326,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: isPaper ? "google/gemini-2.5-flash" : "openai/gpt-5.4",
           messages,
           tools: [tool],
           tool_choice: { type: "function", function: { name: toolName } },
