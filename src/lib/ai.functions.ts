@@ -391,13 +391,13 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       } else {
         switch (stage) {
           case 1:
-            return "STAGE 1 (DRAFT): Susun outline presentasi — title, subtitle, agenda, dan minimal 7 slide isi dengan judul + layout + 3 bullet draft + notes singkat. Fokus struktur dulu.";
+            return "STAGE 1 (DRAFT): Susun outline presentasi — title, subtitle, agenda, dan minimal 7 slide isi. Setiap slide layout 'content' WAJIB pakai 'blocks' dengan minimal 1 paragraf pembuka + 1 bullet list draft (±50/50). Fokus struktur dulu.";
           case 2:
-            return `STAGE 2 (EXPAND BULLETS): Draft awal:\n\n${JSON.stringify(prev).slice(0, 8000)}\n\nPerluas SETIAP slide content: jadikan 4-6 bullet (maks 14 kata per bullet) yang lebih informatif dan substantif. Tambahkan 1-2 slide baru jika topik butuh (mis. studi kasus, data). Jangan tipis.`;
+            return `STAGE 2 (EXPAND NARRATIVE): Draft awal:\n\n${JSON.stringify(prev).slice(0, 8000)}\n\nPerluas SETIAP slide 'content': pastikan 'blocks' berisi ±50% paragraf naratif (2-4 kalimat, 30-60 kata) + ±50% bullet (2-4 poin, maks 14 kata). Pola: paragraf pembuka → bullet list → paragraf penghubung/penutup. Tambahkan 1-2 slide baru jika topik butuh. Jangan tipis, jangan 100% bullet.`;
           case 3:
-            return `STAGE 3 (ENRICH NOTES): Versi terkini:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nFokus catatan pembicara: tiap slide HARUS punya notes 4-6 kalimat yang detail — penjelasan konteks, contoh konkret, transisi ke slide berikut. Tambahkan minimal 1 slide layout 'stats' (3 angka) dan/atau 'two_column' jika belum ada.`;
+            return `STAGE 3 (ENRICH NOTES): Versi terkini:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nFokus catatan pembicara: tiap slide HARUS punya notes 4-6 kalimat yang detail — penjelasan konteks, contoh konkret, transisi ke slide berikut. Pertahankan campuran paragraf & bullet di 'blocks'. Tambahkan minimal 1 slide layout 'stats' (3 angka) dan/atau 'two_column' jika belum ada.`;
           case 4:
-            return `STAGE 4 (POLISH): Versi siap-poles:\n\n${JSON.stringify(prev).slice(0, 14000)}\n\nFinal pass: konsistensi gaya bullet, tidak ada slide kosong/tipis, agenda sinkron dengan urutan slide, closing.message + cta yang kuat. Pastikan ada 1-2 slide 'section' sebagai pembatas. Kembalikan presentasi FINAL utuh.`;
+            return `STAGE 4 (POLISH): Versi siap-poles:\n\n${JSON.stringify(prev).slice(0, 14000)}\n\nFinal pass: verifikasi tiap slide 'content' benar-benar ±50/50 paragraf + bullet di 'blocks' (tidak ada yang 100% bullet atau 100% paragraf). Paragraf harus mengalir naratif, bullet ringkas. Agenda sinkron dengan urutan slide, closing.message + cta kuat, ada 1-2 slide 'section' sebagai pembatas. Kembalikan presentasi FINAL utuh.`;
         }
       }
       return "";
