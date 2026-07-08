@@ -141,6 +141,30 @@ const presentationTool = {
                 minItems: 1,
                 items: { type: "string" },
               },
+              blocks: {
+                type: "array",
+                description:
+                  "WAJIB untuk layout 'content'. Campuran ±50% paragraf naratif + ±50% bullet list agar slide bergaya naratif-akademik, bukan sekadar deretan bullet. Pola ideal per slide: paragraf pembuka 2-3 kalimat → bullet list 2-4 poin → (opsional) paragraf penutup singkat. Bila diisi, renderer memakai 'blocks' dan mengabaikan 'bullets'.",
+                items: {
+                  type: "object",
+                  properties: {
+                    kind: { type: "string", enum: ["paragraph", "bullets"] },
+                    text: {
+                      type: "string",
+                      description:
+                        "Untuk kind=paragraph: 1 paragraf naratif 2-4 kalimat (~30-60 kata).",
+                    },
+                    items: {
+                      type: "array",
+                      description:
+                        "Untuk kind=bullets: 2-5 poin ringkas, tiap poin maks 14 kata.",
+                      items: { type: "string" },
+                    },
+                  },
+                  required: ["kind"],
+                  additionalProperties: false,
+                },
+              },
               bullets_right: {
                 type: "array",
                 description: "Hanya untuk layout two_column: bullet kolom kanan.",
