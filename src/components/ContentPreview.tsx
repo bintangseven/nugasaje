@@ -29,6 +29,7 @@ type SlideContent = {
   title: string;
   layout: "section" | "content" | "two_column" | "quote" | "stats";
   bullets?: string[];
+  blocks?: PaperBlock[];
   bullets_right?: string[];
   stats?: { value: string; label: string }[];
   quote?: string;
@@ -216,13 +217,31 @@ function SlideCard({ index, slide }: { index: number; slide: SlideContent }) {
           </ul>
         </div>
       ) : (
-        (slide.bullets?.length ?? 0) > 0 && (
-          <ul className="mt-3 list-disc space-y-0.5 pl-5 text-[13px] text-foreground">
-            {slide.bullets!.map((b, i) => (
-              <li key={i}>{b}</li>
-            ))}
-          </ul>
-        )
+        (slide.blocks && slide.blocks.length > 0 ? (
+          <div className="mt-3 space-y-2">
+            {slide.blocks.map((b, i) =>
+              b.kind === "bullets" ? (
+                <ul key={i} className="list-disc space-y-0.5 pl-5 text-[13px] text-foreground">
+                  {b.items.map((it, j) => (
+                    <li key={j}>{it}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p key={i} className="text-justify text-[13px] leading-relaxed text-foreground">
+                  {b.text}
+                </p>
+              ),
+            )}
+          </div>
+        ) : (
+          (slide.bullets?.length ?? 0) > 0 && (
+            <ul className="mt-3 list-disc space-y-0.5 pl-5 text-[13px] text-foreground">
+              {slide.bullets!.map((b, i) => (
+                <li key={i}>{b}</li>
+              ))}
+            </ul>
+          )
+        ))
       )}
 
       {slide.notes && (
