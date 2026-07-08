@@ -304,7 +304,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
             "- agenda: 3-5 poin singkat sesuai isi slide.",
             "- slides: minimal 6 slide isi, urutan logis (Pendahuluan → Pembahasan → Penutup).",
             "- Sisipkan 1-2 slide layout 'section' sebagai pembatas bab besar.",
-            "- Mayoritas slide pakai layout 'content' (3-5 bullet ringkas, maks 12 kata per bullet).",
+            "- Mayoritas slide pakai layout 'content' dengan GAYA NARATIF: WAJIB isi field 'blocks' dengan campuran ±50% paragraf naratif + ±50% bullet list. Pola tiap slide: paragraf pembuka (2-4 kalimat) → bullet list (2-4 poin, maks 14 kata) → paragraf penutup singkat bila perlu. JANGAN slide yang 100% bullet dan JANGAN 100% paragraf.",
             "- Gunakan 'two_column' untuk perbandingan, 'stats' untuk data angka, 'quote' untuk kutipan penting (opsional, hanya bila relevan).",
             "- Setiap slide wajib punya catatan pembicara 2-3 kalimat.",
             "- closing.message berisi ucapan terima kasih singkat.",
