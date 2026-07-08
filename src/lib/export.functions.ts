@@ -806,13 +806,37 @@ async function buildPptx(
       }
     } else {
       // content (default)
-      s.addText(
-        slide.bullets.map((b) => ({ text: b, options: { bullet: true } })),
-        {
+      const useBlocks = Array.isArray(slide.blocks) && slide.blocks.length > 0;
+      if (useBlocks) {
+        const items: { text: string; options: Record<string, unknown> }[] = [];
+        (slide.blocks ?? []).forEach((blk) => {
+          if (blk.kind === "paragraph" && blk.text) {
+            items.push({
+              text: blk.text,
+              options: { bullet: false, fontSize: 16, paraSpaceAfter: 10, paraSpaceBefore: 4 },
+            });
+          } else if (blk.kind === "bullets" && Array.isArray(blk.items)) {
+            blk.items.forEach((it) => {
+              items.push({
+                text: it,
+                options: { bullet: true, fontSize: 18, paraSpaceAfter: 6, indentLevel: 0 },
+              });
+            });
+          }
+        });
+        s.addText(items, {
           x: 0.7, y: 1.7, w: W - 1.4, h: H - 2.5,
-          fontFace: t.bodyFont, fontSize: 20, color: t.ink, valign: "top", paraSpaceAfter: 10,
-        },
-      );
+          fontFace: t.bodyFont, fontSize: 18, color: t.ink, valign: "top",
+        });
+      } else {
+        s.addText(
+          slide.bullets.map((b) => ({ text: b, options: { bullet: true } })),
+          {
+            x: 0.7, y: 1.7, w: W - 1.4, h: H - 2.5,
+            fontFace: t.bodyFont, fontSize: 20, color: t.ink, valign: "top", paraSpaceAfter: 10,
+          },
+        );
+      }
     }
 
     if (slide.notes) s.addNotes(slide.notes);
