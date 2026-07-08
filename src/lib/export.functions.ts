@@ -31,6 +31,7 @@ type PresentationContent = {
     title: string;
     layout: "section" | "content" | "two_column" | "quote" | "stats";
     bullets: string[];
+    blocks?: SlideBlock[];
     bullets_right?: string[];
     stats?: { value: string; label: string }[];
     quote?: string;
@@ -38,6 +39,10 @@ type PresentationContent = {
     notes: string;
   }[];
 };
+
+type SlideBlock =
+  | { kind: "paragraph"; text: string }
+  | { kind: "bullets"; items: string[] };
 
 function sanitizeFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9-_ ]+/g, "").trim().slice(0, 60) || "student-os";
