@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { LogOut, Loader2, Sparkles, Crown, Receipt, ExternalLink } from "lucide-react";
-import { useEffect, useState } from "react";
+import { LogOut, Loader2, Sparkles, Crown, Receipt, ExternalLink, Upload, Check } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/AppHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import {
   PRO_DAILY_LIMIT,
   PRO_PRICE_IDR,
 } from "@/lib/projects.functions";
+import { dummyAvatars } from "@/lib/avatars";
 import { createProUpgradeInvoice, listMyPayments } from "@/lib/payments.functions";
 import { useCurrentUser } from "@/hooks/use-auth";
 
@@ -57,6 +58,9 @@ function ProfilePage() {
   });
 
   const [form, setForm] = useState({ name: "", university: "", major: "", semester: "" });
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
     if (profile) {
       setForm({
@@ -65,17 +69,56 @@ function ProfilePage() {
         major: profile.major ?? "",
         semester: profile.semester ?? "",
       });
+      setAvatarUrl(profile.avatar_url ?? null);
     }
   }, [profile]);
 
   const save = useMutation({
-    mutationFn: () => updateFn({ data: form }),
+    mutationFn: () => updateFn({ data: { ...form, avatar_url: avatarUrl } }),
     onSuccess: () => {
       toast.success("Profil disimpan");
       queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Gagal menyimpan"),
   });
+
+  async function handleFile(file: File) {
+    if (file.size > 3 * 1024 * 1024) {
+      toast.error("Ukuran maksimum 3MB");
+      return;
+    }
+    setUploading(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = () => {
+          img.onload = () => {
+            const size = 256;
+            const canvas = document.createElement("canvas");
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext("2d")!;
+            const min = Math.min(img.width, img.height);
+            const sx = (img.width - min) / 2;
+            const sy = (img.height - min) / 2;
+            ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+            resolve(canvas.toDataURL("image/jpeg", 0.82));
+          };
+          img.onerror = reject;
+          img.src = reader.result as string;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      setAvatarUrl(dataUrl);
+      toast.success("Foto siap disimpan. Klik 'Simpan perubahan'.");
+    } catch {
+      toast.error("Gagal memproses foto");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   const upgrade = useMutation({
     mutationFn: () => upgradeFn(),
@@ -169,14 +212,74 @@ function ProfilePage() {
 
         <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
           <div className="flex items-center gap-4">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-lg font-semibold text-foreground">
-              {initials}
+            <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-secondary text-lg font-semibold text-foreground">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
+              ) : (
+                initials
+              )}
             </span>
             <div>
               <p className="text-base font-semibold text-foreground">{displayName}</p>
               <p className="text-sm text-muted-foreground">
                 {profile?.email ?? user?.email ?? "—"}
               </p>
+            </div>
+          </div>
+
+          {/* Avatar picker */}
+          <div className="mt-6 border-t border-border pt-6">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Foto profil
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Pilih avatar bawaan atau unggah foto pribadimu.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {dummyAvatars.map((a) => {
+                const active = avatarUrl === a.url;
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setAvatarUrl(a.url)}
+                    aria-label={a.label}
+                    className={`relative h-14 w-14 overflow-hidden rounded-full border-2 transition-all ${
+                      active
+                        ? "border-foreground ring-2 ring-foreground/20"
+                        : "border-border hover:border-foreground/40"
+                    }`}
+                  >
+                    <img src={a.url} alt={a.label} className="h-full w-full object-cover" />
+                    {active && (
+                      <span className="absolute inset-0 flex items-center justify-center bg-foreground/40">
+                        <Check className="h-5 w-5 text-background" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-full border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground disabled:opacity-50"
+                aria-label="Unggah foto"
+              >
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                <span className="text-[9px] font-medium">Unggah</span>
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleFile(f);
+                  e.target.value = "";
+                }}
+              />
             </div>
           </div>
 

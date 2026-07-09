@@ -750,13 +750,61 @@ async function buildPptx(
     s.background = { color: t.surface };
     if (isIngoude) decorateIngoude(s);
     if (isLovable) decorateLovable(s, "light");
-    s.addText(slide.title, {
-      x: 0.6, y: 0.5, w: W - 1.2, h: 0.8,
-      fontFace: t.headFont, fontSize: 28, bold: true, color: t.ink,
-    });
-    s.addShape(SHAPES.rect, {
-      x: 0.6, y: 1.25, w: 0.7, h: 0.07, fill: { color: t.accent }, line: { color: t.accent },
-    });
+    // Rotate decorative header per slide so the deck feels less monoton
+    const variant = i % 4;
+    if (variant === 0) {
+      // Classic: title + short accent underline
+      s.addText(slide.title, {
+        x: 0.6, y: 0.5, w: W - 1.2, h: 0.8,
+        fontFace: t.headFont, fontSize: 28, bold: true, color: t.ink,
+      });
+      s.addShape(SHAPES.rect, {
+        x: 0.6, y: 1.25, w: 0.7, h: 0.07, fill: { color: t.accent }, line: { color: t.accent },
+      });
+    } else if (variant === 1) {
+      // Side ribbon: vertical accent bar + indented title
+      s.addShape(SHAPES.rect, {
+        x: 0.35, y: 0.5, w: 0.12, h: 0.9, fill: { color: t.accent }, line: { color: t.accent },
+      });
+      s.addText(slide.title, {
+        x: 0.7, y: 0.5, w: W - 1.3, h: 0.9,
+        fontFace: t.headFont, fontSize: 28, bold: true, color: t.ink, valign: "middle",
+      });
+    } else if (variant === 2) {
+      // Numbered chip in the top-right + underline full-width thin line
+      s.addText(slide.title, {
+        x: 0.6, y: 0.5, w: W - 2.2, h: 0.8,
+        fontFace: t.headFont, fontSize: 28, bold: true, color: t.ink,
+      });
+      s.addShape(SHAPES.roundRect, {
+        x: W - 1.5, y: 0.55, w: 0.9, h: 0.55,
+        fill: { color: t.accentSoft }, line: { color: t.accentSoft }, rectRadius: 0.1,
+      });
+      s.addText(String(i + 1).padStart(2, "0"), {
+        x: W - 1.5, y: 0.55, w: 0.9, h: 0.55,
+        fontFace: t.headFont, fontSize: 16, bold: true, color: t.accent,
+        align: "center", valign: "middle",
+      });
+      s.addShape(SHAPES.line, {
+        x: 0.6, y: 1.32, w: W - 1.2, h: 0,
+        line: { color: t.accent, width: 0.75 },
+      });
+    } else {
+      // Highlighted eyebrow chip + slightly smaller title
+      s.addShape(SHAPES.roundRect, {
+        x: 0.6, y: 0.5, w: 1.4, h: 0.35,
+        fill: { color: t.accent }, line: { color: t.accent }, rectRadius: 0.06,
+      });
+      s.addText((slide.layout === "stats" ? "DATA KUNCI" : slide.layout === "quote" ? "KUTIPAN" : "POIN UTAMA"), {
+        x: 0.6, y: 0.5, w: 1.4, h: 0.35,
+        fontFace: t.headFont, fontSize: 10, bold: true, color: "FFFFFF",
+        align: "center", valign: "middle", charSpacing: 3,
+      });
+      s.addText(slide.title, {
+        x: 0.6, y: 0.9, w: W - 1.2, h: 0.7,
+        fontFace: t.headFont, fontSize: 26, bold: true, color: t.ink,
+      });
+    }
 
     if (slide.layout === "two_column") {
       const colW = (W - 1.4) / 2;
