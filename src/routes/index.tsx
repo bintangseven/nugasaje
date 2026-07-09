@@ -12,6 +12,7 @@ import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { defaultProjectName, missions, type MissionType, type ProjectRow } from "@/lib/mock-data";
 import { createProject, listProjects } from "@/lib/projects.functions";
+import { DashboardHome } from "@/components/DashboardHome";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -86,6 +87,10 @@ function Index() {
   }
 
   const recent = ((projectsQuery.data ?? []) as ProjectRow[]).slice(0, 3);
+
+  if (loaded && user) {
+    return <DashboardHome user={user} />;
+  }
 
   return (
     <div className="min-h-screen bg-background noise-overlay">
