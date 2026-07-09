@@ -3,6 +3,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 
+export const MAX_PROJECTS = 15;
+
 const MissionEnum = z.enum(["paper", "presentation"]);
 const PhaseEnum = z.enum(["interview", "working", "done"]);
 
@@ -55,6 +57,15 @@ export const createProject = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    const { count, error: countErr } = await context.supabase
+      .from("projects")
+      .select("id", { count: "exact", head: true });
+    if (countErr) throw new Error(countErr.message);
+    if ((count ?? 0) >= MAX_PROJECTS) {
+      throw new Error(
+        `Batas maksimum ${MAX_PROJECTS} proyek tercapai. Hapus proyek lama sebelum menambah proyek baru.`,
+      );
+    }
     const { data: row, error } = await context.supabase
       .from("projects")
       .insert({
@@ -105,7 +116,7 @@ export const getProfile = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("profiles")
-      .select("id,name,email,university,major,semester,plan,generations_used,generations_date,pro_until")
+      .select("id,name,email,university,major,semester,plan,generations_used,generations_date,pro_until,avatar_url")
       .eq("id", context.userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -144,6 +155,7 @@ export const updateProfile = createServerFn({ method: "POST" })
         university: z.string().max(160).optional(),
         major: z.string().max(160).optional(),
         semester: z.string().max(40).optional(),
+        avatar_url: z.string().max(500_000).nullable().optional(),
       })
       .parse(input),
   )
