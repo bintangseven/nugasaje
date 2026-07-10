@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { FileText, Presentation, Plus, ArrowRight, Crown, Sparkles, Zap } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
+import { useEffect } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { ProjectCard } from "@/components/ProjectCard";
 import {
@@ -40,6 +41,13 @@ export function DashboardHome({ user }: { user: User }) {
   const doneCount = projects.filter((p) => p.progress >= 100).length;
 
   const profile = profileQuery.data;
+
+  useEffect(() => {
+    if (profile && profile.onboarded === false) {
+      navigate({ to: "/onboarding" });
+    }
+  }, [profile, navigate]);
+
   const isProActive =
     profile?.plan === "pro" &&
     (!profile.pro_until || new Date(profile.pro_until).getTime() > Date.now());
