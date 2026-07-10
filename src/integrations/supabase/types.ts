@@ -67,11 +67,13 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           email: string | null
+          gender: string | null
           generations_date: string | null
           generations_used: number
           id: string
           major: string | null
           name: string | null
+          onboarded: boolean
           plan: Database["public"]["Enums"]["user_plan"]
           pro_until: string | null
           semester: string | null
@@ -82,11 +84,13 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          gender?: string | null
           generations_date?: string | null
           generations_used?: number
           id: string
           major?: string | null
           name?: string | null
+          onboarded?: boolean
           plan?: Database["public"]["Enums"]["user_plan"]
           pro_until?: string | null
           semester?: string | null
@@ -97,11 +101,13 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          gender?: string | null
           generations_date?: string | null
           generations_used?: number
           id?: string
           major?: string | null
           name?: string | null
+          onboarded?: boolean
           plan?: Database["public"]["Enums"]["user_plan"]
           pro_until?: string | null
           semester?: string | null
