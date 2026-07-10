@@ -116,7 +116,7 @@ export const getProfile = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("profiles")
-      .select("id,name,email,university,major,semester,plan,generations_used,generations_date,pro_until,avatar_url")
+      .select("id,name,email,university,major,semester,plan,generations_used,generations_date,pro_until,avatar_url,gender,onboarded")
       .eq("id", context.userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -155,6 +155,7 @@ export const updateProfile = createServerFn({ method: "POST" })
         university: z.string().max(160).optional(),
         major: z.string().max(160).optional(),
         semester: z.string().max(40).optional(),
+        gender: z.string().max(20).nullable().optional(),
         avatar_url: z.string().max(500_000).nullable().optional(),
       })
       .parse(input),
@@ -163,6 +164,33 @@ export const updateProfile = createServerFn({ method: "POST" })
     const { error } = await context.supabase
       .from("profiles")
       .update(data)
+      .eq("id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const completeOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        name: z.string().min(1).max(120),
+        university: z.string().max(160).optional().default(""),
+        gender: z.string().max(20).optional().default(""),
+        avatar_url: z.string().max(500_000).nullable().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("profiles")
+      .update({
+        name: data.name,
+        university: data.university,
+        gender: data.gender,
+        avatar_url: data.avatar_url ?? null,
+        onboarded: true,
+      })
       .eq("id", context.userId);
     if (error) throw new Error(error.message);
     return { ok: true };

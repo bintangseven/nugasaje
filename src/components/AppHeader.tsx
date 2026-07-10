@@ -1,12 +1,22 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { getProfile } from "@/lib/projects.functions";
 
 export function AppHeader() {
   const [user, setUser] = useState<User | null>(null);
   const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
+  const profileFn = useServerFn(getProfile);
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => profileFn(),
+    enabled: !!user,
+  });
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
@@ -28,6 +38,7 @@ export function AppHeader() {
   }, []);
 
   const displayName =
+    profile?.name ??
     (user?.user_metadata?.name as string | undefined) ??
     (user?.user_metadata?.full_name as string | undefined) ??
     user?.email?.split("@")[0] ??
@@ -39,6 +50,8 @@ export function AppHeader() {
         .slice(0, 2)
         .join("")
         .toUpperCase();
+
+  const avatarUrl = profile?.avatar_url ?? null;
 
   return (
     <header className="sticky top-0 z-40 glass">
@@ -73,10 +86,17 @@ export function AppHeader() {
           <button
             type="button"
             onClick={() => navigate({ to: "/profile" })}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-sm font-bold text-background transition-transform hover:scale-105"
+            className="group flex items-center gap-1.5 rounded-full border border-border bg-card py-1 pl-1 pr-2.5 transition-all hover:border-foreground/30 hover:shadow-sm"
             aria-label="Profil"
           >
-            {initials}
+            <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-foreground text-xs font-bold text-background">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
+              ) : (
+                initials
+              )}
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover:translate-y-0.5" />
           </button>
         ) : (
           <Link
