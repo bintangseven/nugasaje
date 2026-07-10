@@ -140,6 +140,7 @@ function ProfilePage() {
   const usedToday =
     profile?.generations_date === today ? profile?.generations_used ?? 0 : 0;
   const remaining = Math.max(0, dailyLimit - usedToday);
+  const usedPct = Math.min(100, Math.round((usedToday / dailyLimit) * 100));
   const priceLabel = `Rp${PRO_PRICE_IDR.toLocaleString("id-ID")}/bulan`;
 
   const displayName = form.name || profile?.name || user?.email?.split("@")[0] || "Mahasiswa";
@@ -165,10 +166,10 @@ function ProfilePage() {
 
         {/* Langganan */}
         <div
-          className={`mt-8 overflow-hidden rounded-2xl border p-6 ${
+          className={`mt-8 overflow-hidden rounded-2xl border-2 p-6 shadow-[0_10px_30px_-15px_rgba(15,23,42,0.15)] ${
             isProActive
-              ? "border-amber-300/60 bg-gradient-to-br from-amber-50 to-orange-50"
-              : "border-border bg-card"
+              ? "border-amber-400/70 bg-gradient-to-br from-amber-50 to-orange-50"
+              : "border-foreground/15 bg-card"
           }`}
         >
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -184,7 +185,7 @@ function ProfilePage() {
               </span>
               </div>
             <p className="mt-2 text-lg font-semibold text-foreground">
-              Sisa kuota hari ini: {remaining} dari {dailyLimit} generate
+              Kuota hari ini: {usedToday} / {dailyLimit} generate
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               {isProActive
@@ -208,9 +209,28 @@ function ProfilePage() {
               </button>
             )}
           </div>
+          {/* Visual progress bar */}
+          <div className="mt-5">
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-foreground/10">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  remaining === 0
+                    ? "bg-rose-500"
+                    : isProActive
+                      ? "bg-amber-500"
+                      : "bg-foreground"
+                }`}
+                style={{ width: `${usedPct}%` }}
+              />
+            </div>
+            <div className="mt-1.5 flex justify-between text-[11px] font-medium text-muted-foreground">
+              <span>Terpakai {usedToday}</span>
+              <span>Sisa {remaining} · reset besok</span>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <div className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-[0_2px_8px_rgba(15,23,42,0.05)]">
           <div className="flex items-center gap-4">
             <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-secondary text-lg font-semibold text-foreground">
               {avatarUrl ? (
@@ -244,16 +264,16 @@ function ProfilePage() {
                     type="button"
                     onClick={() => setAvatarUrl(a.url)}
                     aria-label={a.label}
-                    className={`relative h-14 w-14 overflow-hidden rounded-full border-2 transition-all ${
+                    className={`relative h-14 w-14 overflow-hidden rounded-full transition-all ${
                       active
-                        ? "border-foreground ring-2 ring-foreground/20"
-                        : "border-border hover:border-foreground/40"
+                        ? "scale-110 ring-[3px] ring-foreground ring-offset-2 ring-offset-card"
+                        : "ring-1 ring-border hover:ring-foreground/40"
                     }`}
                   >
                     <img src={a.url} alt={a.label} className="h-full w-full object-cover" />
                     {active && (
-                      <span className="absolute inset-0 flex items-center justify-center bg-foreground/40">
-                        <Check className="h-5 w-5 text-background" />
+                      <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-background shadow-md ring-2 ring-card">
+                        <Check className="h-3 w-3" strokeWidth={3} />
                       </span>
                     )}
                   </button>
@@ -263,7 +283,7 @@ function ProfilePage() {
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
-                className="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-full border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground disabled:opacity-50"
+                className="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-full border-2 border-dashed border-foreground/30 text-muted-foreground transition-colors hover:border-foreground hover:text-foreground disabled:opacity-50"
                 aria-label="Unggah foto"
               >
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
@@ -422,13 +442,15 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-medium text-muted-foreground">{label}</span>
+      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-foreground/70">
+        {label}
+      </span>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-foreground/30 focus:outline-none focus:ring-2 focus:ring-foreground/10"
+        className="w-full rounded-lg border-2 border-foreground/15 bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-foreground focus:outline-none focus:ring-4 focus:ring-foreground/10"
       />
     </label>
   );
