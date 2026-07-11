@@ -23,6 +23,19 @@ const GENDERS = [
   { id: "other", label: "Lainnya" },
 ];
 
+const SEMESTER_OPTIONS = [
+  "Semester 1",
+  "Semester 2",
+  "Semester 3",
+  "Semester 4",
+  "Semester 5",
+  "Semester 6",
+  "Semester 7",
+  "Semester 8",
+  "Semester 9+",
+  "Pascasarjana",
+];
+
 function OnboardingPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -33,6 +46,8 @@ function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [university, setUniversity] = useState("");
+  const [major, setMajor] = useState("");
+  const [semester, setSemester] = useState("");
   const [gender, setGender] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -45,6 +60,8 @@ function OnboardingPage() {
     if (profile && !name) {
       setName(profile.name ?? "");
       setUniversity(profile.university ?? "");
+      setMajor(profile.major ?? "");
+      setSemester(profile.semester ?? "");
       setGender(profile.gender ?? "");
       setAvatarUrl(profile.avatar_url ?? null);
     }
@@ -56,6 +73,8 @@ function OnboardingPage() {
         data: {
           name: name.trim(),
           university: university.trim(),
+          major: major.trim(),
+          semester: semester.trim(),
           gender,
           avatar_url: avatarUrl,
         },
@@ -105,9 +124,20 @@ function OnboardingPage() {
     }
   }
 
-  const totalSteps = 3;
+  // Steps: 0 Nama · 1 Jenis kelamin · 2 Universitas · 3 Jurusan · 4 Semester · 5 Avatar
+  const totalSteps = 6;
   const canNext =
-    step === 0 ? name.trim().length >= 2 : step === 1 ? gender !== "" : true;
+    step === 0
+      ? name.trim().length >= 2
+      : step === 1
+        ? gender !== ""
+        : step === 2
+          ? university.trim().length >= 2
+          : step === 3
+            ? major.trim().length >= 2
+            : step === 4
+              ? semester.trim().length >= 1
+              : true;
 
   if (isLoading) {
     return (
@@ -116,6 +146,15 @@ function OnboardingPage() {
       </div>
     );
   }
+
+  const stepTitles = [
+    { title: "Kenalan dulu, yuk", sub: "Kami akan menyapamu di dashboard." },
+    { title: "Sedikit tentang kamu", sub: "Bantu kami memanggilmu dengan tepat." },
+    { title: "Kampus atau instansi", sub: "Muncul di header dokumen yang kamu buat." },
+    { title: "Jurusan / program studi", sub: "AI akan menyesuaikan istilah dengan bidangmu." },
+    { title: "Semester saat ini", sub: "Menyesuaikan kedalaman & referensi." },
+    { title: "Pilih foto profilmu", sub: "Pilih avatar bawaan atau unggah fotomu sendiri." },
+  ];
 
   return (
     <div className="min-h-screen bg-[#FAF6EC] px-6 py-12">
@@ -149,36 +188,18 @@ function OnboardingPage() {
             className="mt-2 text-2xl font-semibold text-[#1B2A4A]"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
-            {step === 0
-              ? "Kenalan dulu, yuk"
-              : step === 1
-                ? "Sedikit tentang kamu"
-                : "Pilih foto profilmu"}
+            {stepTitles[step].title}
           </h1>
-          <p className="mt-1 text-sm text-[#55524C]">
-            {step === 0
-              ? "Kami akan menyapamu di dashboard."
-              : step === 1
-                ? "Data ini membantu personalisasi hasil AI."
-                : "Pilih avatar bawaan atau unggah fotomu sendiri."}
-          </p>
+          <p className="mt-1 text-sm text-[#55524C]">{stepTitles[step].sub}</p>
 
           <div className="mt-6 space-y-4">
             {step === 0 && (
-              <>
-                <OField
-                  label="Nama lengkap"
-                  value={name}
-                  onChange={setName}
-                  placeholder="Contoh: Rina Kartika"
-                />
-                <OField
-                  label="Universitas / Instansi"
-                  value={university}
-                  onChange={setUniversity}
-                  placeholder="Contoh: Universitas Indonesia"
-                />
-              </>
+              <OField
+                label="Nama lengkap"
+                value={name}
+                onChange={setName}
+                placeholder="Contoh: Rina Kartika"
+              />
             )}
 
             {step === 1 && (
@@ -206,6 +227,48 @@ function OnboardingPage() {
             )}
 
             {step === 2 && (
+              <OField
+                label="Universitas / Instansi"
+                value={university}
+                onChange={setUniversity}
+                placeholder="Contoh: Universitas Indonesia"
+              />
+            )}
+
+            {step === 3 && (
+              <OField
+                label="Jurusan / Program Studi"
+                value={major}
+                onChange={setMajor}
+                placeholder="Contoh: Ilmu Komunikasi"
+              />
+            )}
+
+            {step === 4 && (
+              <div>
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-[#1B2A4A]/70">
+                  Semester
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  {SEMESTER_OPTIONS.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setSemester(s)}
+                      className={`rounded-xl border-2 px-3 py-2.5 text-sm font-medium transition-all ${
+                        semester === s
+                          ? "border-[#1B2A4A] bg-[#1B2A4A] text-white shadow-md"
+                          : "border-[#1B2A4A]/15 bg-white text-[#1B2A4A] hover:border-[#1B2A4A]/40"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {step === 5 && (
               <div>
                 <div className="grid grid-cols-4 gap-3">
                   {dummyAvatars.map((a) => {

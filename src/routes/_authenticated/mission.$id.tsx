@@ -46,6 +46,13 @@ function MissionWorkspace() {
   const projectQuery = useQuery({
     queryKey: ["project", id],
     queryFn: () => getFn({ data: { id } }),
+    // Bila proyek sedang dikerjakan AI, polling agar UI otomatis
+    // ter-update walau user sempat keluar dari halaman ini.
+    refetchInterval: (query) => {
+      const row = query.state.data as ProjectRow | null | undefined;
+      return row && row.phase === "working" ? 4000 : false;
+    },
+    refetchOnWindowFocus: true,
   });
 
   // Redirect if project not found
@@ -106,6 +113,17 @@ function Workspace({
   const [phase, setPhase] = useState<ProjectPhase>(project.phase);
   const [stepIndex, setStepIndex] = useState<number>(project.step_index ?? -1);
   const [draft, setDraft] = useState("");
+
+  // Sinkronkan state lokal saat data server berubah (mis. karena polling
+  // menemukan phase → "done" dari eksekusi AI yang jalan di tab lain).
+  useEffect(() => {
+    if (project.phase !== phase) {
+      setPhase(project.phase);
+      setStepIndex(project.step_index ?? -1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project.phase, project.step_index]);
+
   const [templateId, setTemplateId] = useState<string>(
     ((project.answers ?? {}) as Record<string, string>).__template ?? DEFAULT_TEMPLATE_ID,
   );
@@ -252,6 +270,9 @@ function Workspace({
       setStepIndex(steps.length);
       await queryClient.invalidateQueries({ queryKey: ["project", project.id] });
       await queryClient.invalidateQueries({ queryKey: ["projects"] });
+      // Kuota harian bertambah di server; refresh cache profile agar
+      // dashboard menampilkan sisa kuota terbaru.
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
       if (missionType === "presentation") {
         toast.success("Slide siap diunduh ✨");
       } else {
@@ -471,7 +492,7 @@ function Workspace({
             </div>
           )}
 
-          {phase === "interview" && interviewDone && (
+          {interviewDone && phase !== "done" && (
             <div className="mt-4 space-y-4 border-t border-border pt-4">
               {missionType === "presentation" && (
                 <>
@@ -520,13 +541,29 @@ function Workspace({
                   </button>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={startGeneration}
-                className="w-full rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
-              >
-                Mulai kerjakan
-              </button>
+              {phase === "working" ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-xs text-foreground">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Sedang dikerjakan AI… kamu bebas menutup halaman ini.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={startGeneration}
+                    className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
+                  >
+                    Jalankan ulang jika macet
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={startGeneration}
+                  className="w-full rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+                >
+                  Mulai kerjakan
+                </button>
+              )}
             </div>
           )}
         </section>
