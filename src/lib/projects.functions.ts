@@ -176,6 +176,8 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       .object({
         name: z.string().min(1).max(120),
         university: z.string().max(160).optional().default(""),
+        major: z.string().max(160).optional().default(""),
+        semester: z.string().max(40).optional().default(""),
         gender: z.string().max(20).optional().default(""),
         avatar_url: z.string().max(500_000).nullable().optional(),
       })
@@ -187,6 +189,8 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       .update({
         name: data.name,
         university: data.university,
+        major: data.major,
+        semester: data.semester,
         gender: data.gender,
         avatar_url: data.avatar_url ?? null,
         onboarded: true,
