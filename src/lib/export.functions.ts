@@ -59,6 +59,7 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
     PageBreak,
     TableOfContents,
     StyleLevel,
+    LevelFormat,
   } = await import("docx");
 
   const FONT = "Times New Roman";
@@ -76,11 +77,13 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
       children: [new TextRun({ text, font: FONT, size: BODY, italics: opts.italic })],
     });
 
+  // Ganti bullet dot dengan penomoran huruf kecil (a. b. c. …) sesuai
+  // konvensi makalah Indonesia. Numbering dikonfigurasi di Document.numbering.
   const bulletPara = (text: string) =>
     new Paragraph({
       alignment: AlignmentType.JUSTIFIED,
       spacing: { after: 80, line: 340 },
-      bullet: { level: 0 },
+      numbering: { reference: "abc-list", level: 0 },
       children: [new TextRun({ text, font: FONT, size: BODY })],
     });
 
@@ -124,11 +127,12 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
     new Paragraph({ children: [new PageBreak()] }),
   ];
 
-  const h1 = (text: string) =>
+  const h1 = (text: string, opts: { pageBreakBefore?: boolean } = {}) =>
     new Paragraph({
       heading: HeadingLevel.HEADING_1,
       alignment: AlignmentType.CENTER,
       spacing: { before: 360, after: 240 },
+      pageBreakBefore: opts.pageBreakBefore,
       children: [new TextRun({ text: text.toUpperCase(), font: FONT, size: H1, bold: true })],
     });
 
@@ -157,50 +161,44 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
     });
 
   const kataPengantarBlock = [
-    h1("Kata Pengantar"),
+    h1("Kata Pengantar", { pageBreakBefore: true }),
     ...content.kata_pengantar
       .split(/\n+/)
       .map((p) => p.trim())
       .filter(Boolean)
       .map((p) => bodyPara(p, { firstLine: true })),
-    new Paragraph({ children: [new PageBreak()] }),
   ];
 
+  // TOC ditempatkan sebagai block-level element langsung di section
+  // (bukan di dalam Paragraph) agar Word mengenalinya sebagai field TOC
+  // yang bisa di-Update Field (F9) untuk memperbaharui nomor halaman.
   const daftarIsiBlock = [
-    h1("Daftar Isi"),
-    new Paragraph({
-      children: [
-        new TableOfContents("Daftar Isi", {
-          hyperlink: true,
-          headingStyleRange: "1-3",
-          stylesWithLevels: [
-            new StyleLevel("Heading1", 1),
-            new StyleLevel("Heading2", 2),
-            new StyleLevel("Heading3", 3),
-          ],
-        }),
+    h1("Daftar Isi", { pageBreakBefore: true }),
+    new TableOfContents("Daftar Isi", {
+      hyperlink: true,
+      headingStyleRange: "1-3",
+      stylesWithLevels: [
+        new StyleLevel("Heading1", 1),
+        new StyleLevel("Heading2", 2),
+        new StyleLevel("Heading3", 3),
       ],
     }),
-    new Paragraph({ children: [new PageBreak()] }),
   ];
 
   const abstractBlock = [
-    h1("Abstrak"),
+    h1("Abstrak", { pageBreakBefore: true }),
     bodyPara(content.abstract, { italic: true, firstLine: true }),
-    new Paragraph({ children: [new PageBreak()] }),
   ];
 
   const sectionBlocks = content.sections.flatMap((s) => {
-    const blocks: InstanceType<typeof Paragraph>[] = [
-      new Paragraph({ children: [new PageBreak()] }),
-    ];
+    const blocks: InstanceType<typeof Paragraph>[] = [];
     // Pisah "BAB I PENDAHULUAN" -> baris 1: "BAB I", baris 2: "PENDAHULUAN"
     const match = s.heading.match(/^(BAB\s+[IVXLCDM]+)\s+(.+)$/i);
     if (match) {
-      blocks.push(h1(match[1]));
+      blocks.push(h1(match[1], { pageBreakBefore: true }));
       blocks.push(h1Tight(match[2]));
     } else {
-      blocks.push(h1(s.heading));
+      blocks.push(h1(s.heading, { pageBreakBefore: true }));
     }
     renderBlocks(s.blocks, s.paragraphs).forEach((b) => blocks.push(b));
     (s.subsections ?? []).forEach((sub) => {
@@ -210,10 +208,13 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
     return blocks;
   });
 
-  const conclusion = [h1("Kesimpulan"), bodyPara(content.conclusion, { firstLine: true })];
+  const conclusion = [
+    h1("Kesimpulan", { pageBreakBefore: true }),
+    bodyPara(content.conclusion, { firstLine: true }),
+  ];
 
   const references = [
-    h1("Daftar Pustaka"),
+    h1("Daftar Pustaka", { pageBreakBefore: true }),
     ...content.references.map(
       (r) =>
         new Paragraph({
@@ -227,6 +228,22 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
   const doc = new Document({
     creator: "Nugasinaje",
     title: content.title,
+    numbering: {
+      config: [
+        {
+          reference: "abc-list",
+          levels: [
+            {
+              level: 0,
+              format: LevelFormat.LOWER_LETTER,
+              text: "%1.",
+              alignment: AlignmentType.LEFT,
+              style: { paragraph: { indent: { left: 720, hanging: 360 } } },
+            },
+          ],
+        },
+      ],
+    },
     styles: {
       default: {
         document: { run: { font: FONT, size: BODY } },
