@@ -131,6 +131,13 @@ export const missionQuestions: Record<
       type: "choice",
       options: ["Bahasa Indonesia", "Bahasa Inggris"],
     },
+    {
+      id: "notes",
+      question:
+        "Ada keterangan tambahan? (mis. fokus khusus, batasan, contoh kasus, atau referensi yang harus dipakai). Ketik ‘tidak ada’ jika tidak.",
+      type: "text",
+      placeholder: "Contoh: fokus pada UMKM di Jawa Barat, hindari data sebelum 2020.",
+    },
   ],
   presentation: [
     {
@@ -177,6 +184,13 @@ export const missionQuestions: Record<
       question: "Bahasa yang dipakai?",
       type: "choice",
       options: ["Bahasa Indonesia", "Bahasa Inggris"],
+    },
+    {
+      id: "notes",
+      question:
+        "Ada keterangan tambahan? (mis. fokus khusus, poin wajib, contoh kasus). Ketik ‘tidak ada’ jika tidak.",
+      type: "text",
+      placeholder: "Contoh: sertakan studi kasus Gojek, tekankan tren 2024.",
     },
   ],
 };

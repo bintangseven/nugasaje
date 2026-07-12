@@ -50,6 +50,15 @@ export function Footer() {
           <span>© {new Date().getFullYear()} Nugasinaje. Dibuat untuk anak skripsi.</span>
           <span className="font-mono-eyebrow">v1.0 — paper edition</span>
         </div>
+
+        <p
+          className="mt-4 text-[11px] leading-relaxed"
+          style={{ color: "var(--graphite)" }}
+        >
+          ⚠️ <strong>Disclaimer:</strong> Konten dihasilkan oleh AI dan bisa
+          mengandung kesalahan atau data yang kurang akurat. Selalu periksa
+          ulang fakta, sitasi, dan referensi sebelum diserahkan.
+        </p>
       </div>
     </footer>
   );

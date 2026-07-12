@@ -120,6 +120,11 @@ function Workspace({
     if (project.phase !== phase) {
       setPhase(project.phase);
       setStepIndex(project.step_index ?? -1);
+      // Ketika polling menemukan proyek sudah selesai di background
+      // (mis. user pernah menutup tab), refresh kuota harian.
+      if (project.phase === "done") {
+        queryClient.invalidateQueries({ queryKey: ["profile"] });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.phase, project.step_index]);
