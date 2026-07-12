@@ -274,10 +274,10 @@ export const generateProjectContent = createServerFn({ method: "POST" })
         : "apa";
     const citationInstruction =
       citationStyle === "ieee"
-        ? "GUNAKAN SITASI IEEE. Sisipkan sitasi dalam teks memakai nomor kurung siku seperti [1], [2], [3] setiap kali mengutip fakta/data/definisi (target minimal 4-6 sitasi tersebar). Field 'references' WAJIB diurut sesuai nomor sitasi pertama, format IEEE: [1] A. Penulis, \"Judul,\" Jurnal, vol. X, no. Y, hlm. Z-Z, Thn. Referensi minimal 6, campur jurnal + buku + web."
+        ? "GUNAKAN SITASI IEEE. Sisipkan sitasi dalam teks memakai nomor kurung siku seperti [1], [2], [3] setiap kali mengutip fakta/data/definisi (target minimal 4-6 sitasi tersebar). Field 'references' WAJIB diurut sesuai nomor sitasi pertama, format IEEE: [1] A. Penulis, \"Judul,\" Jurnal, vol. X, no. Y, hlm. Z-Z, Thn. Referensi minimal 6, campur jurnal + buku + web. WAJIB pakai sumber NYATA & DAPAT DILACAK (nama penulis, jurnal/penerbit, tahun benar) — jangan mengarang. UTAMAKAN sumber terbitan 2020 ke atas (≥70% referensi); sumber lawas hanya boleh untuk teori klasik/definisi mendasar."
         : citationStyle === "none"
-          ? "TANPA sitasi formal dalam teks. Tetap sediakan 4-6 item di 'references' sebagai daftar bacaan pendukung dengan format bebas namun konsisten."
-          : "GUNAKAN SITASI APA. Sisipkan sitasi dalam teks memakai format (Nama, Tahun) atau Nama (Tahun) setiap kali mengutip fakta/data/definisi (target minimal 4-6 sitasi tersebar). Field 'references' format APA edisi 7: Nama, A. B. (Tahun). Judul. Penerbit/Jurnal, vol(no), hlm. Referensi minimal 6, campur jurnal + buku + web.";
+          ? "TANPA sitasi formal dalam teks. Tetap sediakan 4-6 item di 'references' sebagai daftar bacaan pendukung dengan format bebas namun konsisten. Gunakan sumber NYATA yang bisa dilacak, utamakan terbitan 2020 ke atas."
+          : "GUNAKAN SITASI APA. Sisipkan sitasi dalam teks memakai format (Nama, Tahun) atau Nama (Tahun) setiap kali mengutip fakta/data/definisi (target minimal 4-6 sitasi tersebar). Field 'references' format APA edisi 7: Nama, A. B. (Tahun). Judul. Penerbit/Jurnal, vol(no), hlm. Referensi minimal 6, campur jurnal + buku + web. WAJIB pakai sumber NYATA & DAPAT DILACAK (nama penulis, jurnal/penerbit, DOI/URL bila ada, tahun benar) — jangan mengarang judul atau penulis fiktif. UTAMAKAN sumber terbitan 2020 ke atas (≥70% referensi); sumber lawas hanya boleh untuk teori klasik/definisi mendasar.";
 
     const systemPrompt = isPaper
       ? `Kamu adalah asisten akademik untuk mahasiswa Indonesia. Tugasmu menyusun paper berbahasa Indonesia yang rapi, runtut, dan dapat langsung diserahkan. ${toneInstruction} ${citationInstruction} Selalu panggil fungsi submit_paper.`
