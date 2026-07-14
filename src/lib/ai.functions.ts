@@ -440,13 +440,19 @@ export const generateProjectContent = createServerFn({ method: "POST" })
     if (upErr) throw new Error(upErr.message);
 
     // Catat pemakaian harian (reset tiap hari)
-    await context.supabase
+    // Gunakan admin client agar melewati trigger anti-privilege-escalation
+    // yang memblokir perubahan kolom generations_* dari user biasa.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: quotaErr } = await supabaseAdmin
       .from("profiles")
       .update({
         generations_used: usedToday + 1,
         generations_date: today,
       })
       .eq("id", context.userId);
+    if (quotaErr) {
+      console.error("[quota] gagal update kuota harian:", quotaErr.message);
+    }
 
     return { ok: true };
   });
