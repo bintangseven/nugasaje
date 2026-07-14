@@ -102,6 +102,18 @@ export function AppHeader() {
                 Proyek
               </Link>
               <Link
+                to="/harga"
+                className="transition-colors hover:text-foreground data-[status=active]:text-foreground"
+              >
+                Harga
+              </Link>
+              <Link
+                to="/faq"
+                className="transition-colors hover:text-foreground data-[status=active]:text-foreground"
+              >
+                FAQ
+              </Link>
+              <Link
                 to="/profile"
                 className="transition-colors hover:text-foreground data-[status=active]:text-foreground"
               >
@@ -117,10 +129,10 @@ export function AppHeader() {
               >
                 Beranda
               </Link>
-              <Link to="/" hash="harga" className="transition-colors hover:text-foreground">
+              <Link to="/harga" className="transition-colors hover:text-foreground">
                 Harga
               </Link>
-              <Link to="/" hash="faq" className="transition-colors hover:text-foreground">
+              <Link to="/faq" className="transition-colors hover:text-foreground">
                 FAQ
               </Link>
             </>
