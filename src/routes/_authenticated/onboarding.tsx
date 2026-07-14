@@ -81,6 +81,9 @@ function OnboardingPage() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["profile"] });
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("onboarding_skipped");
+      }
       toast.success("Selamat datang di Nugasinaje!");
       navigate({ to: "/" });
     },
