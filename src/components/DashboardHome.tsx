@@ -43,6 +43,9 @@ export function DashboardHome({ user }: { user: User }) {
   const profile = profileQuery.data;
 
   useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem("onboarding_skipped") === "1") {
+      return;
+    }
     if (profile && profile.onboarded === false) {
       navigate({ to: "/onboarding" });
     }
