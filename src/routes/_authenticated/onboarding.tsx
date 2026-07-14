@@ -329,7 +329,16 @@ function OnboardingPage() {
           <div className="mt-8 flex items-center justify-between gap-3">
             <button
               type="button"
-              onClick={() => (step === 0 ? navigate({ to: "/" }) : setStep(step - 1))}
+              onClick={() => {
+                if (step === 0) {
+                  if (typeof window !== "undefined") {
+                    sessionStorage.setItem("onboarding_skipped", "1");
+                  }
+                  navigate({ to: "/" });
+                } else {
+                  setStep(step - 1);
+                }
+              }}
               className="text-sm font-medium text-[#55524C] hover:text-[#1B2A4A]"
             >
               {step === 0 ? "Nanti saja" : "Kembali"}
