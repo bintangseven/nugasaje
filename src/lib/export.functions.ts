@@ -26,6 +26,17 @@ type PresentationContent = {
   title: string;
   subtitle: string;
   agenda: string[];
+  cover_style?:
+    | "solid"
+    | "gradient"
+    | "split"
+    | "geometric"
+    | "minimal"
+    | "editorial"
+    | "band"
+    | "duotone"
+    | "ingoude"
+    | "lovable";
   closing: { message: string; cta?: string };
   slides: {
     title: string;
@@ -314,6 +325,9 @@ async function buildPptx(
   pres.layout = "LAYOUT_WIDE";
   const tpl: PptxTemplate = getTemplate(meta.templateId);
   const t = tpl.theme;
+  // Cover style now comes from the AI (Claude designs freely per project).
+  // Fallback to "solid" for older content payloads without cover_style.
+  const coverStyle = content.cover_style ?? "solid";
 
   // Slide dims (LAYOUT_WIDE = 13.333 x 7.5)
   const W = 13.333;
@@ -323,8 +337,8 @@ async function buildPptx(
   const SHAPES = pres.ShapeType;
 
   // ===== Ingoude-style triangle decorations =====
-  const isIngoude = tpl.cover === "ingoude";
-  const isLovable = tpl.cover === "lovable";
+  const isIngoude = coverStyle === "ingoude";
+  const isLovable = coverStyle === "lovable";
   const decorateIngoude = (s: Slide, variant: "light" | "dark" = "light") => {
     // Top-right corner: large navy right-triangle + amber accent on top
     s.addShape(SHAPES.rtTriangle, {
@@ -429,7 +443,7 @@ async function buildPptx(
   const subtitle = content.subtitle || meta.course || "";
 
   const renderCover = () => {
-    switch (tpl.cover) {
+    switch (coverStyle) {
       case "lovable": {
         cover.background = { color: t.bg };
         // decorative concentric circles on the right
@@ -682,8 +696,8 @@ async function buildPptx(
     }
 
     // Footer credit shared across all cover styles
-    const isDarkCover = ["solid", "gradient", "duotone", "lovable"].includes(tpl.cover)
-      ? tpl.cover !== "minimal"
+    const isDarkCover = ["solid", "gradient", "duotone", "lovable"].includes(coverStyle)
+      ? coverStyle !== "minimal"
       : false;
     const creditColor = isDarkCover ? "FFFFFF" : t.ink;
     const dateColor = isDarkCover ? t.accentSoft : t.muted;
