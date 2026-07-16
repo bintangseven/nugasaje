@@ -99,15 +99,30 @@ const paperTool = {
 } as const;
 
 const presentationTool = {
-  type: "function",
-  function: {
-    name: "submit_presentation",
-    description: "Susun slide presentasi akademik berbahasa Indonesia.",
-    parameters: {
+  name: "submit_presentation",
+  description: "Susun slide presentasi akademik berbahasa Indonesia.",
+  input_schema: {
       type: "object",
       properties: {
         title: { type: "string" },
         subtitle: { type: "string" },
+        cover_style: {
+          type: "string",
+          enum: [
+            "solid",
+            "gradient",
+            "split",
+            "geometric",
+            "minimal",
+            "editorial",
+            "band",
+            "duotone",
+            "ingoude",
+            "lovable",
+          ],
+          description:
+            "Pilih gaya cover slide yang paling cocok untuk topik & audiens. Boleh berbeda tiap presentasi — kamu bebas mendesain.",
+        },
         agenda: {
           type: "array",
           minItems: 3,
@@ -194,9 +209,8 @@ const presentationTool = {
           },
         },
       },
-      required: ["title", "subtitle", "agenda", "closing", "slides"],
+      required: ["title", "subtitle", "cover_style", "agenda", "closing", "slides"],
       additionalProperties: false,
-    },
   },
 } as const;
 
