@@ -10,9 +10,9 @@ export function TemplatePicker({ value, onChange }: TemplatePickerProps) {
   return (
     <div className="space-y-3">
       <div>
-        <h3 className="text-sm font-semibold text-foreground">Pilih template slide</h3>
+        <h3 className="text-sm font-semibold text-foreground">Pilih kombinasi warna</h3>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Tema warna & tata letak cover akan dipakai di file .pptx kamu.
+          Hanya palet warna — Claude yang akan mendesain cover & tiap slide otomatis.
         </p>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -29,7 +29,7 @@ export function TemplatePicker({ value, onChange }: TemplatePickerProps) {
                   : "border-border hover:border-foreground/30"
               }`}
             >
-              <TemplatePreview tpl={tpl} />
+              <PalettePreview tpl={tpl} />
               <div className="px-3 py-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <p className="truncate text-xs font-semibold text-foreground">{tpl.name}</p>
@@ -55,196 +55,22 @@ function hex(c: string) {
   return `#${c}`;
 }
 
-function TemplatePreview({ tpl }: { tpl: PptxTemplate }) {
+function PalettePreview({ tpl }: { tpl: PptxTemplate }) {
   const t = tpl.theme;
-  const baseBg = hex(t.bg);
-  const bg2 = hex(t.bg2);
-  const surface = hex(t.surface);
-  const ink = hex(t.ink);
-  const accent = hex(t.accent);
-  const accentSoft = hex(t.accentSoft);
-  const muted = hex(t.muted);
-
-  const Wrapper = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
-    <div className="relative aspect-[16/9] w-full overflow-hidden" style={style}>
-      {children}
+  const swatches = [t.bg, t.accent, t.accentSoft, t.bg2, t.surface];
+  return (
+    <div className="relative aspect-[16/9] w-full overflow-hidden" style={{ background: hex(t.surface) }}>
+      <div className="absolute inset-0 flex">
+        {swatches.map((c, idx) => (
+          <div key={idx} className="flex-1" style={{ background: hex(c) }} />
+        ))}
+      </div>
+      <div
+        className="absolute inset-x-2 bottom-2 rounded px-2 py-1 text-[9px] font-bold uppercase tracking-wider"
+        style={{ background: hex(t.bg), color: hex(t.accentSoft) }}
+      >
+        Palette
+      </div>
     </div>
   );
-
-  switch (tpl.cover) {
-    case "lovable":
-      return (
-        <Wrapper style={{ background: baseBg }}>
-          {/* concentric circles right */}
-          <div
-            className="absolute -right-3 -top-3 h-14 w-14 rounded-full opacity-60"
-            style={{ background: accentSoft }}
-          />
-          <div
-            className="absolute -right-1 top-1 h-10 w-10 rounded-full opacity-70"
-            style={{ background: accent }}
-          />
-          <div
-            className="absolute right-2 top-3 h-6 w-6 rounded-full"
-            style={{ background: bg2 }}
-          />
-          <div className="absolute left-2 top-2 text-[5px] font-bold tracking-[0.18em]" style={{ color: accent }}>
-            PRODUCT LAUNCH
-          </div>
-          <div className="absolute left-2 top-4 right-14 text-[11px] font-extrabold leading-[1.05] text-white">
-            Build beautiful products, faster.
-          </div>
-          <div className="absolute left-2 bottom-2 text-[5px]" style={{ color: "#B8B6C8" }}>
-            Your Company · 2026
-          </div>
-        </Wrapper>
-      );
-    case "ingoude":
-      return (
-        <Wrapper style={{ background: surface }}>
-          {/* top-right triangles */}
-          <div
-            className="absolute -right-1 -top-1 h-6 w-12"
-            style={{ background: baseBg, clipPath: "polygon(0 0, 100% 0, 100% 100%)" }}
-          />
-          <div
-            className="absolute right-0 -top-1 h-4 w-8"
-            style={{ background: accentSoft, clipPath: "polygon(0 0, 100% 0, 100% 100%)" }}
-          />
-          {/* bottom-left triangles */}
-          <div
-            className="absolute -left-1 -bottom-1 h-5 w-12"
-            style={{ background: accentSoft, clipPath: "polygon(0 100%, 0 0, 100% 100%)" }}
-          />
-          <div
-            className="absolute left-2 -bottom-1 h-3 w-10"
-            style={{ background: baseBg, clipPath: "polygon(0 100%, 0 0, 100% 100%)" }}
-          />
-          {/* navy banner */}
-          <div
-            className="absolute left-0 top-1.5 h-2.5 w-[55%]"
-            style={{
-              background: baseBg,
-              clipPath: "polygon(0 0, 100% 0, 95% 100%, 0 100%)",
-            }}
-          />
-          <div className="absolute left-1 top-2 text-[5px] font-bold tracking-[0.1em] text-white">
-            COMPANY
-          </div>
-          {/* title */}
-          <div
-            className="absolute left-2 top-5 right-12 text-[11px] font-extrabold leading-[1.05]"
-            style={{ color: baseBg }}
-          >
-            JUDUL
-          </div>
-          {/* amber subtitle bar */}
-          <div
-            className="absolute left-2 bottom-3 h-2 w-[45%] px-1 text-[5px] font-bold leading-[8px]"
-            style={{ background: accentSoft, color: baseBg }}
-          >
-            "Tagline"
-          </div>
-          {/* chevrons */}
-          <div
-            className="absolute right-2 bottom-1.5 h-2 w-2"
-            style={{ background: baseBg, clipPath: "polygon(0 0, 70% 50%, 0 100%)" }}
-          />
-        </Wrapper>
-      );
-    case "gradient":
-      return (
-        <Wrapper style={{ background: `linear-gradient(135deg, ${baseBg}, ${bg2})` }}>
-          <div className="absolute left-2 top-2 text-[5px] font-bold tracking-[0.15em] text-white/80">PRESENTASI</div>
-          <div className="absolute left-2 top-4 right-2 text-[10px] font-bold leading-tight text-white">
-            Judul Presentasi
-          </div>
-          <div className="absolute bottom-2 left-2 text-[5px] text-white/70">Mata Kuliah</div>
-        </Wrapper>
-      );
-    case "split":
-      return (
-        <Wrapper style={{ background: surface }}>
-          <div className="absolute inset-y-0 left-0 w-[42%]" style={{ background: baseBg }} />
-          <div className="absolute left-[33%] top-1/2 h-6 w-6 -translate-y-1/2 rounded-full" style={{ background: bg2 }} />
-          <div className="absolute right-2 top-3 left-[46%] text-[9px] font-bold leading-tight" style={{ color: ink }}>
-            Judul
-          </div>
-          <div className="absolute right-2 bottom-2 left-[46%] text-[5px]" style={{ color: muted }}>
-            Mata Kuliah
-          </div>
-        </Wrapper>
-      );
-    case "minimal":
-      return (
-        <Wrapper style={{ background: baseBg }}>
-          <div className="absolute left-2 top-2 h-[2px] w-3" style={{ background: accent }} />
-          <div className="absolute left-2 top-3 text-[5px] font-bold tracking-[0.18em]" style={{ color: accent }}>
-            PRESENTASI
-          </div>
-          <div className="absolute left-2 top-5 right-2 text-[11px] font-bold leading-tight" style={{ color: ink }}>
-            Judul
-          </div>
-          <div className="absolute bottom-2 left-2 text-[5px]" style={{ color: muted }}>Mata Kuliah</div>
-        </Wrapper>
-      );
-    case "editorial":
-      return (
-        <Wrapper style={{ background: baseBg }}>
-          <div className="absolute left-2 top-2 text-[4px] font-bold tracking-[0.15em]" style={{ color: accent }}>VOL. 01</div>
-          <div className="absolute right-2 top-2 text-[4px] font-bold tracking-[0.15em]" style={{ color: accent }}>2026</div>
-          <div className="absolute left-2 right-2 top-3.5 h-px" style={{ background: accent }} />
-          <div className="absolute left-2 right-2 top-4 text-[12px] font-bold italic leading-tight" style={{ color: ink }}>
-            Judul
-          </div>
-          <div className="absolute bottom-1.5 left-2 text-[5px] italic" style={{ color: accent }}>Mata Kuliah</div>
-        </Wrapper>
-      );
-    case "band":
-      return (
-        <Wrapper style={{ background: surface }}>
-          <div className="absolute inset-x-0 top-[32%] h-[36%]" style={{ background: bg2 }} />
-          <div className="absolute left-2 top-[36%] text-[5px] font-bold tracking-[0.15em] text-white/90">PRESENTASI</div>
-          <div className="absolute left-2 top-[44%] right-2 text-[10px] font-bold leading-tight text-white">Judul</div>
-          <div className="absolute bottom-1.5 left-2 text-[5px]" style={{ color: ink }}>Mata Kuliah</div>
-        </Wrapper>
-      );
-    case "geometric":
-      return (
-        <Wrapper style={{ background: surface }}>
-          <div className="absolute -right-3 -top-3 h-12 w-12 rounded-full" style={{ background: accent }} />
-          <div className="absolute -bottom-3 -left-3 h-8 w-8 rounded-full" style={{ background: accentSoft }} />
-          <div className="absolute left-2 top-2 text-[5px] font-bold tracking-[0.15em]" style={{ color: accent }}>
-            PRESENTASI
-          </div>
-          <div className="absolute left-2 top-4 right-12 text-[11px] font-bold leading-tight" style={{ color: ink }}>
-            Judul
-          </div>
-          <div className="absolute bottom-2 left-2 text-[5px]" style={{ color: muted }}>Mata Kuliah</div>
-        </Wrapper>
-      );
-    case "duotone":
-      return (
-        <Wrapper style={{ background: `linear-gradient(120deg, ${baseBg} 45%, ${bg2})` }}>
-          <div className="absolute left-[28%] top-[18%] h-10 w-10 rounded-full opacity-70" style={{ background: accent }} />
-          <div className="absolute left-2 top-2 text-[5px] font-bold tracking-[0.18em]" style={{ color: accentSoft }}>
-            PRESENTASI
-          </div>
-          <div className="absolute left-2 top-4 right-2 text-[10px] font-bold leading-tight text-white">Judul</div>
-          <div className="absolute bottom-2 left-2 text-[5px]" style={{ color: accentSoft }}>Mata Kuliah</div>
-        </Wrapper>
-      );
-    case "solid":
-    default:
-      return (
-        <Wrapper style={{ background: baseBg }}>
-          <div className="absolute left-2 top-3 h-[2px] w-3" style={{ background: accentSoft }} />
-          <div className="absolute left-2 top-4 text-[5px] font-bold tracking-[0.15em]" style={{ color: accentSoft }}>
-            PRESENTASI
-          </div>
-          <div className="absolute left-2 top-6 right-2 text-[10px] font-bold leading-tight text-white">Judul</div>
-          <div className="absolute bottom-2 left-2 text-[5px]" style={{ color: accentSoft }}>Mata Kuliah</div>
-        </Wrapper>
-      );
-  }
 }

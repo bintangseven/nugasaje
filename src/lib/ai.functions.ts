@@ -99,15 +99,30 @@ const paperTool = {
 } as const;
 
 const presentationTool = {
-  type: "function",
-  function: {
-    name: "submit_presentation",
-    description: "Susun slide presentasi akademik berbahasa Indonesia.",
-    parameters: {
+  name: "submit_presentation",
+  description: "Susun slide presentasi akademik berbahasa Indonesia.",
+  input_schema: {
       type: "object",
       properties: {
         title: { type: "string" },
         subtitle: { type: "string" },
+        cover_style: {
+          type: "string",
+          enum: [
+            "solid",
+            "gradient",
+            "split",
+            "geometric",
+            "minimal",
+            "editorial",
+            "band",
+            "duotone",
+            "ingoude",
+            "lovable",
+          ],
+          description:
+            "Pilih gaya cover slide yang paling cocok untuk topik & audiens. Boleh berbeda tiap presentasi — kamu bebas mendesain.",
+        },
         agenda: {
           type: "array",
           minItems: 3,
@@ -194,9 +209,8 @@ const presentationTool = {
           },
         },
       },
-      required: ["title", "subtitle", "agenda", "closing", "slides"],
+      required: ["title", "subtitle", "cover_style", "agenda", "closing", "slides"],
       additionalProperties: false,
-    },
   },
 } as const;
 
@@ -255,8 +269,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
 
     const answers = (project.answers ?? {}) as Record<string, string>;
     const isPaper = project.mission === "paper";
-    const tool = isPaper ? paperTool : presentationTool;
-    const toolName = tool.function.name;
+    const toolName = isPaper ? paperTool.function.name : presentationTool.name;
 
     // Terjemahkan pilihan user jadi instruksi konkret untuk AI
     const toneRaw = (answers.style ?? "").toLowerCase();
@@ -281,7 +294,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
 
     const systemPrompt = isPaper
       ? `Kamu adalah asisten akademik untuk mahasiswa Indonesia. Tugasmu menyusun paper berbahasa Indonesia yang rapi, runtut, dan dapat langsung diserahkan. ${toneInstruction} ${citationInstruction} Selalu panggil fungsi submit_paper.`
-      : `Kamu adalah asisten akademik untuk mahasiswa Indonesia. Tugasmu menyusun slide presentasi berbahasa Indonesia yang jelas dan terstruktur. ${toneInstruction} Selalu panggil fungsi submit_presentation.`;
+      : `Kamu adalah desainer & penulis presentasi akademik profesional untuk mahasiswa Indonesia. Tugasmu MERANCANG slide presentasi berbahasa Indonesia yang jelas, terstruktur, dan enak dipandang. ${toneInstruction} Kamu BEBAS memilih 'cover_style' yang paling cocok dengan topik/audiens dan mengatur variasi layout ('section', 'content', 'two_column', 'stats', 'quote') tiap slide seperti desainer sungguhan. Selalu panggil fungsi submit_presentation.`;
 
     const userPrompt = [
       `Mahasiswa memberikan informasi berikut untuk ${isPaper ? "paper" : "presentasi"}:`,
@@ -313,24 +326,42 @@ export const generateProjectContent = createServerFn({ method: "POST" })
     ].join("\n");
 
     const att = data.attachment;
-    const userContent: Array<Record<string, unknown>> = [{ type: "text", text: userPrompt }];
+    // ---- Lovable Gateway (paper) attachment format ----
+    const gatewayUserContent: Array<Record<string, unknown>> = [{ type: "text", text: userPrompt }];
     if (att) {
       const mime = att.mime || "application/octet-stream";
       if (mime.startsWith("image/")) {
-        userContent.push({
-          type: "image_url",
-          image_url: { url: `data:${mime};base64,${att.base64}` },
-        });
+        gatewayUserContent.push({ type: "image_url", image_url: { url: `data:${mime};base64,${att.base64}` } });
       } else {
-        userContent.push({
+        gatewayUserContent.push({
           type: "file",
-          file: {
-            filename: att.name,
-            file_data: `data:${mime};base64,${att.base64}`,
-          },
+          file: { filename: att.name, file_data: `data:${mime};base64,${att.base64}` },
         });
       }
-      userContent.push({
+      gatewayUserContent.push({
+        type: "text",
+        text: `Gunakan isi file terlampir "${att.name}" sebagai bahan utama. Ekstrak poin-poin penting, kutipan, dan data yang relevan; jangan menyalin mentah-mentah.`,
+      });
+    }
+    // ---- Anthropic Claude (presentation) attachment format ----
+    const anthropicUserContent: Array<Record<string, unknown>> = [];
+    if (att) {
+      const mime = att.mime || "application/octet-stream";
+      if (mime.startsWith("image/")) {
+        anthropicUserContent.push({
+          type: "image",
+          source: { type: "base64", media_type: mime, data: att.base64 },
+        });
+      } else if (mime === "application/pdf") {
+        anthropicUserContent.push({
+          type: "document",
+          source: { type: "base64", media_type: "application/pdf", data: att.base64 },
+        });
+      }
+    }
+    anthropicUserContent.push({ type: "text", text: userPrompt });
+    if (att) {
+      anthropicUserContent.push({
         type: "text",
         text: `Gunakan isi file terlampir "${att.name}" sebagai bahan utama. Ekstrak poin-poin penting, kutipan, dan data yang relevan; jangan menyalin mentah-mentah.`,
       });
@@ -342,18 +373,16 @@ export const generateProjectContent = createServerFn({ method: "POST" })
     // makin substantif. Lebih lambat tapi hasil jauh lebih lengkap.
     type ChatMsg = { role: "system" | "user" | "assistant"; content: unknown };
 
-    const callTool = async (messages: ChatMsg[]): Promise<Record<string, unknown>> => {
+    // Paper: Lovable Gateway (Gemini via OpenAI-compatible tool calls)
+    const callGatewayTool = async (messages: ChatMsg[]): Promise<Record<string, unknown>> => {
       const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: isPaper ? "google/gemini-2.5-flash" : "openai/gpt-5.4",
+          model: "google/gemini-2.5-flash",
           messages,
-          tools: [tool],
-          tool_choice: { type: "function", function: { name: toolName } },
+          tools: [paperTool],
+          tool_choice: { type: "function", function: { name: paperTool.function.name } },
         }),
       });
       if (res.status === 429) throw new Error("Batas pemakaian AI tercapai. Coba lagi sebentar lagi.");
@@ -363,18 +392,75 @@ export const generateProjectContent = createServerFn({ method: "POST" })
         throw new Error(`AI gateway error ${res.status}: ${text.slice(0, 200)}`);
       }
       const j = (await res.json()) as {
-        choices?: Array<{
-          message?: { tool_calls?: Array<{ function?: { name?: string; arguments?: string } }> };
-        }>;
+        choices?: Array<{ message?: { tool_calls?: Array<{ function?: { arguments?: string } }> } }>;
       };
       const argsText = j.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
       if (!argsText) throw new Error("AI tidak mengembalikan konten terstruktur.");
-      try {
-        return JSON.parse(argsText);
-      } catch {
-        throw new Error("Gagal mem-parsing hasil AI.");
-      }
+      try { return JSON.parse(argsText); } catch { throw new Error("Gagal mem-parsing hasil AI."); }
     };
+
+    // Presentation: Anthropic Claude directly (tool_use)
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    const callClaudeTool = async (extraUserText: string, prevAssistantJson: Record<string, unknown> | null): Promise<Record<string, unknown>> => {
+      if (!anthropicKey) throw new Error("ANTHROPIC_API_KEY belum diset di server.");
+      const messages: Array<{ role: "user" | "assistant"; content: unknown }> = [];
+      // First turn: full user context (with attachment)
+      messages.push({ role: "user", content: anthropicUserContent });
+      if (prevAssistantJson) {
+        // Feed previous tool output back as assistant tool_use so Claude iterates
+        messages.push({
+          role: "assistant",
+          content: [
+            {
+              type: "tool_use",
+              id: "prev_stage",
+              name: presentationTool.name,
+              input: prevAssistantJson,
+            },
+          ],
+        });
+        messages.push({
+          role: "user",
+          content: [
+            { type: "tool_result", tool_use_id: "prev_stage", content: "ok, lanjutkan revisi." },
+            { type: "text", text: extraUserText },
+          ],
+        });
+      } else {
+        messages.push({ role: "user", content: [{ type: "text", text: extraUserText }] });
+      }
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": anthropicKey,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-5-20250929",
+          max_tokens: 8000,
+          system: systemPrompt,
+          tools: [presentationTool],
+          tool_choice: { type: "tool", name: presentationTool.name },
+          messages,
+        }),
+      });
+      if (res.status === 429) throw new Error("Batas pemakaian Claude tercapai. Coba lagi sebentar lagi.");
+      if (res.status === 401 || res.status === 403) {
+        throw new Error("ANTHROPIC_API_KEY ditolak oleh Anthropic. Periksa key & billing.");
+      }
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Anthropic error ${res.status}: ${text.slice(0, 300)}`);
+      }
+      const j = (await res.json()) as {
+        content?: Array<{ type: string; name?: string; input?: Record<string, unknown> }>;
+      };
+      const toolBlock = j.content?.find((c) => c.type === "tool_use" && c.name === presentationTool.name);
+      if (!toolBlock?.input) throw new Error("Claude tidak mengembalikan hasil tool.");
+      return toolBlock.input;
+    };
+    void toolName;
 
     const stageInstruction = (stage: 1 | 2 | 3 | 4, prev: Record<string, unknown> | null): string => {
       if (isPaper) {
@@ -403,19 +489,22 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       return "";
     };
 
-    const baseMessages: ChatMsg[] = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userContent },
-    ];
-
     let parsed: Record<string, unknown> | null = null;
-    for (const stage of [1, 2, 3, 4] as const) {
-      const stageMsg = stageInstruction(stage, parsed);
-      const messages: ChatMsg[] =
-        stage === 1
-          ? [...baseMessages, { role: "user", content: stageMsg }]
-          : [...baseMessages, { role: "user", content: stageMsg }];
-      parsed = await callTool(messages);
+    if (isPaper) {
+      const baseMessages: ChatMsg[] = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: gatewayUserContent },
+      ];
+      for (const stage of [1, 2, 3, 4] as const) {
+        const stageMsg = stageInstruction(stage, parsed);
+        const messages: ChatMsg[] = [...baseMessages, { role: "user", content: stageMsg }];
+        parsed = await callGatewayTool(messages);
+      }
+    } else {
+      for (const stage of [1, 2, 3, 4] as const) {
+        const stageMsg = stageInstruction(stage, parsed);
+        parsed = await callClaudeTool(stageMsg, parsed);
+      }
     }
     if (!parsed) throw new Error("AI tidak menghasilkan konten.");
 
