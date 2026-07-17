@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getTemplate, type PptxTemplate } from "./pptx-templates";
+import { DEFAULT_THEME, resolveTheme, type PptxTheme } from "./pptx-templates";
 
 type PaperContent = {
   title: string;
@@ -37,6 +37,7 @@ type PresentationContent = {
     | "duotone"
     | "ingoude"
     | "lovable";
+  theme?: Partial<PptxTheme>;
   closing: { message: string; cta?: string };
   slides: {
     title: string;
@@ -318,13 +319,14 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
 async function buildPptx(
   content: PresentationContent,
   studentName: string,
-  meta: { course?: string; style?: string; audience?: string; templateId?: string },
+  meta: { course?: string; style?: string; audience?: string },
 ): Promise<Uint8Array> {
   const pptxgen = (await import("pptxgenjs")).default;
   const pres = new pptxgen();
   pres.layout = "LAYOUT_WIDE";
-  const tpl: PptxTemplate = getTemplate(meta.templateId);
-  const t = tpl.theme;
+  // Theme now comes from Claude per-project. Fallback to DEFAULT_THEME.
+  const t = resolveTheme(content.theme);
+  void DEFAULT_THEME;
   // Cover style now comes from the AI (Claude designs freely per project).
   // Fallback to "solid" for older content payloads without cover_style.
   const coverStyle = content.cover_style ?? "solid";
@@ -1016,7 +1018,6 @@ export const exportProject = createServerFn({ method: "POST" })
       course: answers.course,
       style: answers.style,
       audience: answers.audience,
-      templateId: answers.__template,
     });
     return {
       base64: toBase64(bytes),
