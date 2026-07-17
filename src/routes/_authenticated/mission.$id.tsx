@@ -487,11 +487,6 @@ function Workspace({
 
           {interviewDone && phase !== "done" && (
             <div className="mt-4 space-y-4 border-t border-border pt-4">
-              {missionType === "presentation" && (
-                <>
-                  <TemplatePicker value={templateId} onChange={setTemplateId} />
-                </>
-              )}
               <div className="space-y-2">
                 <div className="text-xs font-medium text-foreground">Lampiran (opsional)</div>
                 <p className="text-[11px] text-muted-foreground">
