@@ -123,6 +123,23 @@ const presentationTool = {
           description:
             "Pilih gaya cover slide yang paling cocok untuk topik & audiens. Boleh berbeda tiap presentasi — kamu bebas mendesain.",
         },
+        theme: {
+          type: "object",
+          description:
+            "Palet warna deck yang KAMU rancang sendiri agar cocok dengan topik, audiens, & mood presentasi. Semua nilai berupa hex 6 digit TANPA '#'. Pastikan kontras teks selalu terbaca (mis. bg gelap → gunakan teks putih otomatis).",
+          properties: {
+            bg: { type: "string", description: "Warna latar utama slide gelap / cover (hex 6 digit tanpa #)." },
+            bg2: { type: "string", description: "Warna latar sekunder / band / gradient partner." },
+            surface: { type: "string", description: "Warna latar slide konten terang (biasanya putih/off-white)." },
+            ink: { type: "string", description: "Warna teks utama di atas surface (gelap, kontras tinggi)." },
+            inkInverse: { type: "string", description: "Warna teks di atas bg gelap (biasanya FFFFFF)." },
+            muted: { type: "string", description: "Warna teks sekunder / caption." },
+            accent: { type: "string", description: "Warna aksen utama (garis, chip, angka stats)." },
+            accentSoft: { type: "string", description: "Aksen lembut / dekorasi / highlight tipis." },
+          },
+          required: ["bg", "bg2", "surface", "ink", "inkInverse", "muted", "accent", "accentSoft"],
+          additionalProperties: false,
+        },
         agenda: {
           type: "array",
           minItems: 3,
@@ -209,7 +226,7 @@ const presentationTool = {
           },
         },
       },
-      required: ["title", "subtitle", "cover_style", "agenda", "closing", "slides"],
+      required: ["title", "subtitle", "cover_style", "theme", "agenda", "closing", "slides"],
       additionalProperties: false,
   },
 } as const;
@@ -294,7 +311,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
 
     const systemPrompt = isPaper
       ? `Kamu adalah asisten akademik untuk mahasiswa Indonesia. Tugasmu menyusun paper berbahasa Indonesia yang rapi, runtut, dan dapat langsung diserahkan. ${toneInstruction} ${citationInstruction} Selalu panggil fungsi submit_paper.`
-      : `Kamu adalah desainer & penulis presentasi akademik profesional untuk mahasiswa Indonesia. Tugasmu MERANCANG slide presentasi berbahasa Indonesia yang jelas, terstruktur, dan enak dipandang. ${toneInstruction} Kamu BEBAS memilih 'cover_style' yang paling cocok dengan topik/audiens dan mengatur variasi layout ('section', 'content', 'two_column', 'stats', 'quote') tiap slide seperti desainer sungguhan. Selalu panggil fungsi submit_presentation.`;
+      : `Kamu adalah desainer & penulis presentasi akademik profesional untuk mahasiswa Indonesia. Tugasmu MERANCANG slide presentasi berbahasa Indonesia yang jelas, terstruktur, dan enak dipandang. ${toneInstruction} Tidak ada template preset — kamu WAJIB merancang sendiri: (1) 'theme' berupa palet warna hex 6 digit tanpa '#' yang cocok dengan topik/audiens (kontras teks harus jelas), (2) 'cover_style' yang paling cocok, dan (3) variasi layout ('section', 'content', 'two_column', 'stats', 'quote') tiap slide seperti desainer sungguhan. Selalu panggil fungsi submit_presentation.`;
 
     const userPrompt = [
       `Mahasiswa memberikan informasi berikut untuk ${isPaper ? "paper" : "presentasi"}:`,

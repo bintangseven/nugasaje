@@ -18,8 +18,6 @@ import {
 import { getProject, updateProject } from "@/lib/projects.functions";
 import { generateProjectContent } from "@/lib/ai.functions";
 import { exportProject } from "@/lib/export.functions";
-import { TemplatePicker } from "@/components/TemplatePicker";
-import { DEFAULT_TEMPLATE_ID } from "@/lib/pptx-templates";
 import { PaperContentPreview, SlidesContentPreview } from "@/components/ContentPreview";
 
 export const Route = createFileRoute("/_authenticated/mission/$id")({
@@ -129,9 +127,6 @@ function Workspace({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.phase, project.step_index]);
 
-  const [templateId, setTemplateId] = useState<string>(
-    ((project.answers ?? {}) as Record<string, string>).__template ?? DEFAULT_TEMPLATE_ID,
-  );
   const [attachment, setAttachment] = useState<{ name: string; mime: string; base64: string; size: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
@@ -248,17 +243,10 @@ function Workspace({
   async function startGeneration() {
     setPhase("working");
     setStepIndex(0);
-    // Persist template choice (for presentation) along with phase change.
-    const nextAnswers =
-      missionType === "presentation"
-        ? { ...answers, __template: templateId }
-        : undefined;
-    if (nextAnswers) setAnswers(nextAnswers);
     scheduleSave({
       phase: "working",
       step_index: 0,
       progress: 30,
-      ...(nextAnswers ? { answers: nextAnswers } : {}),
     });
     try {
       const p = generateFn({
@@ -499,11 +487,6 @@ function Workspace({
 
           {interviewDone && phase !== "done" && (
             <div className="mt-4 space-y-4 border-t border-border pt-4">
-              {missionType === "presentation" && (
-                <>
-                  <TemplatePicker value={templateId} onChange={setTemplateId} />
-                </>
-              )}
               <div className="space-y-2">
                 <div className="text-xs font-medium text-foreground">Lampiran (opsional)</div>
                 <p className="text-[11px] text-muted-foreground">
