@@ -842,6 +842,16 @@ async function buildPptx(
     const s = pres.addSlide();
     const pageNo = 3 + i;
 
+    // ===== Artboard mode: Claude designed this slide directly =====
+    if (slide.design && Array.isArray(slide.design.elements) && slide.design.elements.length > 0) {
+      const isDark = slide.layout === "section";
+      s.background = { color: clean(slide.design.background, isDark ? t.bg : t.surface) };
+      renderDesign(s, slide.design);
+      if (slide.notes) s.addNotes(slide.notes);
+      addFooter(s, pageNo, totalPages);
+      return;
+    }
+
     if (slide.layout === "section") {
       s.background = { color: t.bg };
       if (isIngoude) {
