@@ -49,7 +49,36 @@ type PresentationContent = {
     quote?: string;
     quote_source?: string;
     notes: string;
+    design?: SlideDesign;
   }[];
+};
+
+type SlideElement = {
+  type: "rect" | "roundRect" | "ellipse" | "line" | "triangle" | "chevron" | "text";
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  fill?: string;
+  opacity?: number;
+  stroke?: string;
+  strokeWidth?: number;
+  radius?: number;
+  rotate?: number;
+  text?: string;
+  fontSize?: number;
+  fontFace?: "heading" | "body";
+  color?: string;
+  bold?: boolean;
+  italic?: boolean;
+  align?: "left" | "center" | "right";
+  valign?: "top" | "middle" | "bottom";
+  charSpacing?: number;
+};
+
+type SlideDesign = {
+  background?: string;
+  elements: SlideElement[];
 };
 
 type SlideBlock =
