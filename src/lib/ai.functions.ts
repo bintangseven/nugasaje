@@ -530,7 +530,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-5-20250929",
-          max_tokens: 8000,
+          max_tokens: 16000,
           system: systemPrompt,
           tools: [presentationTool],
           tool_choice: { type: "tool", name: presentationTool.name },
