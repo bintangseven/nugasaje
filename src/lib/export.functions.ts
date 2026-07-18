@@ -49,7 +49,36 @@ type PresentationContent = {
     quote?: string;
     quote_source?: string;
     notes: string;
+    design?: SlideDesign;
   }[];
+};
+
+type SlideElement = {
+  type: "rect" | "roundRect" | "ellipse" | "line" | "triangle" | "chevron" | "text";
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  fill?: string;
+  opacity?: number;
+  stroke?: string;
+  strokeWidth?: number;
+  radius?: number;
+  rotate?: number;
+  text?: string;
+  fontSize?: number;
+  fontFace?: "heading" | "body";
+  color?: string;
+  bold?: boolean;
+  italic?: boolean;
+  align?: "left" | "center" | "right";
+  valign?: "top" | "middle" | "bottom";
+  charSpacing?: number;
+};
+
+type SlideDesign = {
+  background?: string;
+  elements: SlideElement[];
 };
 
 type SlideBlock =
@@ -437,6 +466,71 @@ async function buildPptx(
     });
   };
 
+  // ===== Artboard renderer (Claude-designed slides) =====
+  const clean = (hex: string | undefined, fallback: string) => {
+    if (!hex || typeof hex !== "string") return fallback;
+    const h = hex.replace("#", "").trim();
+    return /^[0-9a-fA-F]{6}$/.test(h) ? h.toUpperCase() : fallback;
+  };
+  const shapeMap = {
+    rect: SHAPES.rect,
+    roundRect: SHAPES.roundRect,
+    ellipse: SHAPES.ellipse,
+    line: SHAPES.line,
+    triangle: SHAPES.rtTriangle,
+    chevron: SHAPES.chevron,
+  } as const;
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+  const renderDesign = (s: Slide, design: SlideDesign) => {
+    if (design.background) s.background = { color: clean(design.background, t.surface) };
+    for (const el of design.elements ?? []) {
+      if (!el || typeof el !== "object") continue;
+      const x = clamp(Number(el.x) || 0, 0, W);
+      const y = clamp(Number(el.y) || 0, 0, H);
+      const w = clamp(Number(el.w) || 0.1, 0.05, W - x);
+      const h = clamp(Number(el.h) || 0.1, 0.05, H - y);
+      if (el.type === "text") {
+        const text = String(el.text ?? "");
+        if (!text) continue;
+        s.addText(text, {
+          x, y, w, h,
+          fontFace: el.fontFace === "heading" ? t.headFont : t.bodyFont,
+          fontSize: clamp(Number(el.fontSize) || 16, 6, 200),
+          color: clean(el.color, t.ink),
+          bold: !!el.bold,
+          italic: !!el.italic,
+          align: (el.align as "left" | "center" | "right") ?? "left",
+          valign: (el.valign as "top" | "middle" | "bottom") ?? "top",
+          charSpacing: typeof el.charSpacing === "number" ? el.charSpacing : undefined,
+          rotate: typeof el.rotate === "number" ? el.rotate : undefined,
+          paraSpaceAfter: 4,
+        });
+        continue;
+      }
+      const shape = shapeMap[el.type as keyof typeof shapeMap];
+      if (!shape) continue;
+      const isLine = el.type === "line";
+      const strokeColor = clean(el.stroke, isLine ? t.accent : el.fill ? clean(el.fill, t.accent) : t.accent);
+      const opacityTrans = typeof el.opacity === "number" ? clamp(el.opacity, 0, 100) : undefined;
+      const fillOpt = isLine
+        ? undefined
+        : el.fill
+          ? { color: clean(el.fill, t.accent), transparency: opacityTrans }
+          : { color: t.accent, transparency: 100 };
+      s.addShape(shape, {
+        x, y, w, h,
+        fill: fillOpt,
+        line: {
+          color: strokeColor,
+          width: clamp(Number(el.strokeWidth) || (isLine ? 1 : 0), 0, 8),
+          transparency: opacityTrans,
+        },
+        rectRadius: el.type === "roundRect" ? clamp(Number(el.radius) || 0.12, 0, Math.min(w, h) / 2) : undefined,
+        rotate: typeof el.rotate === "number" ? el.rotate : undefined,
+      });
+    }
+  };
+
   // ===== Cover =====
   const cover = pres.addSlide();
   const dateStr = new Date().toLocaleDateString("id-ID", {
@@ -747,6 +841,16 @@ async function buildPptx(
   content.slides.forEach((slide, i) => {
     const s = pres.addSlide();
     const pageNo = 3 + i;
+
+    // ===== Artboard mode: Claude designed this slide directly =====
+    if (slide.design && Array.isArray(slide.design.elements) && slide.design.elements.length > 0) {
+      const isDark = slide.layout === "section";
+      s.background = { color: clean(slide.design.background, isDark ? t.bg : t.surface) };
+      renderDesign(s, slide.design);
+      if (slide.notes) s.addNotes(slide.notes);
+      addFooter(s, pageNo, totalPages);
+      return;
+    }
 
     if (slide.layout === "section") {
       s.background = { color: t.bg };

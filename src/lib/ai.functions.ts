@@ -220,6 +220,60 @@ const presentationTool = {
               quote: { type: "string", description: "Hanya untuk layout quote: teks kutipan." },
               quote_source: { type: "string", description: "Sumber kutipan, opsional." },
               notes: { type: "string", description: "Catatan pembicara, 2-3 kalimat." },
+              design: {
+                type: "object",
+                description:
+                  "SANGAT DIANJURKAN untuk semua slide 'content', 'two_column', 'stats', 'quote', 'section'. Rancang slide sebagai artboard 16:9 ukuran 13.333 x 7.5 INCI. Bila 'design.elements' diisi, renderer AKAN MENGABAIKAN layout/bullets/blocks bawaan dan menggambar elemen apa adanya persis di posisi (x,y,w,h) inci yang kamu tentukan. Pakai ini untuk membuat slide yang benar-benar didesain (hero, kartu, grid 2/3 kolom, timeline, callout besar, stat block, quote frame, dsb) — mirip artifact yang kamu buat di Claude.ai. Kamu bebas menumpuk shape (rect/ellipse/line) sebagai kartu/latar aksen lalu meletakkan text di atasnya. WAJIB sisakan margin ≥0.4in dari tepi, dan sisakan area 0.35in di bawah untuk footer (jangan menaruh elemen di y ≥ 7.1). Gunakan warna dari 'theme' (bg, bg2, surface, ink, inkInverse, muted, accent, accentSoft) — atau hex custom bila perlu, semua hex 6 digit TANPA '#'.",
+                properties: {
+                  background: {
+                    type: "string",
+                    description: "Warna latar slide (hex 6 digit tanpa #). Kalau tidak diisi, dipakai theme.surface untuk slide konten atau theme.bg untuk slide 'section'.",
+                  },
+                  elements: {
+                    type: "array",
+                    minItems: 3,
+                    description:
+                      "Daftar elemen visual, digambar berurutan (elemen belakang dulu, depan terakhir). Minimal 3 elemen; slide konten biasanya butuh 8-20 elemen untuk terasa 'didesain'.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        type: {
+                          type: "string",
+                          enum: ["rect", "roundRect", "ellipse", "line", "triangle", "chevron", "text"],
+                          description: "Jenis primitif. text=kotak teks; shape lain=grafik.",
+                        },
+                        x: { type: "number", description: "Kiri (inci, 0-13.333)." },
+                        y: { type: "number", description: "Atas (inci, 0-7.5)." },
+                        w: { type: "number", description: "Lebar (inci)." },
+                        h: { type: "number", description: "Tinggi (inci)." },
+                        fill: { type: "string", description: "Warna isi hex 6 digit tanpa #. Boleh dikosongkan untuk line/text tanpa background." },
+                        opacity: { type: "number", description: "Transparansi 0-100 (0=solid, 80=sangat transparan). Untuk membuat lapisan aksen lembut." },
+                        stroke: { type: "string", description: "Warna garis (hex tanpa #). Untuk line WAJIB diisi." },
+                        strokeWidth: { type: "number", description: "Tebal garis (pt), 0.5-4 biasanya." },
+                        radius: { type: "number", description: "Radius sudut (inci) untuk roundRect. 0.08-0.25 lembut, 0.5+ pil." },
+                        rotate: { type: "number", description: "Rotasi derajat (0-360)." },
+                        text: { type: "string", description: "Isi teks untuk type='text'. Boleh multiline pakai '\\n'." },
+                        fontSize: { type: "number", description: "Ukuran pt. 60-120 untuk hero angka; 32-44 title; 22-30 subjudul; 14-20 body; 9-11 caption." },
+                        fontFace: {
+                          type: "string",
+                          enum: ["heading", "body"],
+                          description: "'heading' pakai font judul theme, 'body' pakai font body theme. Default: body.",
+                        },
+                        color: { type: "string", description: "Warna teks (hex tanpa #). WAJIB kontras terhadap fill/background di belakangnya." },
+                        bold: { type: "boolean" },
+                        italic: { type: "boolean" },
+                        align: { type: "string", enum: ["left", "center", "right"] },
+                        valign: { type: "string", enum: ["top", "middle", "bottom"] },
+                        charSpacing: { type: "number", description: "Letter spacing (untuk KICKER uppercase pakai 4-8)." },
+                      },
+                      required: ["type", "x", "y", "w", "h"],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: ["elements"],
+                additionalProperties: false,
+              },
             },
             required: ["title", "layout", "bullets", "notes"],
             additionalProperties: false,
@@ -311,7 +365,28 @@ export const generateProjectContent = createServerFn({ method: "POST" })
 
     const systemPrompt = isPaper
       ? `Kamu adalah asisten akademik untuk mahasiswa Indonesia. Tugasmu menyusun paper berbahasa Indonesia yang rapi, runtut, dan dapat langsung diserahkan. ${toneInstruction} ${citationInstruction} Selalu panggil fungsi submit_paper.`
-      : `Kamu adalah desainer & penulis presentasi akademik profesional untuk mahasiswa Indonesia. Tugasmu MERANCANG slide presentasi berbahasa Indonesia yang jelas, terstruktur, dan enak dipandang. ${toneInstruction} Tidak ada template preset — kamu WAJIB merancang sendiri: (1) 'theme' berupa palet warna hex 6 digit tanpa '#' yang cocok dengan topik/audiens (kontras teks harus jelas), (2) 'cover_style' yang paling cocok, dan (3) variasi layout ('section', 'content', 'two_column', 'stats', 'quote') tiap slide seperti desainer sungguhan. Selalu panggil fungsi submit_presentation.`;
+      : [
+          `Kamu adalah SENIOR PRESENTATION DESIGNER (setara desainer yang membuat artifact di Claude.ai).`,
+          `Tugasmu MERANCANG deck presentasi akademik berbahasa Indonesia yang setingkat portfolio desainer profesional — bukan template generik.`,
+          toneInstruction,
+          `\n\n=== KANVAS ===`,
+          `Setiap slide adalah artboard 16:9 berukuran 13.333 x 7.5 INCI (LAYOUT_WIDE PowerPoint). Origin (0,0) di kiri-atas. Sumbu X ke kanan, Y ke bawah.`,
+          `Aman: konten utama di dalam rectangle x∈[0.4, 12.9], y∈[0.4, 7.1]. Bawah y=7.15..7.5 dipakai footer otomatis.`,
+          `\n=== ATURAN DESAIN (WAJIB) ===`,
+          `1. Untuk SETIAP slide, isi field 'design.elements' — susun elemen (rect / roundRect / ellipse / line / triangle / chevron / text) di koordinat inci PERSIS seperti kamu mendesain di Figma. Jangan hanya mengandalkan 'layout' preset.`,
+          `2. Tumpuk shape sebagai latar dekoratif, kartu, band warna, sidebar, hero panel, dsb. Elemen teks selalu digambar di atas shape. Urutan array = urutan gambar (belakang → depan).`,
+          `3. Variasikan komposisi antar slide: hero teks besar kiri + visual kanan, grid 2 kolom, grid 3 kartu, timeline horizontal, callout besar tengah, split-screen 50/50, sidebar kiri berwarna, dsb. Jangan pernah 2 slide berturut-turut dengan komposisi persis sama.`,
+          `4. Hierarki tipografi: EYEBROW/KICKER uppercase 10-12pt (charSpacing 4-6, color=accent) → TITLE 30-44pt bold (color=ink) → SUBTITLE 18-24pt (color=muted) → BODY 14-18pt (color=ink) → BULLETS 14-16pt.`,
+          `5. Warna: pakai palet 'theme' yang kamu rancang. bg untuk latar gelap/section, surface untuk latar konten terang, ink teks utama, muted teks sekunder, accent untuk highlight & angka besar, accentSoft untuk latar kartu lembut. Kontras teks WAJIB ≥ 4.5:1.`,
+          `6. Untuk data / stat: buat KARTU (roundRect fill=accentSoft radius=0.15) berisi angka 60-96pt bold color=accent + label 12-14pt color=ink. Jangan pakai stats layout preset kalau bisa mendesain sendiri lebih baik.`,
+          `7. Untuk section divider: latar bg gelap penuh, ada band warna accent tipis, judul 44-60pt inkInverse, plus 1-2 shape dekoratif (lingkaran besar transparan / segitiga sudut).`,
+          `8. Untuk konten narasi: gabungkan blok paragraf (text box lebar, fontSize 15-17, valign top) dengan kartu bullet berlatar accentSoft. Target ±50% paragraf + ±50% bullet secara visual.`,
+          `9. Kartu / panel dekoratif menggunakan opacity 10-25 untuk aksen lembut, atau roundRect solid untuk kartu.`,
+          `10. Setiap slide 'content' butuh 8-20 elemen agar terasa didesain. Slide section boleh 5-10 elemen.`,
+          `\n=== KELUARAN ===`,
+          `Tetap isi 'layout', 'bullets', 'blocks', dst sebagai fallback teks — tapi PRIORITASKAN merancang 'design.elements'. Renderer memakai 'design.elements' bila ada, dan mengabaikan layout preset.`,
+          `Selalu panggil fungsi submit_presentation.`,
+        ].join("\n");
 
     const userPrompt = [
       `Mahasiswa memberikan informasi berikut untuk ${isPaper ? "paper" : "presentasi"}:`,
@@ -455,7 +530,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-5-20250929",
-          max_tokens: 8000,
+          max_tokens: 16000,
           system: systemPrompt,
           tools: [presentationTool],
           tool_choice: { type: "tool", name: presentationTool.name },
@@ -498,9 +573,9 @@ export const generateProjectContent = createServerFn({ method: "POST" })
           case 2:
             return `STAGE 2 (EXPAND NARRATIVE): Draft awal:\n\n${JSON.stringify(prev).slice(0, 8000)}\n\nPerluas SETIAP slide 'content': pastikan 'blocks' berisi ±50% paragraf naratif (2-4 kalimat, 30-60 kata) + ±50% bullet (2-4 poin, maks 14 kata). Pola: paragraf pembuka → bullet list → paragraf penghubung/penutup. Tambahkan 1-2 slide baru jika topik butuh. Jangan tipis, jangan 100% bullet.`;
           case 3:
-            return `STAGE 3 (ENRICH NOTES): Versi terkini:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nFokus catatan pembicara: tiap slide HARUS punya notes 4-6 kalimat yang detail — penjelasan konteks, contoh konkret, transisi ke slide berikut. Pertahankan campuran paragraf & bullet di 'blocks'. Tambahkan minimal 1 slide layout 'stats' (3 angka) dan/atau 'two_column' jika belum ada.`;
+            return `STAGE 3 (DESIGN ARTBOARDS): Versi terkini:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nSekarang DESAIN ULANG setiap slide sebagai artboard. Isi 'design.elements' untuk SEMUA slide (termasuk section), pakai koordinat inci pada kanvas 13.333 x 7.5. Variasikan komposisi antar slide (hero, grid 2 kolom, 3 kartu, timeline, callout, split, sidebar berwarna, dsb). Setiap slide 'content' butuh 8-20 elemen. Pakai palet 'theme': shape latar (rect/roundRect/ellipse) → panel/kartu → text di atasnya. Sisakan y ≥ 7.1 untuk footer. Pertahankan 'blocks' & 'bullets' sebagai fallback teks.`;
           case 4:
-            return `STAGE 4 (POLISH): Versi siap-poles:\n\n${JSON.stringify(prev).slice(0, 14000)}\n\nFinal pass: verifikasi tiap slide 'content' benar-benar ±50/50 paragraf + bullet di 'blocks' (tidak ada yang 100% bullet atau 100% paragraf). Paragraf harus mengalir naratif, bullet ringkas. Agenda sinkron dengan urutan slide, closing.message + cta kuat, ada 1-2 slide 'section' sebagai pembatas. Kembalikan presentasi FINAL utuh.`;
+            return `STAGE 4 (POLISH DESIGN + NOTES): Versi siap-poles:\n\n${JSON.stringify(prev).slice(0, 14000)}\n\nFinal pass: (a) Rapikan 'design.elements' tiap slide — periksa tidak ada elemen keluar kanvas atau menabrak footer (y ≥ 7.1), kontras teks jelas, hierarki tipografi konsisten, dan komposisi bervariasi antar slide (tidak monoton). (b) Isi notes tiap slide 4-6 kalimat (konteks + contoh + transisi). (c) Agenda sinkron urutan slide; closing.message + cta kuat; ada 1-2 slide 'section' sebagai pembatas. Kembalikan presentasi FINAL utuh.`;
         }
       }
       return "";
