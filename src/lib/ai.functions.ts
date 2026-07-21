@@ -285,6 +285,16 @@ const presentationTool = {
   },
 } as const;
 
+// OpenAI-compatible tool wrapper untuk Lovable AI Gateway (Gemini).
+const presentationToolGateway = {
+  type: "function",
+  function: {
+    name: presentationTool.name,
+    description: presentationTool.description,
+    parameters: presentationTool.input_schema,
+  },
+} as const;
+
 const BASIC_DAILY_LIMIT = 2;
 const PRO_DAILY_LIMIT = 10;
 
