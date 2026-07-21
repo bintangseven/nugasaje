@@ -285,6 +285,16 @@ const presentationTool = {
   },
 } as const;
 
+// OpenAI-compatible tool wrapper untuk Lovable AI Gateway (Gemini).
+const presentationToolGateway = {
+  type: "function",
+  function: {
+    name: presentationTool.name,
+    description: presentationTool.description,
+    parameters: presentationTool.input_schema,
+  },
+} as const;
+
 const BASIC_DAILY_LIMIT = 2;
 const PRO_DAILY_LIMIT = 10;
 
@@ -466,6 +476,8 @@ export const generateProjectContent = createServerFn({ method: "POST" })
     type ChatMsg = { role: "system" | "user" | "assistant"; content: unknown };
 
     // Paper: Lovable Gateway (Gemini via OpenAI-compatible tool calls)
+    const gatewayTool = isPaper ? paperTool : presentationToolGateway;
+    const gatewayToolName = isPaper ? paperTool.function.name : presentationToolGateway.function.name;
     const callGatewayTool = async (messages: ChatMsg[]): Promise<Record<string, unknown>> => {
       const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -473,8 +485,8 @@ export const generateProjectContent = createServerFn({ method: "POST" })
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages,
-          tools: [paperTool],
-          tool_choice: { type: "function", function: { name: paperTool.function.name } },
+          tools: [gatewayTool],
+          tool_choice: { type: "function", function: { name: gatewayToolName } },
         }),
       });
       if (res.status === 429) throw new Error("Batas pemakaian AI tercapai. Coba lagi sebentar lagi.");
@@ -491,67 +503,9 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       try { return JSON.parse(argsText); } catch { throw new Error("Gagal mem-parsing hasil AI."); }
     };
 
-    // Presentation: Anthropic Claude directly (tool_use)
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
-    const callClaudeTool = async (extraUserText: string, prevAssistantJson: Record<string, unknown> | null): Promise<Record<string, unknown>> => {
-      if (!anthropicKey) throw new Error("ANTHROPIC_API_KEY belum diset di server.");
-      const messages: Array<{ role: "user" | "assistant"; content: unknown }> = [];
-      // First turn: full user context (with attachment)
-      messages.push({ role: "user", content: anthropicUserContent });
-      if (prevAssistantJson) {
-        // Feed previous tool output back as assistant tool_use so Claude iterates
-        messages.push({
-          role: "assistant",
-          content: [
-            {
-              type: "tool_use",
-              id: "prev_stage",
-              name: presentationTool.name,
-              input: prevAssistantJson,
-            },
-          ],
-        });
-        messages.push({
-          role: "user",
-          content: [
-            { type: "tool_result", tool_use_id: "prev_stage", content: "ok, lanjutkan revisi." },
-            { type: "text", text: extraUserText },
-          ],
-        });
-      } else {
-        messages.push({ role: "user", content: [{ type: "text", text: extraUserText }] });
-      }
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "x-api-key": anthropicKey,
-          "anthropic-version": "2023-06-01",
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
-          max_tokens: 16000,
-          system: systemPrompt,
-          tools: [presentationTool],
-          tool_choice: { type: "tool", name: presentationTool.name },
-          messages,
-        }),
-      });
-      if (res.status === 429) throw new Error("Batas pemakaian Claude tercapai. Coba lagi sebentar lagi.");
-      if (res.status === 401 || res.status === 403) {
-        throw new Error("ANTHROPIC_API_KEY ditolak oleh Anthropic. Periksa key & billing.");
-      }
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Anthropic error ${res.status}: ${text.slice(0, 300)}`);
-      }
-      const j = (await res.json()) as {
-        content?: Array<{ type: string; name?: string; input?: Record<string, unknown> }>;
-      };
-      const toolBlock = j.content?.find((c) => c.type === "tool_use" && c.name === presentationTool.name);
-      if (!toolBlock?.input) throw new Error("Claude tidak mengembalikan hasil tool.");
-      return toolBlock.input;
-    };
+    // Presentation via Claude — DINONAKTIFKAN SEMENTARA. Sekarang presentasi
+    // juga memakai Lovable AI Gateway (Gemini) lewat callGatewayTool.
+    void anthropicUserContent;
     void toolName;
 
     const stageInstruction = (stage: 1 | 2 | 3 | 4, prev: Record<string, unknown> | null): string => {
@@ -582,21 +536,14 @@ export const generateProjectContent = createServerFn({ method: "POST" })
     };
 
     let parsed: Record<string, unknown> | null = null;
-    if (isPaper) {
-      const baseMessages: ChatMsg[] = [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: gatewayUserContent },
-      ];
-      for (const stage of [1, 2, 3, 4] as const) {
-        const stageMsg = stageInstruction(stage, parsed);
-        const messages: ChatMsg[] = [...baseMessages, { role: "user", content: stageMsg }];
-        parsed = await callGatewayTool(messages);
-      }
-    } else {
-      for (const stage of [1, 2, 3, 4] as const) {
-        const stageMsg = stageInstruction(stage, parsed);
-        parsed = await callClaudeTool(stageMsg, parsed);
-      }
+    const baseMessages: ChatMsg[] = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: gatewayUserContent },
+    ];
+    for (const stage of [1, 2, 3, 4] as const) {
+      const stageMsg = stageInstruction(stage, parsed);
+      const messages: ChatMsg[] = [...baseMessages, { role: "user", content: stageMsg }];
+      parsed = await callGatewayTool(messages);
     }
     if (!parsed) throw new Error("AI tidak menghasilkan konten.");
 
