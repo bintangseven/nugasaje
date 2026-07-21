@@ -505,70 +505,8 @@ export const generateProjectContent = createServerFn({ method: "POST" })
 
     // Presentation via Claude — DINONAKTIFKAN SEMENTARA. Sekarang presentasi
     // juga memakai Lovable AI Gateway (Gemini) lewat callGatewayTool.
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
-    void anthropicKey;
-    const callClaudeTool = async (extraUserText: string, prevAssistantJson: Record<string, unknown> | null): Promise<Record<string, unknown>> => {
-      throw new Error("Claude dinonaktifkan sementara — presentasi kini pakai Lovable AI.");
-      void extraUserText; void prevAssistantJson;
-      const messages: Array<{ role: "user" | "assistant"; content: unknown }> = [];
-      // First turn: full user context (with attachment)
-      messages.push({ role: "user", content: anthropicUserContent });
-      if (prevAssistantJson) {
-        // Feed previous tool output back as assistant tool_use so Claude iterates
-        messages.push({
-          role: "assistant",
-          content: [
-            {
-              type: "tool_use",
-              id: "prev_stage",
-              name: presentationTool.name,
-              input: prevAssistantJson,
-            },
-          ],
-        });
-        messages.push({
-          role: "user",
-          content: [
-            { type: "tool_result", tool_use_id: "prev_stage", content: "ok, lanjutkan revisi." },
-            { type: "text", text: extraUserText },
-          ],
-        });
-      } else {
-        messages.push({ role: "user", content: [{ type: "text", text: extraUserText }] });
-      }
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "x-api-key": anthropicKey,
-          "anthropic-version": "2023-06-01",
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
-          max_tokens: 16000,
-          system: systemPrompt,
-          tools: [presentationTool],
-          tool_choice: { type: "tool", name: presentationTool.name },
-          messages,
-        }),
-      });
-      if (res.status === 429) throw new Error("Batas pemakaian Claude tercapai. Coba lagi sebentar lagi.");
-      if (res.status === 401 || res.status === 403) {
-        throw new Error("ANTHROPIC_API_KEY ditolak oleh Anthropic. Periksa key & billing.");
-      }
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Anthropic error ${res.status}: ${text.slice(0, 300)}`);
-      }
-      const j = (await res.json()) as {
-        content?: Array<{ type: string; name?: string; input?: Record<string, unknown> }>;
-      };
-      const toolBlock = j.content?.find((c) => c.type === "tool_use" && c.name === presentationTool.name);
-      if (!toolBlock?.input) throw new Error("Claude tidak mengembalikan hasil tool.");
-      return toolBlock.input;
-    };
+    void anthropicUserContent;
     void toolName;
-    void callClaudeTool;
 
     const stageInstruction = (stage: 1 | 2 | 3 | 4, prev: Record<string, unknown> | null): string => {
       if (isPaper) {
