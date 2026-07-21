@@ -476,6 +476,8 @@ export const generateProjectContent = createServerFn({ method: "POST" })
     type ChatMsg = { role: "system" | "user" | "assistant"; content: unknown };
 
     // Paper: Lovable Gateway (Gemini via OpenAI-compatible tool calls)
+    const gatewayTool = isPaper ? paperTool : presentationToolGateway;
+    const gatewayToolName = isPaper ? paperTool.function.name : presentationToolGateway.function.name;
     const callGatewayTool = async (messages: ChatMsg[]): Promise<Record<string, unknown>> => {
       const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -483,8 +485,8 @@ export const generateProjectContent = createServerFn({ method: "POST" })
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages,
-          tools: [paperTool],
-          tool_choice: { type: "function", function: { name: paperTool.function.name } },
+          tools: [gatewayTool],
+          tool_choice: { type: "function", function: { name: gatewayToolName } },
         }),
       });
       if (res.status === 429) throw new Error("Batas pemakaian AI tercapai. Coba lagi sebentar lagi.");
@@ -501,10 +503,13 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       try { return JSON.parse(argsText); } catch { throw new Error("Gagal mem-parsing hasil AI."); }
     };
 
-    // Presentation: Anthropic Claude directly (tool_use)
+    // Presentation via Claude — DINONAKTIFKAN SEMENTARA. Sekarang presentasi
+    // juga memakai Lovable AI Gateway (Gemini) lewat callGatewayTool.
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    void anthropicKey;
     const callClaudeTool = async (extraUserText: string, prevAssistantJson: Record<string, unknown> | null): Promise<Record<string, unknown>> => {
-      if (!anthropicKey) throw new Error("ANTHROPIC_API_KEY belum diset di server.");
+      throw new Error("Claude dinonaktifkan sementara — presentasi kini pakai Lovable AI.");
+      void extraUserText; void prevAssistantJson;
       const messages: Array<{ role: "user" | "assistant"; content: unknown }> = [];
       // First turn: full user context (with attachment)
       messages.push({ role: "user", content: anthropicUserContent });
@@ -563,6 +568,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       return toolBlock.input;
     };
     void toolName;
+    void callClaudeTool;
 
     const stageInstruction = (stage: 1 | 2 | 3 | 4, prev: Record<string, unknown> | null): string => {
       if (isPaper) {
@@ -592,21 +598,14 @@ export const generateProjectContent = createServerFn({ method: "POST" })
     };
 
     let parsed: Record<string, unknown> | null = null;
-    if (isPaper) {
-      const baseMessages: ChatMsg[] = [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: gatewayUserContent },
-      ];
-      for (const stage of [1, 2, 3, 4] as const) {
-        const stageMsg = stageInstruction(stage, parsed);
-        const messages: ChatMsg[] = [...baseMessages, { role: "user", content: stageMsg }];
-        parsed = await callGatewayTool(messages);
-      }
-    } else {
-      for (const stage of [1, 2, 3, 4] as const) {
-        const stageMsg = stageInstruction(stage, parsed);
-        parsed = await callClaudeTool(stageMsg, parsed);
-      }
+    const baseMessages: ChatMsg[] = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: gatewayUserContent },
+    ];
+    for (const stage of [1, 2, 3, 4] as const) {
+      const stageMsg = stageInstruction(stage, parsed);
+      const messages: ChatMsg[] = [...baseMessages, { role: "user", content: stageMsg }];
+      parsed = await callGatewayTool(messages);
     }
     if (!parsed) throw new Error("AI tidak menghasilkan konten.");
 
