@@ -16,17 +16,17 @@ import { lovable } from "@/integrations/lovable";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Masuk — Nugasinaje" },
+      { title: "Masuk — Numu AI" },
       {
         name: "description",
         content:
-          "Masuk ke akun Nugasinaje untuk menyimpan proyek akademik dan mengakses fitur AI penyusun tugas kuliah.",
+          "Masuk ke akun Numu AI untuk menyimpan proyek akademik dan mengakses fitur AI penyusun tugas kuliah.",
       },
-      { property: "og:title", content: "Masuk — Nugasinaje" },
+      { property: "og:title", content: "Masuk — Numu AI" },
       {
         property: "og:description",
         content:
-          "Masuk atau daftar akun Nugasinaje untuk mulai menyusun makalah dan presentasi dengan bantuan AI.",
+          "Masuk atau daftar akun Numu AI untuk mulai menyusun makalah dan presentasi dengan bantuan AI.",
       },
       { property: "og:url", content: "https://nugasaje.lovable.app/auth" },
       { property: "og:type", content: "website" },
@@ -112,7 +112,7 @@ function AuthPage() {
                 className="text-[1.35rem] font-bold text-[#1B2A4A]"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
-                Nugasin<span style={{ color: "#C9A44C" }}>aje</span>
+                Numu AI
               </span>
             </div>
             <h1
@@ -121,7 +121,7 @@ function AuthPage() {
             >
               Selamat datang di
               <br />
-              Nugasinaje
+              Numu AI
             </h1>
             <p className="mt-4 max-w-md text-[1.02rem] leading-relaxed text-[#55524C]">
               Ruang kerja akademik untuk menyelesaikan tugas kuliahmu.
@@ -162,7 +162,7 @@ function AuthPage() {
               />
             </svg>
           </div>
-          <span className="text-xs text-[#55524C]/70">© {new Date().getFullYear()} Nugasinaje</span>
+          <span className="text-xs text-[#55524C]/70">© {new Date().getFullYear()} Numu AI</span>
         </div>
 
         {/* Right: form */}
@@ -176,7 +176,7 @@ function AuthPage() {
                 className="text-lg font-bold text-[#1B2A4A]"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
-                Nugasin<span style={{ color: "#C9A44C" }}>aje</span>
+                Numu AI
               </span>
             </div>
 

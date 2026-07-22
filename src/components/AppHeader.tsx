@@ -79,62 +79,27 @@ export function AppHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 glass">
+    <header className="sticky top-0 z-40 border-b border-outline-variant bg-surface/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <Link to="/" className="flex items-center gap-2 text-foreground font-display text-[1.25rem] font-bold tracking-tight">
-          Nugasin<span style={{ color: "var(--stamp)" }}>aje</span>
+        <Link to="/" className="flex items-center gap-2 font-display text-[1.35rem] font-bold tracking-tight text-primary">
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1", fontSize: 26 }}>auto_awesome</span>
+          Numu AI
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex text-[0.92rem] font-semibold" style={{ color: "var(--ink-soft)" }}>
           {user ? (
             <>
-              <Link
-                to="/"
-                activeOptions={{ exact: true }}
-                className="relative transition-colors hover:text-foreground data-[status=active]:text-foreground"
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/projects"
-                className="transition-colors hover:text-foreground data-[status=active]:text-foreground"
-              >
-                Proyek
-              </Link>
-              <Link
-                to="/harga"
-                className="transition-colors hover:text-foreground data-[status=active]:text-foreground"
-              >
-                Harga
-              </Link>
-              <Link
-                to="/faq"
-                className="transition-colors hover:text-foreground data-[status=active]:text-foreground"
-              >
-                FAQ
-              </Link>
-              <Link
-                to="/profile"
-                className="transition-colors hover:text-foreground data-[status=active]:text-foreground"
-              >
-                Profil
-              </Link>
+              <NavItem to="/" exact label="Dashboard" />
+              <NavItem to="/projects" label="Proyek" />
+              <NavItem to="/harga" label="Harga" />
+              <NavItem to="/faq" label="FAQ" />
+              <NavItem to="/profile" label="Profil" />
             </>
           ) : (
             <>
-              <Link
-                to="/"
-                activeOptions={{ exact: true }}
-                className="relative transition-colors hover:text-foreground data-[status=active]:text-foreground"
-              >
-                Beranda
-              </Link>
-              <Link to="/harga" className="transition-colors hover:text-foreground">
-                Harga
-              </Link>
-              <Link to="/faq" className="transition-colors hover:text-foreground">
-                FAQ
-              </Link>
+              <NavItem to="/" exact label="Beranda" />
+              <NavItem to="/harga" label="Harga" />
+              <NavItem to="/faq" label="FAQ" />
             </>
           )}
         </nav>
@@ -214,12 +179,9 @@ export function AppHeader() {
         ) : (
           <Link
             to="/auth"
-            className="rounded-md bg-foreground px-5 py-2.5 text-[0.88rem] font-bold text-background transition-all hover:-translate-y-0.5"
-            style={{ transition: "background .18s ease, transform .18s ease" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--stamp)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "")}
+            className="ai-gradient-bg rounded-full px-5 py-2 text-[0.88rem] font-semibold text-on-primary shadow-sm transition-all hover:opacity-90 hover:shadow-md"
           >
-            Coba gratis
+            Get Started
           </Link>
         )}
       </div>
@@ -232,12 +194,24 @@ export function AppHeader() {
           style={{
             width: `${progress}%`,
             height: "100%",
-            background: "linear-gradient(90deg, var(--stamp), var(--highlighter))",
+            background: "var(--gradient-ai)",
             transition: "width 120ms linear",
           }}
         />
       </div>
     </header>
+  );
+}
+
+function NavItem({ to, label, exact }: { to: "/" | "/projects" | "/harga" | "/faq" | "/profile"; label: string; exact?: boolean }) {
+  return (
+    <Link
+      to={to}
+      activeOptions={exact ? { exact: true } : undefined}
+      className="relative px-1 py-1 font-medium text-on-surface-variant transition-colors hover:text-primary data-[status=active]:font-bold data-[status=active]:text-primary"
+    >
+      {label}
+    </Link>
   );
 }
 
@@ -269,7 +243,7 @@ function MenuLink({
     <Link
       to={to}
       onClick={onSelect}
-      className="flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+      className="flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-on-surface transition-colors hover:bg-surface-container"
     >
       {icon}
       {label}

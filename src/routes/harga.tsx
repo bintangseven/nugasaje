@@ -8,13 +8,13 @@ import { useCurrentUser } from "@/hooks/use-auth";
 export const Route = createFileRoute("/harga")({
   head: () => ({
     meta: [
-      { title: "Harga — Nugasinaje" },
+      { title: "Harga — Numu AI" },
       {
         name: "description",
         content:
-          "Pilih paket Nugasinaje yang cocok: Basic gratis selamanya atau Pro Rp50.000/bulan untuk 10 generate per hari.",
+          "Pilih paket Numu AI yang cocok: Basic gratis selamanya atau Pro Rp50.000/bulan untuk 10 generate per hari.",
       },
-      { property: "og:title", content: "Harga — Nugasinaje" },
+      { property: "og:title", content: "Harga — Numu AI" },
       {
         property: "og:description",
         content:

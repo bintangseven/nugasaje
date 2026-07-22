@@ -4,17 +4,17 @@ import { CheckCircle2 } from "lucide-react";
 export const Route = createFileRoute("/payment/success")({
   head: () => ({
     meta: [
-      { title: "Pembayaran berhasil — Nugasinaje" },
+      { title: "Pembayaran berhasil — Numu AI" },
       {
         name: "description",
         content:
-          "Pembayaran langganan PRO Nugasinaje berhasil diproses. Akunmu sedang diaktifkan ke paket PRO.",
+          "Pembayaran langganan PRO Numu AI berhasil diproses. Akunmu sedang diaktifkan ke paket PRO.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Pembayaran berhasil — Nugasinaje" },
+      { property: "og:title", content: "Pembayaran berhasil — Numu AI" },
       {
         property: "og:description",
-        content: "Konfirmasi pembayaran langganan PRO Nugasinaje berhasil.",
+        content: "Konfirmasi pembayaran langganan PRO Numu AI berhasil.",
       },
       { property: "og:type", content: "website" },
     ],

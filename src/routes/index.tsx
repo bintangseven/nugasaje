@@ -17,13 +17,13 @@ import { DashboardHome } from "@/components/DashboardHome";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Nugasinaje — Selesaikan tugas kuliahmu lebih cepat" },
+      { title: "Numu AI — Selesaikan tugas kuliahmu lebih cepat" },
       {
         name: "description",
         content:
-          "Nugasinaje adalah ruang kerja akademik untuk mahasiswa Indonesia. Pilih misi, jawab beberapa pertanyaan, dan tugasmu selesai.",
+          "Numu AI adalah ruang kerja akademik untuk mahasiswa Indonesia. Pilih misi, jawab beberapa pertanyaan, dan tugasmu selesai.",
       },
-      { property: "og:title", content: "Nugasinaje" },
+      { property: "og:title", content: "Numu AI" },
       {
         property: "og:description",
         content: "Ruang kerja akademik untuk menyelesaikan paper dan presentasi.",
@@ -103,7 +103,7 @@ function Index() {
               Makalah &amp; PPT kelar <span className="mark-highlight">dalam satu klik.</span>
             </h1>
             <p className="mt-6 max-w-[46ch] text-[1.08rem] leading-relaxed" style={{ color: "var(--graphite)" }}>
-              Pilih satu misi, jawab beberapa pertanyaan singkat, dan biarkan Nugasinaje menyusun
+              Pilih satu misi, jawab beberapa pertanyaan singkat, dan biarkan Numu AI menyusun
               struktur, isi, sampai daftar pustaka. Tinggal unduh, tinggal kumpulkan.
             </p>
           {loaded && !user && (
@@ -501,7 +501,7 @@ function Index() {
                     Deadline besok? <span className="mark-highlight">Mulai sekarang.</span>
                   </h2>
                   <p className="mt-4 max-w-[48ch] text-[1rem]" style={{ color: "var(--graphite)" }}>
-                    Pilih satu misi, jawab brief singkat, dan biarkan Nugasinaje yang lembur.
+                    Pilih satu misi, jawab brief singkat, dan biarkan Numu AI yang lembur.
                     Gratis untuk dicoba — tanpa kartu kredit.
                   </p>
                 </div>

@@ -267,7 +267,7 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
   ];
 
   const doc = new Document({
-    creator: "Nugasinaje",
+    creator: "Numu AI",
     title: content.title,
     numbering: {
       config: [

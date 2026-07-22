@@ -5,17 +5,17 @@ import { Footer } from "@/components/Footer";
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
-      { title: "Syarat Layanan — Nugasinaje" },
+      { title: "Syarat Layanan — Numu AI" },
       {
         name: "description",
         content:
-          "Baca syarat dan ketentuan penggunaan layanan Nugasinaje untuk memahami hak dan kewajibanmu sebagai pengguna.",
+          "Baca syarat dan ketentuan penggunaan layanan Numu AI untuk memahami hak dan kewajibanmu sebagai pengguna.",
       },
-      { property: "og:title", content: "Syarat Layanan — Nugasinaje" },
+      { property: "og:title", content: "Syarat Layanan — Numu AI" },
       {
         property: "og:description",
         content:
-          "Ketentuan penggunaan Nugasinaje: hak, kewajiban, dan tanggung jawab pengguna platform.",
+          "Ketentuan penggunaan Numu AI: hak, kewajiban, dan tanggung jawab pengguna platform.",
       },
       { property: "og:url", content: "https://nugasaje.lovable.app/terms" },
       { property: "og:type", content: "website" },
@@ -40,7 +40,7 @@ function TermsPage() {
           <section>
             <h2 className="font-display text-xl font-semibold text-foreground">1. Penerimaan</h2>
             <p className="mt-2">
-              Dengan membuat akun atau menggunakan Nugasinaje (“Layanan”), kamu setuju
+              Dengan membuat akun atau menggunakan Numu AI (“Layanan”), kamu setuju
               dengan syarat layanan ini. Bila tidak setuju, mohon tidak menggunakan Layanan.
             </p>
           </section>
@@ -102,7 +102,7 @@ function TermsPage() {
             <h2 className="font-display text-xl font-semibold text-foreground">9. Kontak</h2>
             <p className="mt-2">
               Pertanyaan terkait syarat layanan dapat dikirim ke{" "}
-              <a className="underline" href="mailto:halo@nugasinaje.id">halo@nugasinaje.id</a>.
+              <a className="underline" href="mailto:halo@numu-ai.id">halo@numu-ai.id</a>.
             </p>
           </section>
 

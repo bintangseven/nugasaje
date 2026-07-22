@@ -10,7 +10,7 @@ import { dummyAvatars } from "@/lib/avatars";
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
     meta: [
-      { title: "Personalisasi akun — Nugasinaje" },
+      { title: "Personalisasi akun — Numu AI" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -84,7 +84,7 @@ function OnboardingPage() {
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("onboarding_skipped");
       }
-      toast.success("Selamat datang di Nugasinaje!");
+      toast.success("Selamat datang di Numu AI!");
       navigate({ to: "/" });
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Gagal menyimpan"),
@@ -167,7 +167,7 @@ function OnboardingPage() {
             <GraduationCap className="h-5 w-5" />
           </span>
           <span className="font-semibold text-[#1B2A4A]" style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.4rem" }}>
-            Nugasin<span style={{ color: "#C9A44C" }}>aje</span>
+            Numu AI
           </span>
         </div>
 
