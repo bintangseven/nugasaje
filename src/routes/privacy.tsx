@@ -5,17 +5,17 @@ import { Footer } from "@/components/Footer";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Kebijakan Privasi — Nugasinaje" },
+      { title: "Kebijakan Privasi — Numu AI" },
       {
         name: "description",
         content:
-          "Pelajari bagaimana Nugasinaje mengumpulkan, memakai, dan melindungi data pribadi serta proyek akademikmu.",
+          "Pelajari bagaimana Numu AI mengumpulkan, memakai, dan melindungi data pribadi serta proyek akademikmu.",
       },
-      { property: "og:title", content: "Kebijakan Privasi — Nugasinaje" },
+      { property: "og:title", content: "Kebijakan Privasi — Numu AI" },
       {
         property: "og:description",
         content:
-          "Detail lengkap kebijakan privasi Nugasinaje: data yang dikumpulkan, penggunaan, retensi, dan hak pengguna.",
+          "Detail lengkap kebijakan privasi Numu AI: data yang dikumpulkan, penggunaan, retensi, dan hak pengguna.",
       },
       { property: "og:url", content: "https://nugasaje.lovable.app/privacy" },
       { property: "og:type", content: "website" },
@@ -103,7 +103,7 @@ function PrivacyPage() {
             <h2 className="font-display text-xl font-semibold text-foreground">9. Kontak</h2>
             <p className="mt-2">
               Pertanyaan privasi:{" "}
-              <a className="underline" href="mailto:halo@nugasinaje.id">halo@nugasinaje.id</a>.
+              <a className="underline" href="mailto:halo@numu-ai.id">halo@numu-ai.id</a>.
             </p>
           </section>
 

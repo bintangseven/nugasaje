@@ -10,7 +10,7 @@ import { dummyAvatars } from "@/lib/avatars";
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
     meta: [
-      { title: "Personalisasi akun — Nugasinaje" },
+      { title: "Personalisasi akun — Numu AI" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -84,7 +84,7 @@ function OnboardingPage() {
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("onboarding_skipped");
       }
-      toast.success("Selamat datang di Nugasinaje!");
+      toast.success("Selamat datang di Numu AI!");
       navigate({ to: "/" });
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Gagal menyimpan"),

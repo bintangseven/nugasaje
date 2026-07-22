@@ -4,17 +4,17 @@ import { XCircle } from "lucide-react";
 export const Route = createFileRoute("/payment/failed")({
   head: () => ({
     meta: [
-      { title: "Pembayaran gagal — Nugasinaje" },
+      { title: "Pembayaran gagal — Numu AI" },
       {
         name: "description",
         content:
-          "Pembayaran langganan PRO Nugasinaje tidak berhasil atau dibatalkan. Kamu bisa mencoba kembali dari halaman Profil.",
+          "Pembayaran langganan PRO Numu AI tidak berhasil atau dibatalkan. Kamu bisa mencoba kembali dari halaman Profil.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Pembayaran gagal — Nugasinaje" },
+      { property: "og:title", content: "Pembayaran gagal — Numu AI" },
       {
         property: "og:description",
-        content: "Pembayaran langganan PRO Nugasinaje gagal diproses.",
+        content: "Pembayaran langganan PRO Numu AI gagal diproses.",
       },
       { property: "og:type", content: "website" },
     ],

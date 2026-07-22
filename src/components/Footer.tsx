@@ -30,7 +30,7 @@ export function Footer() {
             <ul className="mt-4 space-y-2 text-sm" style={{ color: "var(--ink-soft)" }}>
               <li><Link to="/" hash="cara" className="hover:text-foreground">Panduan</Link></li>
               <li><Link to="/" hash="faq" className="hover:text-foreground">Pertanyaan umum</Link></li>
-              <li><a href="mailto:halo@nugasinaje.id" className="hover:text-foreground">Kontak</a></li>
+              <li><a href="mailto:halo@numu-ai.id" className="hover:text-foreground">Kontak</a></li>
             </ul>
           </div>
 
@@ -47,7 +47,7 @@ export function Footer() {
           className="mt-12 flex flex-col items-start justify-between gap-3 border-t pt-6 text-xs md:flex-row md:items-center"
           style={{ borderColor: "var(--line)", color: "var(--graphite)" }}
         >
-          <span>© {new Date().getFullYear()} Nugasinaje. Dibuat untuk anak skripsi.</span>
+          <span>© {new Date().getFullYear()} Numu AI. Dibuat untuk anak skripsi.</span>
           <span className="font-mono-eyebrow">v1.0 — paper edition</span>
         </div>
 

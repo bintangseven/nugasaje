@@ -20,17 +20,17 @@ import { useCurrentUser } from "@/hooks/use-auth";
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
-      { title: "Profil — Nugasinaje" },
+      { title: "Profil — Numu AI" },
       {
         name: "description",
         content:
-          "Kelola informasi profil, status langganan PRO, dan riwayat penggunaan kuota harian di Nugasinaje.",
+          "Kelola informasi profil, status langganan PRO, dan riwayat penggunaan kuota harian di Numu AI.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Profil — Nugasinaje" },
+      { property: "og:title", content: "Profil — Numu AI" },
       {
         property: "og:description",
-        content: "Halaman profil akun Nugasinaje: langganan, kuota harian, dan riwayat pembayaran.",
+        content: "Halaman profil akun Numu AI: langganan, kuota harian, dan riwayat pembayaran.",
       },
       { property: "og:type", content: "website" },
     ],

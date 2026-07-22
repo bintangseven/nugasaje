@@ -33,16 +33,16 @@ const FAQS = [
 export const Route = createFileRoute("/faq")({
   head: () => ({
     meta: [
-      { title: "FAQ — Nugasinaje" },
+      { title: "FAQ — Numu AI" },
       {
         name: "description",
         content:
-          "Pertanyaan yang sering ditanya seputar Nugasinaje: hasil, deteksi AI, keamanan data, upgrade Pro, dan penggunaan untuk skripsi.",
+          "Pertanyaan yang sering ditanya seputar Numu AI: hasil, deteksi AI, keamanan data, upgrade Pro, dan penggunaan untuk skripsi.",
       },
-      { property: "og:title", content: "FAQ — Nugasinaje" },
+      { property: "og:title", content: "FAQ — Numu AI" },
       {
         property: "og:description",
-        content: "Jawaban singkat untuk pertanyaan paling umum tentang Nugasinaje.",
+        content: "Jawaban singkat untuk pertanyaan paling umum tentang Numu AI.",
       },
     ],
   }),

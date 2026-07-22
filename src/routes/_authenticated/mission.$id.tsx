@@ -23,8 +23,8 @@ import { PaperContentPreview, SlidesContentPreview } from "@/components/ContentP
 export const Route = createFileRoute("/_authenticated/mission/$id")({
   head: () => ({
     meta: [
-      { title: "Misi — Nugasinaje" },
-      { name: "description", content: "Ruang kerja misi akademik di Nugasinaje." },
+      { title: "Misi — Numu AI" },
+      { name: "description", content: "Ruang kerja misi akademik di Numu AI." },
     ],
   }),
   component: MissionWorkspace,
