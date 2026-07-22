@@ -112,7 +112,7 @@ function AuthPage() {
                 className="text-[1.35rem] font-bold text-[#1B2A4A]"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
-                Nugasin<span style={{ color: "#C9A44C" }}>aje</span>
+                Numu AI
               </span>
             </div>
             <h1
@@ -176,7 +176,7 @@ function AuthPage() {
                 className="text-lg font-bold text-[#1B2A4A]"
                 style={{ fontFamily: "'Playfair Display', serif" }}
               >
-                Nugasin<span style={{ color: "#C9A44C" }}>aje</span>
+                Numu AI
               </span>
             </div>
 

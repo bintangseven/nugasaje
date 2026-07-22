@@ -167,7 +167,7 @@ function OnboardingPage() {
             <GraduationCap className="h-5 w-5" />
           </span>
           <span className="font-semibold text-[#1B2A4A]" style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.4rem" }}>
-            Nugasin<span style={{ color: "#C9A44C" }}>aje</span>
+            Numu AI
           </span>
         </div>
 
