@@ -2,13 +2,13 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { MissionCard } from "@/components/MissionCard";
 import { ProjectCard } from "@/components/ProjectCard";
 import { Reveal } from "@/components/Reveal";
 import { Footer } from "@/components/Footer";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Sparkles, Zap, ShieldCheck, Clock3 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { defaultProjectName, missions, type MissionType, type ProjectRow } from "@/lib/mock-data";
 import { createProject, listProjects } from "@/lib/projects.functions";
@@ -39,8 +39,6 @@ function Index() {
   const queryClient = useQueryClient();
   const listFn = useServerFn(listProjects);
   const createFn = useServerFn(createProject);
-  const paperRef = useRef<HTMLDivElement | null>(null);
-  const [tilt, setTilt] = useState({ rx: 0, ry: 0 });
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -48,18 +46,6 @@ function Index() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  function handleMove(e: React.MouseEvent<HTMLDivElement>) {
-    const el = paperRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-    setTilt({ rx: -y * 8, ry: x * 10 });
-  }
-  function handleLeave() {
-    setTilt({ rx: 0, ry: 0 });
-  }
 
   const projectsQuery = useQuery({
     queryKey: ["projects"],
@@ -93,99 +79,128 @@ function Index() {
   }
 
   return (
-    <div className="min-h-screen bg-background noise-overlay">
+    <div className="min-h-screen bg-background">
       <AppHeader />
       <main className="mx-auto max-w-6xl px-6 pb-24 pt-20">
-        <section className="grid items-center gap-14 md:grid-cols-[1.05fr_0.95fr]">
+        {/* HERO */}
+        <section className="grid items-center gap-14 md:grid-cols-[1.1fr_0.9fr]">
           <Reveal>
-            <span className="eyebrow">AI penyusun tugas kuliah</span>
-            <h1 className="mt-5 font-display font-semibold" style={{ fontSize: "clamp(2.4rem, 4.6vw, 3.6rem)" }}>
-              Makalah &amp; PPT kelar <span className="mark-highlight">dalam satu klik.</span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1 text-xs font-semibold text-on-surface-variant">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              AI penyusun tugas kuliah
+            </span>
+            <h1
+              className="mt-5 font-display font-semibold text-on-surface"
+              style={{ fontSize: "clamp(2.4rem, 4.8vw, 3.6rem)", lineHeight: 1.08 }}
+            >
+              Makalah &amp; PPT kelar{" "}
+              <span className="ai-gradient-text">dalam satu klik.</span>
             </h1>
-            <p className="mt-6 max-w-[46ch] text-[1.08rem] leading-relaxed" style={{ color: "var(--graphite)" }}>
-              Pilih satu misi, jawab beberapa pertanyaan singkat, dan biarkan Numu AI menyusun
-              struktur, isi, sampai daftar pustaka. Tinggal unduh, tinggal kumpulkan.
+            <p className="mt-6 max-w-[48ch] text-[1.08rem] leading-relaxed text-on-surface-variant">
+              Pilih satu misi, jawab beberapa pertanyaan singkat, dan biarkan Numu AI
+              menyusun struktur, isi, sampai daftar pustaka. Tinggal unduh, tinggal
+              kumpulkan.
             </p>
-          {loaded && !user && (
-            <p className="mt-5 text-sm" style={{ color: "var(--graphite)" }}>
-              <Link to="/auth" className="font-medium text-foreground hover:underline">
-                Masuk
-              </Link>{" "}
-              untuk menyimpan proyekmu dan melanjutkannya dari perangkat manapun.
-            </p>
-          )}
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => (user ? handleStart("paper") : navigate({ to: "/auth" }))}
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold text-on-primary shadow-glow transition-all hover:-translate-y-0.5"
+              >
+                Mulai gratis
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <a
+                href="#cara"
+                className="inline-flex items-center gap-2 rounded-xl border border-outline-variant bg-surface-container-lowest px-6 py-3.5 text-sm font-semibold text-on-surface hover:border-primary hover:text-primary"
+              >
+                Lihat caranya
+              </a>
+            </div>
+
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-on-surface-variant">
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5 text-primary" /> Data tersimpan aman
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Clock3 className="h-3.5 w-3.5 text-primary" /> Hasil siap ≤ 3 menit
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Zap className="h-3.5 w-3.5 text-primary" /> Tanpa kartu kredit
+              </span>
+            </div>
           </Reveal>
 
-          <div
-            className="relative flex min-h-[420px] items-center justify-center"
-            style={{ perspective: "1200px" }}
-            onMouseMove={handleMove}
-            onMouseLeave={handleLeave}
-          >
+          {/* Product mock — clean M3 card */}
+          <Reveal delay={80}>
             <div
-              ref={paperRef}
-              className="relative w-[300px] rounded-[4px] bg-white p-8 shadow-elegant"
-              style={{
-                transform: `translateY(${scrollY * -0.06}px) rotate(${-2.4 + tilt.ry * 0.2}deg) rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
-                transition: "transform 200ms cubic-bezier(.22,.61,.36,1)",
-                transformStyle: "preserve-3d",
-                backgroundImage:
-                  "repeating-linear-gradient(#FFFFFF 0px, #FFFFFF 27px, var(--line) 28px)",
-              }}
+              className="relative mx-auto w-full max-w-md"
+              style={{ transform: `translateY(${scrollY * -0.04}px)` }}
             >
               <div
-                className="absolute font-hand"
-                style={{
-                  top: "-18px",
-                  left: "-30px",
-                  transform: "rotate(-7deg)",
-                  background: "var(--highlighter)",
-                  color: "var(--stamp-deep)",
-                  padding: "8px 14px",
-                  fontSize: "1.05rem",
-                  fontWeight: 600,
-                  boxShadow: "0 8px 16px -8px rgba(0,0,0,0.25)",
-                }}
-              >
-                Revisi bab 3 malam ini? aman.
+                className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] opacity-70 blur-2xl"
+                style={{ background: "var(--gradient-ai)" }}
+              />
+              <div className="rounded-3xl border border-outline-variant bg-surface-container-lowest p-6 shadow-elegant">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                    <span className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
+                      Draft BAB I
+                    </span>
+                  </div>
+                  <span className="rounded-full bg-primary-fixed px-2.5 py-1 text-[10px] font-bold text-primary">
+                    AI · Selesai
+                  </span>
+                </div>
+                <h3 className="mt-4 font-display text-lg font-semibold text-on-surface">
+                  Pengaruh Literasi Digital terhadap Minat Baca Mahasiswa
+                </h3>
+                <div className="mt-5 space-y-2.5">
+                  {[92, 78, 85, 60, 92, 74].map((w, i) => (
+                    <div
+                      key={i}
+                      className="h-2 rounded-full bg-surface-container"
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${w}%`,
+                          background: "var(--gradient-ai)",
+                          opacity: 0.85,
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 grid grid-cols-3 gap-3">
+                  {[
+                    { k: "Halaman", v: "12" },
+                    { k: "Sitasi", v: "18" },
+                    { k: "Format", v: "APA" },
+                  ].map((s) => (
+                    <div
+                      key={s.k}
+                      className="rounded-xl bg-surface-container-low px-3 py-2 text-center"
+                    >
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
+                        {s.k}
+                      </div>
+                      <div className="mt-0.5 font-display text-base font-semibold text-on-surface">
+                        {s.v}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <span
-                className="font-mono-eyebrow inline-block bg-white"
-                style={{ fontSize: "0.66rem", color: "var(--graphite)" }}
-              >
-                BAB I — PENDAHULUAN
-              </span>
-              <div className="mt-2 inline-block bg-white font-display text-[1.05rem] font-semibold">
-                Pengaruh Literasi Digital terhadap Minat Baca Mahasiswa
-              </div>
-              {["92%", "78%", "85%", "60%", "92%", "78%"].map((w, i) => (
-                <div
-                  key={i}
-                  className="my-3.5 h-2 rounded-[2px] animate-pulse"
-                  style={{ width: w, background: "#E7E1D2", animationDelay: `${i * 120}ms`, animationDuration: "2.6s" }}
-                />
-              ))}
-              <svg
-                className="absolute"
-                style={{ right: "-26px", bottom: "-22px", width: 128, height: 128, transform: "rotate(-11deg)" }}
-                viewBox="0 0 200 200"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <g fill="none" stroke="#B23A2F" strokeWidth="3.4" opacity="0.92">
-                  <circle cx="100" cy="100" r="86" />
-                  <circle cx="100" cy="100" r="74" />
-                </g>
-                <text x="100" y="92" textAnchor="middle" fontFamily="Space Mono, monospace" fontSize="22" fontWeight="700" fill="#B23A2F">ACC</text>
-                <text x="100" y="120" textAnchor="middle" fontFamily="Space Mono, monospace" fontSize="11" letterSpacing="2" fill="#B23A2F">NUGASINAJE</text>
-                <path d="M70 132 L92 150 L132 108" stroke="#B23A2F" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
             </div>
-          </div>
+          </Reveal>
         </section>
 
         <section id="misi" className="mt-20 scroll-mt-24">
           <Reveal className="mb-10 max-w-2xl">
-            <span className="eyebrow">Dua alat, satu alur kerja</span>
+            <span className="eyebrow">Dua alat · Satu alur kerja</span>
             <h2 className="mt-3 font-display text-3xl font-semibold md:text-4xl">
               Dari topik kosong sampai file siap kumpul
             </h2>
@@ -215,7 +230,7 @@ function Index() {
             <h2 className="mt-3 font-display text-3xl font-semibold md:text-4xl">
               Tiga langkah, satu file siap kumpul
             </h2>
-            <p className="mt-3 text-[1rem]" style={{ color: "var(--graphite)" }}>
+            <p className="mt-3 text-[1rem] text-on-surface-variant">
               Tidak perlu prompt panjang. Cukup jawab pertanyaan singkat, sisanya AI yang kerjakan.
             </p>
           </Reveal>
@@ -239,16 +254,18 @@ function Index() {
               },
             ].map((s, i) => (
               <Reveal key={s.step} delay={i * 100}>
-                <div className="group relative h-full overflow-hidden rounded-[10px] border border-border bg-card p-7 transition-all hover:-translate-y-1 hover:shadow-elegant">
+                <div className="bento-card group relative h-full overflow-hidden rounded-3xl p-7 transition-all hover:-translate-y-1">
                   <div
-                    className="absolute -right-6 -top-8 font-display font-bold leading-none transition-transform group-hover:scale-110"
-                    style={{ fontSize: "7rem", color: "var(--paper-deep)" }}
+                    className="absolute -right-4 -top-8 font-display font-bold leading-none text-surface-container transition-transform group-hover:scale-110"
+                    style={{ fontSize: "7rem" }}
                   >
                     {s.step}
                   </div>
                   <span className="eyebrow relative">Langkah {s.step}</span>
-                  <h3 className="relative mt-3 font-display text-xl font-semibold">{s.title}</h3>
-                  <p className="relative mt-2 text-sm leading-relaxed" style={{ color: "var(--graphite)" }}>
+                  <h3 className="relative mt-3 font-display text-xl font-semibold text-on-surface">
+                    {s.title}
+                  </h3>
+                  <p className="relative mt-2 text-sm leading-relaxed text-on-surface-variant">
                     {s.desc}
                   </p>
                 </div>
@@ -264,9 +281,9 @@ function Index() {
             <h2 className="mt-3 font-display text-3xl font-semibold md:text-4xl">
               Mulai gratis, naik kelas saat butuh
             </h2>
-            <p className="mt-3 text-[1rem]" style={{ color: "var(--graphite)" }}>
+            <p className="mt-3 text-[1rem] text-on-surface-variant">
               Promo pembukaan: paket Pro turun dari{" "}
-              <span className="line-through" style={{ color: "var(--ink-soft)" }}>Rp100.000</span>{" "}
+              <span className="text-on-surface-variant/70 line-through">Rp100.000</span>{" "}
               jadi cuma <span className="mark-highlight font-semibold">Rp50.000 / bulan</span>.
             </p>
           </Reveal>
@@ -274,19 +291,21 @@ function Index() {
           <div className="grid gap-6 md:grid-cols-2">
             {/* BASIC */}
             <Reveal>
-              <div className="flex h-full flex-col rounded-[10px] border border-border bg-card p-8 transition-all hover:-translate-y-1 hover:shadow-elegant">
+              <div className="bento-card flex h-full flex-col rounded-3xl p-8 transition-all hover:-translate-y-1">
                 <span className="eyebrow">Basic</span>
-                <h3 className="mt-3 font-display text-2xl font-semibold">Gratis selamanya</h3>
-                <p className="mt-2 text-sm" style={{ color: "var(--graphite)" }}>
+                <h3 className="mt-3 font-display text-2xl font-semibold text-on-surface">
+                  Gratis selamanya
+                </h3>
+                <p className="mt-2 text-sm text-on-surface-variant">
                   Cocok buat coba-coba dan tugas ringan.
                 </p>
 
                 <div className="mt-6 flex items-baseline gap-2">
-                  <span className="font-display text-5xl font-bold">Rp0</span>
-                  <span className="text-sm" style={{ color: "var(--graphite)" }}>/bulan</span>
+                  <span className="font-display text-5xl font-bold text-on-surface">Rp0</span>
+                  <span className="text-sm text-on-surface-variant">/bulan</span>
                 </div>
 
-                <ul className="mt-6 space-y-3 text-sm" style={{ color: "var(--ink-soft)" }}>
+                <ul className="mt-6 space-y-3 text-sm text-on-surface">
                   {[
                     "2 submission per hari",
                     "Akses kedua misi (Makalah & PPT)",
@@ -294,7 +313,7 @@ function Index() {
                     "Unduh .docx & .pptx",
                   ].map((f) => (
                     <li key={f} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "var(--stamp)" }} />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                       <span>{f}</span>
                     </li>
                   ))}
@@ -303,7 +322,7 @@ function Index() {
                 <button
                   type="button"
                   onClick={() => (user ? navigate({ to: "/" }) : navigate({ to: "/auth" }))}
-                  className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-md border border-foreground bg-transparent px-5 py-3 text-sm font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-foreground hover:text-background"
+                  className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant bg-transparent px-5 py-3 text-sm font-bold text-on-surface transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary"
                 >
                   Mulai gratis
                 </button>
@@ -313,43 +332,39 @@ function Index() {
             {/* PRO */}
             <Reveal delay={100}>
               <div
-                className="relative flex h-full flex-col overflow-hidden rounded-[10px] p-8 text-background shadow-elegant"
-                style={{ background: "var(--ink)" }}
+                className="relative flex h-full flex-col overflow-hidden rounded-3xl p-8 shadow-glow"
+                style={{
+                  background:
+                    "linear-gradient(135deg, var(--primary) 0%, var(--tertiary) 100%)",
+                  color: "var(--on-primary)",
+                }}
               >
                 <div
                   className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(244,211,94,0.35), transparent 70%)" }}
+                  style={{ background: "radial-gradient(circle, rgba(255,255,255,0.28), transparent 70%)" }}
                 />
                 <div className="flex items-center justify-between">
-                  <span
-                    className="font-mono-eyebrow uppercase"
-                    style={{ fontSize: "0.72rem", letterSpacing: "0.16em", color: "var(--highlighter)" }}
-                  >
+                  <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-white/80">
                     ● Pro
                   </span>
-                  <span
-                    className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[0.7rem] font-bold uppercase tracking-wider"
-                    style={{ background: "var(--stamp)", color: "var(--paper)" }}
-                  >
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-wider text-white backdrop-blur">
                     <Sparkles className="h-3 w-3" />
                     Promo 50%
                   </span>
                 </div>
 
                 <h3 className="mt-3 font-display text-2xl font-semibold">Buat yang serius</h3>
-                <p className="mt-2 text-sm" style={{ color: "rgba(250,246,236,0.7)" }}>
+                <p className="mt-2 text-sm text-white/75">
                   Untuk minggu UTS, UAS, dan revisi dosen yang nggak ada habisnya.
                 </p>
 
                 <div className="mt-6 flex items-baseline gap-3">
                   <span className="font-display text-5xl font-bold">Rp50rb</span>
-                  <span className="text-sm" style={{ color: "rgba(250,246,236,0.65)" }}>/bulan</span>
-                  <span className="text-sm line-through" style={{ color: "rgba(250,246,236,0.45)" }}>
-                    Rp100rb
-                  </span>
+                  <span className="text-sm text-white/70">/bulan</span>
+                  <span className="text-sm text-white/50 line-through">Rp100rb</span>
                 </div>
 
-                <ul className="mt-6 space-y-3 text-sm" style={{ color: "rgba(250,246,236,0.92)" }}>
+                <ul className="mt-6 space-y-3 text-sm text-white/90">
                   {[
                     "10 submission per hari",
                     "Prioritas antrian generate",
@@ -358,7 +373,7 @@ function Index() {
                     "Dukungan via WhatsApp",
                   ].map((f) => (
                     <li key={f} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "var(--highlighter)" }} />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-white" />
                       <span>{f}</span>
                     </li>
                   ))}
@@ -367,8 +382,7 @@ function Index() {
                 <button
                   type="button"
                   onClick={() => (user ? navigate({ to: "/profile" }) : navigate({ to: "/auth" }))}
-                  className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5"
-                  style={{ background: "var(--highlighter)", color: "var(--ink)" }}
+                  className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-primary transition-all hover:-translate-y-0.5"
                 >
                   Upgrade ke Pro
                   <ArrowRight className="h-4 w-4" />
@@ -383,16 +397,16 @@ function Index() {
           <Reveal className="flex items-end justify-between">
             <div>
               <span className="eyebrow">Riwayat</span>
-              <h2 className="mt-2 font-display text-2xl font-semibold text-foreground">
+              <h2 className="mt-2 font-display text-2xl font-semibold text-on-surface">
                 Proyek Terbaru
               </h2>
-              <p className="mt-1 text-sm" style={{ color: "var(--graphite)" }}>
+              <p className="mt-1 text-sm text-on-surface-variant">
                 Tersinkron otomatis di seluruh perangkatmu.
               </p>
             </div>
             <Link
               to="/projects"
-              className="text-sm font-medium text-foreground hover:underline"
+              className="text-sm font-medium text-primary hover:underline"
             >
               Lihat semua →
             </Link>
@@ -402,12 +416,12 @@ function Index() {
               {[0, 1, 2].map((i) => (
                 <div
                   key={i}
-                  className="h-40 animate-pulse rounded-2xl border border-border bg-card"
+                  className="h-40 animate-pulse rounded-3xl border border-outline-variant bg-surface-container-low"
                 />
               ))}
             </div>
           ) : recent.length === 0 ? (
-            <div className="mt-5 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+            <div className="mt-5 rounded-3xl border border-dashed border-outline-variant bg-surface-container-lowest p-10 text-center">
               <p className="text-sm text-muted-foreground">
                 Belum ada proyek. Mulai misi di atas untuk membuat yang pertama.
               </p>
@@ -460,17 +474,14 @@ function Index() {
               },
             ].map((item, i) => (
               <Reveal key={item.q} delay={i * 60}>
-                <details className="group rounded-[10px] border border-border bg-card p-5 transition-all hover:shadow-elegant">
-                  <summary className="flex cursor-pointer list-none items-start justify-between gap-3 font-display text-base font-semibold">
+                <details className="bento-card group rounded-2xl p-5 transition-all">
+                  <summary className="flex cursor-pointer list-none items-start justify-between gap-3 font-display text-base font-semibold text-on-surface">
                     <span>{item.q}</span>
-                    <span
-                      className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-sm transition-transform group-open:rotate-45"
-                      style={{ borderColor: "var(--line)", color: "var(--graphite)" }}
-                    >
+                    <span className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-outline-variant text-sm text-on-surface-variant transition-transform group-open:rotate-45">
                       +
                     </span>
                   </summary>
-                  <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--graphite)" }}>
+                  <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">
                     {item.a}
                   </p>
                 </details>
@@ -480,27 +491,30 @@ function Index() {
 
           <Reveal>
             <div
-              className="relative overflow-hidden rounded-[14px] p-10 md:p-14"
+              className="relative overflow-hidden rounded-3xl p-10 shadow-glow md:p-14"
               style={{
-                background: "var(--paper-deep)",
-                border: "1px solid var(--line)",
+                background:
+                  "linear-gradient(135deg, var(--primary) 0%, var(--tertiary) 60%, var(--secondary) 100%)",
+                color: "var(--on-primary)",
               }}
             >
               <div
                 className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full"
-                style={{ background: "radial-gradient(circle, rgba(244,211,94,0.6), transparent 70%)" }}
+                style={{ background: "radial-gradient(circle, rgba(255,255,255,0.35), transparent 70%)" }}
               />
               <div
                 className="pointer-events-none absolute -bottom-20 -left-10 h-72 w-72 rounded-full"
-                style={{ background: "radial-gradient(circle, rgba(178,58,47,0.18), transparent 70%)" }}
+                style={{ background: "radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%)" }}
               />
               <div className="relative grid items-center gap-8 md:grid-cols-[1.4fr_1fr]">
                 <div>
-                  <span className="eyebrow">Siap mulai?</span>
+                  <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-white/80">
+                    Siap mulai?
+                  </span>
                   <h2 className="mt-3 font-display text-3xl font-semibold md:text-4xl">
-                    Deadline besok? <span className="mark-highlight">Mulai sekarang.</span>
+                    Deadline besok? <span className="underline decoration-white/60 underline-offset-4">Mulai sekarang.</span>
                   </h2>
-                  <p className="mt-4 max-w-[48ch] text-[1rem]" style={{ color: "var(--graphite)" }}>
+                  <p className="mt-4 max-w-[48ch] text-[1rem] text-white/85">
                     Pilih satu misi, jawab brief singkat, dan biarkan Numu AI yang lembur.
                     Gratis untuk dicoba — tanpa kartu kredit.
                   </p>
@@ -509,14 +523,14 @@ function Index() {
                   <button
                     type="button"
                     onClick={() => (user ? handleStart("paper") : navigate({ to: "/auth" }))}
-                    className="inline-flex items-center justify-center gap-2 rounded-md bg-foreground px-6 py-3.5 text-sm font-bold text-background transition-all hover:-translate-y-0.5 hover:shadow-elegant"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-primary transition-all hover:-translate-y-0.5"
                   >
                     Mulai misi pertama
                     <ArrowRight className="h-4 w-4" />
                   </button>
                   <a
                     href="#harga"
-                    className="text-sm font-semibold text-foreground hover:underline"
+                    className="text-sm font-semibold text-white/90 hover:text-white hover:underline"
                   >
                     Lihat paket Pro →
                   </a>
