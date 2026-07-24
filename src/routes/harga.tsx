@@ -30,34 +30,34 @@ function HargaPage() {
   const { user } = useCurrentUser();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-surface">
       <AppHeader />
-      <main className="mx-auto max-w-6xl px-6 pb-24 pt-14">
-        <Reveal className="mb-12 max-w-2xl">
+      <main className="mx-auto max-w-6xl px-6 pb-24 pt-16">
+        <Reveal className="mb-14 max-w-2xl">
           <span className="eyebrow">Harga</span>
-          <h1 className="mt-3 font-display text-4xl font-semibold md:text-5xl">
+          <h1 className="mt-3 font-display text-4xl font-bold tracking-tight text-on-surface md:text-5xl">
             Mulai gratis, naik kelas saat butuh
           </h1>
-          <p className="mt-4 text-[1rem]" style={{ color: "var(--graphite)" }}>
+          <p className="mt-4 text-[1.02rem] leading-relaxed text-on-surface-variant">
             Promo pembukaan: paket Pro turun dari{" "}
-            <span className="line-through" style={{ color: "var(--ink-soft)" }}>Rp100.000</span>{" "}
-            jadi cuma <span className="mark-highlight font-semibold">Rp50.000 / bulan</span>.
+            <span className="line-through text-outline">Rp100.000</span>{" "}
+            jadi cuma <span className="font-semibold text-primary">Rp50.000 / bulan</span>.
           </p>
         </Reveal>
 
         <div className="grid gap-6 md:grid-cols-2">
           <Reveal>
-            <div className="flex h-full flex-col rounded-[10px] border border-border bg-card p-8 transition-all hover:-translate-y-1 hover:shadow-elegant">
+            <div className="flex h-full flex-col rounded-3xl border border-outline-variant bg-surface-container-lowest p-8 transition-all hover:-translate-y-1 hover:border-primary hover:shadow-elegant">
               <span className="eyebrow">Basic</span>
-              <h3 className="mt-3 font-display text-2xl font-semibold">Gratis selamanya</h3>
-              <p className="mt-2 text-sm" style={{ color: "var(--graphite)" }}>
+              <h3 className="mt-3 font-display text-2xl font-semibold text-on-surface">Gratis selamanya</h3>
+              <p className="mt-2 text-sm text-on-surface-variant">
                 Cocok buat coba-coba dan tugas ringan.
               </p>
               <div className="mt-6 flex items-baseline gap-2">
-                <span className="font-display text-5xl font-bold">Rp0</span>
-                <span className="text-sm" style={{ color: "var(--graphite)" }}>/bulan</span>
+                <span className="font-display text-5xl font-bold text-on-surface">Rp0</span>
+                <span className="text-sm text-on-surface-variant">/bulan</span>
               </div>
-              <ul className="mt-6 space-y-3 text-sm" style={{ color: "var(--ink-soft)" }}>
+              <ul className="mt-6 space-y-3 text-sm text-on-surface-variant">
                 {[
                   "2 submission per hari",
                   "Akses kedua misi (Makalah & PPT)",
@@ -65,7 +65,9 @@ function HargaPage() {
                   "Unduh .docx & .pptx",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "var(--stamp)" }} />
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-fixed text-primary">
+                      <Check className="h-3 w-3" />
+                    </span>
                     <span>{f}</span>
                   </li>
                 ))}
@@ -73,7 +75,7 @@ function HargaPage() {
               <button
                 type="button"
                 onClick={() => (user ? navigate({ to: "/" }) : navigate({ to: "/auth" }))}
-                className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-md border border-foreground bg-transparent px-5 py-3 text-sm font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-foreground hover:text-background"
+                className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant bg-surface-container-low px-5 py-3 text-sm font-semibold text-on-surface transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary"
               >
                 Mulai gratis
               </button>
@@ -82,49 +84,43 @@ function HargaPage() {
 
           <Reveal delay={100}>
             <div
-              className="relative flex h-full flex-col overflow-hidden rounded-[10px] p-8 text-background shadow-elegant"
-              style={{ background: "var(--ink)" }}
+              className="relative flex h-full flex-col overflow-hidden rounded-3xl p-8 text-on-primary shadow-elegant"
+              style={{ background: "var(--gradient-ai)" }}
             >
               <div
-                className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full"
-                style={{ background: "radial-gradient(circle, rgba(244,211,94,0.35), transparent 70%)" }}
+                className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full"
+                style={{ background: "radial-gradient(circle, rgba(255,255,255,0.25), transparent 70%)" }}
               />
               <div className="flex items-center justify-between">
-                <span
-                  className="font-mono-eyebrow uppercase"
-                  style={{ fontSize: "0.72rem", letterSpacing: "0.16em", color: "var(--highlighter)" }}
-                >
+                <span className="eyebrow" style={{ color: "rgba(255,255,255,0.85)" }}>
                   ● Pro
                 </span>
-                <span
-                  className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-[0.7rem] font-bold uppercase tracking-wider"
-                  style={{ background: "var(--stamp)", color: "var(--paper)" }}
-                >
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-wider text-white backdrop-blur">
                   <Sparkles className="h-3 w-3" />
                   Promo 50%
                 </span>
               </div>
               <h3 className="mt-3 font-display text-2xl font-semibold">Buat yang serius</h3>
-              <p className="mt-2 text-sm" style={{ color: "rgba(250,246,236,0.7)" }}>
+              <p className="mt-2 text-sm text-white/75">
                 Untuk minggu UTS, UAS, dan revisi dosen yang nggak ada habisnya.
               </p>
               <div className="mt-6 flex items-baseline gap-3">
                 <span className="font-display text-5xl font-bold">Rp50rb</span>
-                <span className="text-sm" style={{ color: "rgba(250,246,236,0.65)" }}>/bulan</span>
-                <span className="text-sm line-through" style={{ color: "rgba(250,246,236,0.45)" }}>
-                  Rp100rb
-                </span>
+                <span className="text-sm text-white/70">/bulan</span>
+                <span className="text-sm line-through text-white/50">Rp100rb</span>
               </div>
-              <ul className="mt-6 space-y-3 text-sm" style={{ color: "rgba(250,246,236,0.92)" }}>
+              <ul className="mt-6 space-y-3 text-sm text-white/90">
                 {[
                   "10 submission per hari",
                   "Prioritas antrian generate",
-                  "Template PPT premium (Beautiful.ai)",
+                  "Preview PPT & Makalah in-app",
                   "Riwayat & ekspor tanpa batas",
                   "Dukungan via WhatsApp",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "var(--highlighter)" }} />
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20 text-white">
+                      <Check className="h-3 w-3" />
+                    </span>
                     <span>{f}</span>
                   </li>
                 ))}
@@ -132,8 +128,7 @@ function HargaPage() {
               <button
                 type="button"
                 onClick={() => (user ? navigate({ to: "/profile" }) : navigate({ to: "/auth" }))}
-                className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5"
-                style={{ background: "var(--highlighter)", color: "var(--ink)" }}
+                className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-primary transition-all hover:-translate-y-0.5 hover:opacity-95"
               >
                 Upgrade ke Pro
                 <ArrowRight className="h-4 w-4" />
