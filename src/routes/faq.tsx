@@ -51,32 +51,29 @@ export const Route = createFileRoute("/faq")({
 
 function FaqPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-surface">
       <AppHeader />
-      <main className="mx-auto max-w-4xl px-6 pb-24 pt-14">
+      <main className="mx-auto max-w-4xl px-6 pb-24 pt-16">
         <Reveal className="mb-10 max-w-2xl">
           <span className="eyebrow">FAQ</span>
-          <h1 className="mt-3 font-display text-4xl font-semibold md:text-5xl">
+          <h1 className="mt-3 font-display text-4xl font-bold tracking-tight text-on-surface md:text-5xl">
             Pertanyaan yang sering ditanya
           </h1>
-          <p className="mt-3 text-[1rem]" style={{ color: "var(--graphite)" }}>
+          <p className="mt-3 text-[1.02rem] leading-relaxed text-on-surface-variant">
             Belum ketemu jawabannya? Kirim pesan lewat menu Profil.
           </p>
         </Reveal>
         <div className="grid gap-4 md:grid-cols-2">
           {FAQS.map((item, i) => (
             <Reveal key={item.q} delay={i * 60}>
-              <details className="group rounded-[10px] border border-border bg-card p-5 transition-all hover:shadow-elegant">
-                <summary className="flex cursor-pointer list-none items-start justify-between gap-3 font-display text-base font-semibold">
+              <details className="group rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 transition-all hover:border-primary hover:shadow-elegant">
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-3 font-display text-base font-semibold text-on-surface">
                   <span>{item.q}</span>
-                  <span
-                    className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-sm transition-transform group-open:rotate-45"
-                    style={{ borderColor: "var(--line)", color: "var(--graphite)" }}
-                  >
+                  <span className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-fixed text-sm font-bold text-primary transition-transform group-open:rotate-45">
                     +
                   </span>
                 </summary>
-                <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--graphite)" }}>
+                <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">
                   {item.a}
                 </p>
               </details>
