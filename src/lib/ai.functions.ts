@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { fixPresentationDesign, buildAiFixInstruction } from "./design-validator";
 
 const paperTool = {
   type: "function",
@@ -14,7 +15,8 @@ const paperTool = {
         course: { type: "string" },
         kata_pengantar: {
           type: "string",
-          description: "Kata pengantar berisi ucapan syukur, tujuan penulisan singkat, ucapan terima kasih, dan harapan. Sekitar 100 kata, boleh 2-3 paragraf dipisah newline.",
+          description:
+            "Kata pengantar berisi ucapan syukur, tujuan penulisan singkat, ucapan terima kasih, dan harapan. Sekitar 100 kata, boleh 2-3 paragraf dipisah newline.",
         },
         abstract: { type: "string", description: "Abstrak singkat 100-150 kata." },
         sections: {
@@ -50,7 +52,8 @@ const paperTool = {
               },
               subsections: {
                 type: "array",
-                description: "Sub-bab (mis. 1.1 Latar Belakang). Opsional tapi sangat dianjurkan untuk BAB Pendahuluan & Pembahasan.",
+                description:
+                  "Sub-bab (mis. 1.1 Latar Belakang). Opsional tapi sangat dianjurkan untuk BAB Pendahuluan & Pembahasan.",
                 items: {
                   type: "object",
                   properties: {
@@ -102,186 +105,206 @@ const presentationTool = {
   name: "submit_presentation",
   description: "Susun slide presentasi akademik berbahasa Indonesia.",
   input_schema: {
-      type: "object",
-      properties: {
-        title: { type: "string" },
-        subtitle: { type: "string" },
-        cover_style: {
-          type: "string",
-          enum: [
-            "solid",
-            "gradient",
-            "split",
-            "geometric",
-            "minimal",
-            "editorial",
-            "band",
-            "duotone",
-            "ingoude",
-            "lovable",
-          ],
-          description:
-            "Pilih gaya cover slide yang paling cocok untuk topik & audiens. Boleh berbeda tiap presentasi — kamu bebas mendesain.",
+    type: "object",
+    properties: {
+      title: { type: "string" },
+      subtitle: { type: "string" },
+      cover_style: {
+        type: "string",
+        enum: [
+          "solid",
+          "gradient",
+          "split",
+          "geometric",
+          "minimal",
+          "editorial",
+          "band",
+          "duotone",
+          "ingoude",
+          "lovable",
+        ],
+        description:
+          "Pilih gaya cover slide yang paling cocok untuk topik & audiens. Boleh berbeda tiap presentasi — kamu bebas mendesain.",
+      },
+      theme: {
+        type: "object",
+        description:
+          "Palet warna deck yang KAMU rancang sendiri agar cocok dengan topik, audiens, & mood presentasi. Semua nilai berupa hex 6 digit TANPA '#'. Pastikan kontras teks selalu terbaca (mis. bg gelap → gunakan teks putih otomatis).",
+        properties: {
+          bg: { type: "string", description: "Warna latar utama slide gelap / cover (hex 6 digit tanpa #)." },
+          bg2: { type: "string", description: "Warna latar sekunder / band / gradient partner." },
+          surface: { type: "string", description: "Warna latar slide konten terang (biasanya putih/off-white)." },
+          ink: { type: "string", description: "Warna teks utama di atas surface (gelap, kontras tinggi)." },
+          inkInverse: { type: "string", description: "Warna teks di atas bg gelap (biasanya FFFFFF)." },
+          muted: { type: "string", description: "Warna teks sekunder / caption." },
+          accent: { type: "string", description: "Warna aksen utama (garis, chip, angka stats)." },
+          accentSoft: { type: "string", description: "Aksen lembut / dekorasi / highlight tipis." },
         },
-        theme: {
+        required: ["bg", "bg2", "surface", "ink", "inkInverse", "muted", "accent", "accentSoft"],
+        additionalProperties: false,
+      },
+      agenda: {
+        type: "array",
+        minItems: 3,
+        maxItems: 6,
+        items: { type: "string", description: "Satu poin agenda singkat (3-6 kata)." },
+      },
+      closing: {
+        type: "object",
+        properties: {
+          message: { type: "string", description: "Pesan penutup singkat, mis. 'Terima kasih atas perhatiannya'." },
+          cta: { type: "string", description: "Ajakan/kalimat penutup tambahan, opsional." },
+        },
+        required: ["message"],
+        additionalProperties: false,
+      },
+      slides: {
+        type: "array",
+        minItems: 5,
+        items: {
           type: "object",
-          description:
-            "Palet warna deck yang KAMU rancang sendiri agar cocok dengan topik, audiens, & mood presentasi. Semua nilai berupa hex 6 digit TANPA '#'. Pastikan kontras teks selalu terbaca (mis. bg gelap → gunakan teks putih otomatis).",
           properties: {
-            bg: { type: "string", description: "Warna latar utama slide gelap / cover (hex 6 digit tanpa #)." },
-            bg2: { type: "string", description: "Warna latar sekunder / band / gradient partner." },
-            surface: { type: "string", description: "Warna latar slide konten terang (biasanya putih/off-white)." },
-            ink: { type: "string", description: "Warna teks utama di atas surface (gelap, kontras tinggi)." },
-            inkInverse: { type: "string", description: "Warna teks di atas bg gelap (biasanya FFFFFF)." },
-            muted: { type: "string", description: "Warna teks sekunder / caption." },
-            accent: { type: "string", description: "Warna aksen utama (garis, chip, angka stats)." },
-            accentSoft: { type: "string", description: "Aksen lembut / dekorasi / highlight tipis." },
-          },
-          required: ["bg", "bg2", "surface", "ink", "inkInverse", "muted", "accent", "accentSoft"],
-          additionalProperties: false,
-        },
-        agenda: {
-          type: "array",
-          minItems: 3,
-          maxItems: 6,
-          items: { type: "string", description: "Satu poin agenda singkat (3-6 kata)." },
-        },
-        closing: {
-          type: "object",
-          properties: {
-            message: { type: "string", description: "Pesan penutup singkat, mis. 'Terima kasih atas perhatiannya'." },
-            cta: { type: "string", description: "Ajakan/kalimat penutup tambahan, opsional." },
-          },
-          required: ["message"],
-          additionalProperties: false,
-        },
-        slides: {
-          type: "array",
-          minItems: 5,
-          items: {
-            type: "object",
-            properties: {
-              title: { type: "string" },
-              layout: {
-                type: "string",
-                enum: ["section", "content", "two_column", "quote", "stats"],
-                description:
-                  "section = pembatas bab; content = judul + bullet; two_column = dua kolom bullet; quote = kutipan tebal; stats = 2-4 angka highlight.",
-              },
-              bullets: {
-                type: "array",
-                minItems: 1,
-                items: { type: "string" },
-              },
-              blocks: {
-                type: "array",
-                description:
-                  "WAJIB untuk layout 'content'. Campuran ±50% paragraf naratif + ±50% bullet list agar slide bergaya naratif-akademik, bukan sekadar deretan bullet. Pola ideal per slide: paragraf pembuka 2-3 kalimat → bullet list 2-4 poin → (opsional) paragraf penutup singkat. Bila diisi, renderer memakai 'blocks' dan mengabaikan 'bullets'.",
-                items: {
-                  type: "object",
-                  properties: {
-                    kind: { type: "string", enum: ["paragraph", "bullets"] },
-                    text: {
-                      type: "string",
-                      description:
-                        "Untuk kind=paragraph: 1 paragraf naratif 2-4 kalimat (~30-60 kata).",
-                    },
-                    items: {
-                      type: "array",
-                      description:
-                        "Untuk kind=bullets: 2-5 poin ringkas, tiap poin maks 14 kata.",
-                      items: { type: "string" },
-                    },
-                  },
-                  required: ["kind"],
-                  additionalProperties: false,
-                },
-              },
-              bullets_right: {
-                type: "array",
-                description: "Hanya untuk layout two_column: bullet kolom kanan.",
-                items: { type: "string" },
-              },
-              stats: {
-                type: "array",
-                description: "Hanya untuk layout stats: 2-4 item.",
-                minItems: 2,
-                maxItems: 4,
-                items: {
-                  type: "object",
-                  properties: {
-                    value: { type: "string", description: "Angka/teks pendek, mis. '85%'." },
-                    label: { type: "string", description: "Label singkat di bawah angka." },
-                  },
-                  required: ["value", "label"],
-                  additionalProperties: false,
-                },
-              },
-              quote: { type: "string", description: "Hanya untuk layout quote: teks kutipan." },
-              quote_source: { type: "string", description: "Sumber kutipan, opsional." },
-              notes: { type: "string", description: "Catatan pembicara, 2-3 kalimat." },
-              design: {
+            title: { type: "string" },
+            layout: {
+              type: "string",
+              enum: ["section", "content", "two_column", "quote", "stats"],
+              description:
+                "section = pembatas bab; content = judul + bullet; two_column = dua kolom bullet; quote = kutipan tebal; stats = 2-4 angka highlight.",
+            },
+            bullets: {
+              type: "array",
+              minItems: 1,
+              items: { type: "string" },
+            },
+            blocks: {
+              type: "array",
+              description:
+                "WAJIB untuk layout 'content'. Campuran ±50% paragraf naratif + ±50% bullet list agar slide bergaya naratif-akademik, bukan sekadar deretan bullet. Pola ideal per slide: paragraf pembuka 2-3 kalimat → bullet list 2-4 poin → (opsional) paragraf penutup singkat. Bila diisi, renderer memakai 'blocks' dan mengabaikan 'bullets'.",
+              items: {
                 type: "object",
-                description:
-                  "SANGAT DIANJURKAN untuk semua slide 'content', 'two_column', 'stats', 'quote', 'section'. Rancang slide sebagai artboard 16:9 ukuran 13.333 x 7.5 INCI. Bila 'design.elements' diisi, renderer AKAN MENGABAIKAN layout/bullets/blocks bawaan dan menggambar elemen apa adanya persis di posisi (x,y,w,h) inci yang kamu tentukan. Pakai ini untuk membuat slide yang benar-benar didesain (hero, kartu, grid 2/3 kolom, timeline, callout besar, stat block, quote frame, dsb) — mirip artifact yang kamu buat di Claude.ai. Kamu bebas menumpuk shape (rect/ellipse/line) sebagai kartu/latar aksen lalu meletakkan text di atasnya. WAJIB sisakan margin ≥0.4in dari tepi, dan sisakan area 0.35in di bawah untuk footer (jangan menaruh elemen di y ≥ 7.1). Gunakan warna dari 'theme' (bg, bg2, surface, ink, inkInverse, muted, accent, accentSoft) — atau hex custom bila perlu, semua hex 6 digit TANPA '#'.",
                 properties: {
-                  background: {
+                  kind: { type: "string", enum: ["paragraph", "bullets"] },
+                  text: {
                     type: "string",
-                    description: "Warna latar slide (hex 6 digit tanpa #). Kalau tidak diisi, dipakai theme.surface untuk slide konten atau theme.bg untuk slide 'section'.",
+                    description: "Untuk kind=paragraph: 1 paragraf naratif 2-4 kalimat (~30-60 kata).",
                   },
-                  elements: {
+                  items: {
                     type: "array",
-                    minItems: 3,
-                    description:
-                      "Daftar elemen visual, digambar berurutan (elemen belakang dulu, depan terakhir). Minimal 3 elemen; slide konten biasanya butuh 8-20 elemen untuk terasa 'didesain'.",
-                    items: {
-                      type: "object",
-                      properties: {
-                        type: {
-                          type: "string",
-                          enum: ["rect", "roundRect", "ellipse", "line", "triangle", "chevron", "text"],
-                          description: "Jenis primitif. text=kotak teks; shape lain=grafik.",
-                        },
-                        x: { type: "number", description: "Kiri (inci, 0-13.333)." },
-                        y: { type: "number", description: "Atas (inci, 0-7.5)." },
-                        w: { type: "number", description: "Lebar (inci)." },
-                        h: { type: "number", description: "Tinggi (inci)." },
-                        fill: { type: "string", description: "Warna isi hex 6 digit tanpa #. Boleh dikosongkan untuk line/text tanpa background." },
-                        opacity: { type: "number", description: "Transparansi 0-100 (0=solid, 80=sangat transparan). Untuk membuat lapisan aksen lembut." },
-                        stroke: { type: "string", description: "Warna garis (hex tanpa #). Untuk line WAJIB diisi." },
-                        strokeWidth: { type: "number", description: "Tebal garis (pt), 0.5-4 biasanya." },
-                        radius: { type: "number", description: "Radius sudut (inci) untuk roundRect. 0.08-0.25 lembut, 0.5+ pil." },
-                        rotate: { type: "number", description: "Rotasi derajat (0-360)." },
-                        text: { type: "string", description: "Isi teks untuk type='text'. Boleh multiline pakai '\\n'." },
-                        fontSize: { type: "number", description: "Ukuran pt. 60-120 untuk hero angka; 32-44 title; 22-30 subjudul; 14-20 body; 9-11 caption." },
-                        fontFace: {
-                          type: "string",
-                          enum: ["heading", "body"],
-                          description: "'heading' pakai font judul theme, 'body' pakai font body theme. Default: body.",
-                        },
-                        color: { type: "string", description: "Warna teks (hex tanpa #). WAJIB kontras terhadap fill/background di belakangnya." },
-                        bold: { type: "boolean" },
-                        italic: { type: "boolean" },
-                        align: { type: "string", enum: ["left", "center", "right"] },
-                        valign: { type: "string", enum: ["top", "middle", "bottom"] },
-                        charSpacing: { type: "number", description: "Letter spacing (untuk KICKER uppercase pakai 4-8)." },
-                      },
-                      required: ["type", "x", "y", "w", "h"],
-                      additionalProperties: false,
-                    },
+                    description: "Untuk kind=bullets: 2-5 poin ringkas, tiap poin maks 14 kata.",
+                    items: { type: "string" },
                   },
                 },
-                required: ["elements"],
+                required: ["kind"],
                 additionalProperties: false,
               },
             },
-            required: ["title", "layout", "bullets", "notes"],
-            additionalProperties: false,
+            bullets_right: {
+              type: "array",
+              description: "Hanya untuk layout two_column: bullet kolom kanan.",
+              items: { type: "string" },
+            },
+            stats: {
+              type: "array",
+              description: "Hanya untuk layout stats: 2-4 item.",
+              minItems: 2,
+              maxItems: 4,
+              items: {
+                type: "object",
+                properties: {
+                  value: { type: "string", description: "Angka/teks pendek, mis. '85%'." },
+                  label: { type: "string", description: "Label singkat di bawah angka." },
+                },
+                required: ["value", "label"],
+                additionalProperties: false,
+              },
+            },
+            quote: { type: "string", description: "Hanya untuk layout quote: teks kutipan." },
+            quote_source: { type: "string", description: "Sumber kutipan, opsional." },
+            notes: { type: "string", description: "Catatan pembicara, 2-3 kalimat." },
+            design: {
+              type: "object",
+              description:
+                "SANGAT DIANJURKAN untuk semua slide 'content', 'two_column', 'stats', 'quote', 'section'. Rancang slide sebagai artboard 16:9 ukuran 13.333 x 7.5 INCI. Bila 'design.elements' diisi, renderer AKAN MENGABAIKAN layout/bullets/blocks bawaan dan menggambar elemen apa adanya persis di posisi (x,y,w,h) inci yang kamu tentukan. Pakai ini untuk membuat slide yang benar-benar didesain (hero, kartu, grid 2/3 kolom, timeline, callout besar, stat block, quote frame, dsb) — mirip artifact yang kamu buat di Claude.ai. Kamu bebas menumpuk shape (rect/ellipse/line) sebagai kartu/latar aksen lalu meletakkan text di atasnya. WAJIB sisakan margin ≥0.4in dari tepi, dan sisakan area 0.35in di bawah untuk footer (jangan menaruh elemen di y ≥ 7.1). Gunakan warna dari 'theme' (bg, bg2, surface, ink, inkInverse, muted, accent, accentSoft) — atau hex custom bila perlu, semua hex 6 digit TANPA '#'.",
+              properties: {
+                background: {
+                  type: "string",
+                  description:
+                    "Warna latar slide (hex 6 digit tanpa #). Kalau tidak diisi, dipakai theme.surface untuk slide konten atau theme.bg untuk slide 'section'.",
+                },
+                elements: {
+                  type: "array",
+                  minItems: 3,
+                  description:
+                    "Daftar elemen visual, digambar berurutan (elemen belakang dulu, depan terakhir). Minimal 3 elemen; slide konten biasanya butuh 8-20 elemen untuk terasa 'didesain'.",
+                  items: {
+                    type: "object",
+                    properties: {
+                      type: {
+                        type: "string",
+                        enum: ["rect", "roundRect", "ellipse", "line", "triangle", "chevron", "text"],
+                        description: "Jenis primitif. text=kotak teks; shape lain=grafik.",
+                      },
+                      x: { type: "number", description: "Kiri (inci, 0-13.333)." },
+                      y: { type: "number", description: "Atas (inci, 0-7.5)." },
+                      w: { type: "number", description: "Lebar (inci)." },
+                      h: { type: "number", description: "Tinggi (inci)." },
+                      fill: {
+                        type: "string",
+                        description:
+                          "Warna isi hex 6 digit tanpa #. Boleh dikosongkan untuk line/text tanpa background.",
+                      },
+                      opacity: {
+                        type: "number",
+                        description:
+                          "Transparansi 0-100 (0=solid, 80=sangat transparan). Untuk membuat lapisan aksen lembut.",
+                      },
+                      stroke: { type: "string", description: "Warna garis (hex tanpa #). Untuk line WAJIB diisi." },
+                      strokeWidth: { type: "number", description: "Tebal garis (pt), 0.5-4 biasanya." },
+                      radius: {
+                        type: "number",
+                        description: "Radius sudut (inci) untuk roundRect. 0.08-0.25 lembut, 0.5+ pil.",
+                      },
+                      rotate: { type: "number", description: "Rotasi derajat (0-360)." },
+                      text: { type: "string", description: "Isi teks untuk type='text'. Boleh multiline pakai '\\n'." },
+                      fontSize: {
+                        type: "number",
+                        description:
+                          "Ukuran pt. 60-120 untuk hero angka; 32-44 title; 22-30 subjudul; 14-20 body; 9-11 caption.",
+                      },
+                      fontFace: {
+                        type: "string",
+                        enum: ["heading", "body"],
+                        description: "'heading' pakai font judul theme, 'body' pakai font body theme. Default: body.",
+                      },
+                      color: {
+                        type: "string",
+                        description: "Warna teks (hex tanpa #). WAJIB kontras terhadap fill/background di belakangnya.",
+                      },
+                      bold: { type: "boolean" },
+                      italic: { type: "boolean" },
+                      align: { type: "string", enum: ["left", "center", "right"] },
+                      valign: { type: "string", enum: ["top", "middle", "bottom"] },
+                      charSpacing: {
+                        type: "number",
+                        description: "Letter spacing (untuk KICKER uppercase pakai 4-8).",
+                      },
+                    },
+                    required: ["type", "x", "y", "w", "h"],
+                    additionalProperties: false,
+                  },
+                },
+              },
+              required: ["elements"],
+              additionalProperties: false,
+            },
           },
+          required: ["title", "layout", "bullets", "notes"],
+          additionalProperties: false,
         },
       },
-      required: ["title", "subtitle", "cover_style", "theme", "agenda", "closing", "slides"],
-      additionalProperties: false,
+    },
+    required: ["title", "subtitle", "cover_style", "theme", "agenda", "closing", "slides"],
+    additionalProperties: false,
   },
 } as const;
 
@@ -323,12 +346,11 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       .maybeSingle();
     if (profileErr) throw new Error(profileErr.message);
     const isProActive =
-      profile?.plan === "pro" &&
-      (!profile.pro_until || new Date(profile.pro_until).getTime() > Date.now());
+      profile?.plan === "pro" && (!profile.pro_until || new Date(profile.pro_until).getTime() > Date.now());
     const dailyLimit = isProActive ? PRO_DAILY_LIMIT : BASIC_DAILY_LIMIT;
     const today = new Date().toISOString().slice(0, 10);
     const sameDay = profile?.generations_date === today;
-    const usedToday = sameDay ? profile?.generations_used ?? 0 : 0;
+    const usedToday = sameDay ? (profile?.generations_used ?? 0) : 0;
     if (usedToday >= dailyLimit) {
       throw new Error(
         isProActive
@@ -500,7 +522,11 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       };
       const argsText = j.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
       if (!argsText) throw new Error("AI tidak mengembalikan konten terstruktur.");
-      try { return JSON.parse(argsText); } catch { throw new Error("Gagal mem-parsing hasil AI."); }
+      try {
+        return JSON.parse(argsText);
+      } catch {
+        throw new Error("Gagal mem-parsing hasil AI.");
+      }
     };
 
     // Presentation via Claude — DINONAKTIFKAN SEMENTARA. Sekarang presentasi
@@ -544,6 +570,36 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       const stageMsg = stageInstruction(stage, parsed);
       const messages: ChatMsg[] = [...baseMessages, { role: "user", content: stageMsg }];
       parsed = await callGatewayTool(messages);
+
+      // ---- Validasi & auto-fix layout spasial (hanya presentasi, hanya setelah
+      // stage desain/polish diisi) ----
+      if (!isPaper && (stage === 3 || stage === 4)) {
+        const { fixed, report } = fixPresentationDesign(parsed);
+        parsed = fixed;
+        if (report.issues.length > 0) {
+          console.warn(
+            `[design-validator] stage ${stage}: ${report.issues.length} issue(s) ditemukan` +
+              (report.needsAiFix
+                ? `, ${report.slidesNeedingRegeneration.length} slide perlu fix AI`
+                : ", semua auto-fixed"),
+          );
+        }
+
+        // Kalau ini stage terakhir (polish) dan masih ada masalah yang tidak
+        // bisa diperbaiki otomatis (overlap/overflow teks) -> satu panggilan
+        // tambahan yang presisi, hanya menyebut slide & elemen bermasalah.
+        if (stage === 4 && report.needsAiFix) {
+          const fixMsg = buildAiFixInstruction(report, parsed);
+          const fixMessages: ChatMsg[] = [...baseMessages, { role: "user", content: fixMsg }];
+          try {
+            parsed = await callGatewayTool(fixMessages);
+          } catch (fixErr) {
+            console.error("[design-validator] stage FIX gagal, pakai hasil sebelum fix:", fixErr);
+          }
+          // Jaring pengaman terakhir: clamp keras tetap jalan apa pun hasil stage FIX
+          parsed = fixPresentationDesign(parsed).fixed;
+        }
+      }
     }
     if (!parsed) throw new Error("AI tidak menghasilkan konten.");
 
