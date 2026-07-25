@@ -159,8 +159,70 @@ const presentationToolGateway = {
                   "OPSIONAL. Query pencarian gambar Unsplash yang cocok (bahasa Inggris, 2-5 kata). Bila diisi, renderer memilih 1 foto dan meng-inject ke elemen <img data-unsplash> di dalam html.",
               },
               notes: { type: "string", description: "Catatan pembicara 2-3 kalimat." },
+              structured: {
+                type: "object",
+                description:
+                  "WAJIB. Versi TERSTRUKTUR dari isi slide yang sama — dipakai untuk membangun file .pptx yang bisa diedit di PowerPoint. Konten teks di sini harus sinkron dengan yang ditulis di 'html'.",
+                properties: {
+                  layout: {
+                    type: "string",
+                    enum: ["cover", "agenda", "content", "two_column", "stats", "quote", "closing"],
+                  },
+                  kicker: { type: "string", description: "Eyebrow pendek 2-4 kata (opsional)." },
+                  title: { type: "string" },
+                  subtitle: { type: "string" },
+                  paragraphs: {
+                    type: "array",
+                    description: "Paragraf naratif (0-2 item, tiap paragraf 1-3 kalimat).",
+                    items: { type: "string" },
+                  },
+                  bullets: {
+                    type: "array",
+                    description: "Bullet ringkas (0-6 item, tiap bullet ≤14 kata).",
+                    items: { type: "string" },
+                  },
+                  columns: {
+                    type: "array",
+                    description: "Untuk layout=two_column: tepat 2 kolom.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        heading: { type: "string" },
+                        items: { type: "array", items: { type: "string" } },
+                      },
+                      required: ["items"],
+                      additionalProperties: false,
+                    },
+                  },
+                  stats: {
+                    type: "array",
+                    description: "Untuk layout=stats: 2-3 kartu angka.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        value: { type: "string", description: "Angka/persentase besar, mis. '78%'." },
+                        label: { type: "string", description: "Deskripsi 3-8 kata." },
+                      },
+                      required: ["value", "label"],
+                      additionalProperties: false,
+                    },
+                  },
+                  quote: {
+                    type: "object",
+                    properties: {
+                      text: { type: "string" },
+                      author: { type: "string" },
+                    },
+                    required: ["text"],
+                    additionalProperties: false,
+                  },
+                  footer: { type: "string", description: "Teks kecil bawah slide (opsional)." },
+                },
+                required: ["layout", "title"],
+                additionalProperties: false,
+              },
             },
-            required: ["kind", "html", "notes"],
+            required: ["kind", "html", "notes", "structured"],
             additionalProperties: false,
           },
         },
