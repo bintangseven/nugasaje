@@ -1,7 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { fixPresentationDesign, buildAiFixInstruction } from "./design-validator";
+
+// ============================================================================
+// PRESENTATION SCHEMA — HTML-first (Plus Jakarta Sans + Space Grotesk +
+// Font Awesome 6 + MathML). Renderer memakai HTML fragment langsung di iframe;
+// download PPTX dibuat di client via html2canvas + pptxgenjs.
+// ============================================================================
 
 const paperTool = {
   type: "function",
