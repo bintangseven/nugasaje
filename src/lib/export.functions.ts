@@ -355,6 +355,19 @@ async function buildPptx(
   pres.layout = "LAYOUT_WIDE";
   // Theme now comes from Claude per-project. Fallback to DEFAULT_THEME.
   const t = resolveTheme(content.theme);
+  // Safe-list font substitution (see .agents/skills/pptx-numu). Font di luar
+  // daftar ini punya lebar substitusi yang tidak konsisten antar PowerPoint /
+  // LibreOffice → sering bikin overflow tidak terduga. Paksa fallback ke Calibri.
+  const SAFE_FONTS = new Set([
+    "Calibri", "Arial", "Cambria", "Times New Roman",
+    "Courier New", "Bookman Old Style", "Century Schoolbook",
+  ]);
+  const safeFont = (name: string | undefined, fallback = "Calibri"): string => {
+    if (!name) return fallback;
+    return SAFE_FONTS.has(name) ? name : fallback;
+  };
+  t.headFont = safeFont(t.headFont, "Cambria");
+  t.bodyFont = safeFont(t.bodyFont, "Calibri");
   void DEFAULT_THEME;
   // Cover style now comes from the AI (Claude designs freely per project).
   // Fallback to "solid" for older content payloads without cover_style.
@@ -495,6 +508,10 @@ async function buildPptx(
         s.addText(text, {
           x, y, w, h,
           fontFace: el.fontFace === "heading" ? t.headFont : t.bodyFont,
+          // margin:0 supaya text align presisi dengan shape/line di posisi x
+          // yang sama (pptxgenjs default punya internal padding). Lihat
+          // .agents/skills/pptx-numu §B.
+          margin: 0,
           fontSize: clamp(Number(el.fontSize) || 16, 6, 200),
           color: clean(el.color, t.ink),
           bold: !!el.bold,
