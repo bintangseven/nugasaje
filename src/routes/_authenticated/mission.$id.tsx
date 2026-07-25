@@ -392,8 +392,34 @@ function Workspace({
                   filename={`${name || "presentasi"}.pptx`}
                   slides={
                     (project.ai_context as {
-                      content?: { slides?: Array<{ html?: string; notes?: string }> };
+                      content?: {
+                        slides?: Array<{
+                          notes?: string;
+                          imageUrl?: string;
+                          imageCredit?: string;
+                          structured?: Parameters<
+                            typeof DownloadPptxButton
+                          >[0]["slides"][number]["structured"];
+                        }>;
+                      };
                     } | null)?.content?.slides ?? []
+                  }
+                  meta={
+                    (project.ai_context as {
+                      content?: {
+                        meta?: {
+                          title?: string;
+                          subtitle?: string;
+                          palette?: Parameters<typeof DownloadPptxButton>[0]["meta"] extends
+                            | infer M
+                            | undefined
+                            ? M extends { palette?: infer P }
+                              ? P
+                              : never
+                            : never;
+                        };
+                      };
+                    } | null)?.content?.meta
                   }
                 />
               )}

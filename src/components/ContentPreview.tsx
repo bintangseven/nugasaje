@@ -188,9 +188,9 @@ export function buildSlideSrcDoc(html: string): string {
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
-  html,body{margin:0;padding:0;background:#fff;font-family:'Plus Jakarta Sans',system-ui,sans-serif;}
-  body{display:flex;align-items:center;justify-content:center;overflow:hidden;}
-  .slide-wrap{width:1280px;height:720px;transform-origin:top left;}
+  html,body{margin:0;padding:0;background:#fff;font-family:'Plus Jakarta Sans',system-ui,sans-serif;overflow:hidden;}
+  html,body{width:100%;height:100%;}
+  .slide-wrap{position:absolute;top:0;left:0;width:1280px;height:720px;transform-origin:top left;}
   .slide{width:1280px;height:720px;box-sizing:border-box;overflow:hidden;}
   h1,h2,h3,h4{font-family:'Space Grotesk',system-ui,sans-serif;margin:0;}
   p{margin:0;}
@@ -199,7 +199,10 @@ export function buildSlideSrcDoc(html: string): string {
   window.addEventListener('load',()=>{
     const wrap=document.querySelector('.slide-wrap');
     if(!wrap)return;
-    const fit=()=>{const s=Math.min(window.innerWidth/1280,window.innerHeight/720);wrap.style.transform='scale('+s+')';};
+    const fit=()=>{
+      const s=Math.min(window.innerWidth/1280,window.innerHeight/720);
+      wrap.style.transform='scale('+s+')';
+    };
     fit();window.addEventListener('resize',fit);
   });
 <\/script>
