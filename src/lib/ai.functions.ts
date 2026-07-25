@@ -222,11 +222,11 @@ const presentationToolGateway = {
                     description:
                       "OPSIONAL tapi SANGAT dianjurkan. Koordinat area teks utama pada kanvas 13.333×7.5 inci (satuan inci) supaya renderer bisa menaruh text-box editable persis di atas snapshot HTML. Isi hanya region yang benar-benar dipakai layout ini. Warna hex 6-digit tanpa '#'.",
                     properties: {
-                      title:    { type: "object", properties: regionShape(), required: ["x","y","w","h"], additionalProperties: false },
-                      subtitle: { type: "object", properties: regionShape(), required: ["x","y","w","h"], additionalProperties: false },
-                      body:     { type: "object", properties: regionShape(), required: ["x","y","w","h"], additionalProperties: false },
-                      quote:    { type: "object", properties: regionShape(), required: ["x","y","w","h"], additionalProperties: false },
-                      footer:   { type: "object", properties: regionShape(), required: ["x","y","w","h"], additionalProperties: false },
+                      title:    { type: "object", properties: { x:{type:"number"}, y:{type:"number"}, w:{type:"number"}, h:{type:"number"}, fontSize:{type:"number"}, color:{type:"string"}, align:{type:"string",enum:["left","center","right"]}, bold:{type:"boolean"} }, required: ["x","y","w","h"], additionalProperties: false },
+                      subtitle: { type: "object", properties: { x:{type:"number"}, y:{type:"number"}, w:{type:"number"}, h:{type:"number"}, fontSize:{type:"number"}, color:{type:"string"}, align:{type:"string",enum:["left","center","right"]}, bold:{type:"boolean"} }, required: ["x","y","w","h"], additionalProperties: false },
+                      body:     { type: "object", properties: { x:{type:"number"}, y:{type:"number"}, w:{type:"number"}, h:{type:"number"}, fontSize:{type:"number"}, color:{type:"string"}, align:{type:"string",enum:["left","center","right"]}, bold:{type:"boolean"} }, required: ["x","y","w","h"], additionalProperties: false },
+                      quote:    { type: "object", properties: { x:{type:"number"}, y:{type:"number"}, w:{type:"number"}, h:{type:"number"}, fontSize:{type:"number"}, color:{type:"string"}, align:{type:"string",enum:["left","center","right"]}, bold:{type:"boolean"} }, required: ["x","y","w","h"], additionalProperties: false },
+                      footer:   { type: "object", properties: { x:{type:"number"}, y:{type:"number"}, w:{type:"number"}, h:{type:"number"}, fontSize:{type:"number"}, color:{type:"string"}, align:{type:"string",enum:["left","center","right"]}, bold:{type:"boolean"} }, required: ["x","y","w","h"], additionalProperties: false },
                     },
                     additionalProperties: false,
                   },
