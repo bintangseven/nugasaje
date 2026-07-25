@@ -343,16 +343,9 @@ export const exportProject = createServerFn({ method: "POST" })
       };
     }
 
-    // Presentasi selalu di-render via pptxgenjs (Beautiful.ai nonaktif sementara).
-    const answers = (project.answers ?? {}) as Record<string, string>;
-    const bytes = await buildPptx(ctx.content as PresentationContent, studentName, {
-      course: answers.course,
-      style: answers.style,
-      audience: answers.audience,
-    });
-    return {
-      base64: toBase64(bytes),
-      filename: `${baseName}.pptx`,
-      mime: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    };
+    // Presentasi HTML-first: PPTX di-render di client (html2canvas + pptxgenjs)
+    // dari slides.html yang sudah tersimpan di ai_context.
+    throw new Error(
+      "Unduh PPTX untuk presentasi diproses di sisi browser — gunakan tombol 'Unduh .pptx' di halaman preview.",
+    );
   });
