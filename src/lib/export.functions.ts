@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { DEFAULT_THEME, resolveTheme, type PptxTheme } from "./pptx-templates";
 
 type PaperContent = {
   title: string;
@@ -21,65 +20,6 @@ type PaperContent = {
 type PaperBlock =
   | { kind: "paragraph"; text: string }
   | { kind: "bullets"; items: string[] };
-
-type PresentationContent = {
-  title: string;
-  subtitle: string;
-  agenda: string[];
-  cover_style?:
-    | "solid"
-    | "gradient"
-    | "split"
-    | "geometric"
-    | "minimal"
-    | "editorial"
-    | "band"
-    | "duotone"
-    | "ingoude"
-    | "lovable";
-  theme?: Partial<PptxTheme>;
-  closing: { message: string; cta?: string };
-  slides: {
-    title: string;
-    layout: "section" | "content" | "two_column" | "quote" | "stats";
-    bullets: string[];
-    blocks?: SlideBlock[];
-    bullets_right?: string[];
-    stats?: { value: string; label: string }[];
-    quote?: string;
-    quote_source?: string;
-    notes: string;
-    design?: SlideDesign;
-  }[];
-};
-
-type SlideElement = {
-  type: "rect" | "roundRect" | "ellipse" | "line" | "triangle" | "chevron" | "text";
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  fill?: string;
-  opacity?: number;
-  stroke?: string;
-  strokeWidth?: number;
-  radius?: number;
-  rotate?: number;
-  text?: string;
-  fontSize?: number;
-  fontFace?: "heading" | "body";
-  color?: string;
-  bold?: boolean;
-  italic?: boolean;
-  align?: "left" | "center" | "right";
-  valign?: "top" | "middle" | "bottom";
-  charSpacing?: number;
-};
-
-type SlideDesign = {
-  background?: string;
-  elements: SlideElement[];
-};
 
 type SlideBlock =
   | { kind: "paragraph"; text: string }
