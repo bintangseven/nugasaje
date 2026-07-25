@@ -345,7 +345,7 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
   return new Uint8Array(buffer);
 }
 
-async function buildPptx(
+export async function buildPptx(
   content: PresentationContent,
   studentName: string,
   meta: { course?: string; style?: string; audience?: string },
