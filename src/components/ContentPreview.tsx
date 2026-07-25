@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useMemo } from "react";
 
 type PaperBlock =
   | { kind: "paragraph"; text: string }
