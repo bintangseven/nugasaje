@@ -129,5 +129,79 @@ export function PaperContentPreview({ content }: { content: PaperContent }) {
 
 export function SlidesContentPreview({ content }: { content: PresentationContent }) {
   const slides = content.slides ?? [];
+  const title = content.meta?.title ?? content.title;
+  const subtitle = content.meta?.subtitle ?? content.subtitle;
   return (
-    <div className="max-h-[600px] space-y-4 overflow-y-auto pr-1">
+    <div className="max-h-[720px] space-y-4 overflow-y-auto pr-1">
+      {(title || subtitle) && (
+        <div className="rounded-xl border border-border bg-card p-4 text-foreground shadow-sm">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Deck</p>
+          {title && <h3 className="mt-1 text-base font-semibold">{title}</h3>}
+          {subtitle && <p className="mt-0.5 text-[13px] text-muted-foreground">{subtitle}</p>}
+        </div>
+      )}
+      {slides.map((s, i) => (
+        <HtmlSlideCard key={i} index={i + 1} slide={s} />
+      ))}
+    </div>
+  );
+}
+
+function HtmlSlideCard({ index, slide }: { index: number; slide: HtmlSlide }) {
+  // Iframe sandbox: HTML dari AI dianggap untrusted. Font Awesome + Google Fonts
+  // dimuat di dalam iframe, konten discale down agar muat card 640px.
+  const srcDoc = useMemo(() => buildSlideSrcDoc(slide.html ?? ""), [slide.html]);
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+      <div className="flex items-center justify-between border-b border-border bg-secondary/50 px-3 py-1.5">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+          Slide {index}
+          {slide.kind ? ` · ${slide.kind}` : ""}
+        </p>
+        {slide.imageCredit && (
+          <p className="text-[10px] text-muted-foreground">{slide.imageCredit}</p>
+        )}
+      </div>
+      <div className="relative w-full" style={{ aspectRatio: "16 / 9" }}>
+        <iframe
+          title={`Slide ${index}`}
+          srcDoc={srcDoc}
+          sandbox="allow-same-origin"
+          className="absolute inset-0 h-full w-full border-0"
+          loading="lazy"
+        />
+      </div>
+      {slide.notes && (
+        <details className="border-t border-border bg-secondary/40 px-3 py-2 text-[11px] text-muted-foreground">
+          <summary className="cursor-pointer font-medium text-foreground">Catatan pembicara</summary>
+          <p className="mt-1 leading-relaxed">{slide.notes}</p>
+        </details>
+      )}
+    </div>
+  );
+}
+
+export function buildSlideSrcDoc(html: string): string {
+  return `<!doctype html><html><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+  html,body{margin:0;padding:0;background:#fff;font-family:'Plus Jakarta Sans',system-ui,sans-serif;}
+  body{display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .slide-wrap{width:1280px;height:720px;transform-origin:top left;}
+  .slide{width:1280px;height:720px;box-sizing:border-box;overflow:hidden;}
+  h1,h2,h3,h4{font-family:'Space Grotesk',system-ui,sans-serif;margin:0;}
+  p{margin:0;}
+</style>
+<script>
+  window.addEventListener('load',()=>{
+    const wrap=document.querySelector('.slide-wrap');
+    if(!wrap)return;
+    const fit=()=>{const s=Math.min(window.innerWidth/1280,window.innerHeight/720);wrap.style.transform='scale('+s+')';};
+    fit();window.addEventListener('resize',fit);
+  });
+<\/script>
+</head><body><div class="slide-wrap">${html}</div></body></html>`;
+}
