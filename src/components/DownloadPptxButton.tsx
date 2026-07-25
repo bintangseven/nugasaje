@@ -69,8 +69,17 @@ export function DownloadPptxButton({ slides, filename, disabled }: Props) {
             /* noop */
           }
         }
-        // Tunggu semua <img> (Unsplash) selesai decode.
+        // Set crossOrigin agar html2canvas bisa membaca pixel gambar Unsplash
+        // (kalau tidak, canvas akan tainted dan toDataURL gagal senyap).
         const imgs = Array.from(doc.images);
+        for (const img of imgs) {
+          if (!img.crossOrigin) {
+            const src = img.src;
+            img.crossOrigin = "anonymous";
+            // Force reload dengan crossOrigin baru.
+            img.src = src;
+          }
+        }
         await Promise.all(
           imgs.map((img) => {
             if (img.complete && img.naturalWidth > 0) return Promise.resolve();
