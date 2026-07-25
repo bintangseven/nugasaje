@@ -440,7 +440,7 @@ async function buildPptx(
         fill: { color: t.accentSoft }, line: { color: t.accentSoft },
       });
     } else {
-      // top-right dot cluster
+        // top-right dot cluster
       s.addShape(SHAPES.ellipse, {
         x: W - 0.75, y: 0.45, w: 0.38, h: 0.38,
         fill: { color: t.accent }, line: { color: t.accent },
@@ -453,28 +453,16 @@ async function buildPptx(
         x: W - 1.45, y: 0.5, w: 0.1, h: 0.1,
         fill: { color: t.accent, transparency: 40 }, line: { color: t.accent, transparency: 40 },
       });
-      // bottom-left two-tone slash (sits just above footer bar)
-      s.addShape(SHAPES.rect, {
-        x: 0, y: H - 0.42, w: 1.4, h: 0.07,
-        fill: { color: t.accent }, line: { color: t.accent },
-      });
-      s.addShape(SHAPES.rect, {
-        x: 1.45, y: H - 0.42, w: 0.5, h: 0.07,
-        fill: { color: t.accentSoft }, line: { color: t.accentSoft },
-      });
     }
   };
 
   const addFooter = (s: Slide, pageNo: number, totalNo: number) => {
-    s.addShape(SHAPES.rect, {
-      x: 0, y: H - 0.35, w: W, h: 0.05, fill: { color: t.accent }, line: { color: t.accent },
-    });
     s.addText(content.title, {
-      x: 0.5, y: H - 0.32, w: W - 2, h: 0.28,
+      x: 0.5, y: H - 0.35, w: W - 2, h: 0.3,
       fontFace: t.bodyFont, fontSize: 10, color: t.muted, align: "left",
     });
     s.addText(`${pageNo} / ${totalNo}`, {
-      x: W - 1.3, y: H - 0.32, w: 0.8, h: 0.28,
+      x: W - 1.3, y: H - 0.35, w: 0.8, h: 0.3,
       fontFace: t.bodyFont, fontSize: 10, color: t.muted, align: "right",
     });
   };
@@ -679,25 +667,22 @@ async function buildPptx(
       }
       case "minimal": {
         cover.background = { color: t.bg };
-        cover.addShape(SHAPES.rect, {
-          x: 0.8, y: 1.4, w: 0.8, h: 0.06, fill: { color: t.accent }, line: { color: t.accent },
-        });
         cover.addText("PRESENTASI", {
           x: 0.8, y: 1.55, w: 12, h: 0.4,
           fontFace: t.headFont, fontSize: 13, bold: true, color: t.accent, charSpacing: 8,
         });
         cover.addText(content.title, {
           x: 0.8, y: 2.2, w: 11.5, h: 3.0,
-          fontFace: t.headFont, fontSize: 60, bold: true, color: t.ink,
+          fontFace: t.headFont, fontSize: 60, bold: true, color: t.inkInverse,
         });
         cover.addText(subtitle, {
           x: 0.8, y: 5.4, w: 11.5, h: 0.6,
-          fontFace: t.bodyFont, fontSize: 20, color: t.muted,
+          fontFace: t.bodyFont, fontSize: 20, color: t.inkInverse,
         });
         break;
       }
       case "editorial": {
-        cover.background = { color: t.bg };
+        cover.background = { color: t.surface };
         cover.addText("VOL. 01", {
           x: 0.8, y: 0.7, w: 6, h: 0.4,
           fontFace: t.headFont, fontSize: 12, bold: true, color: t.accent, charSpacing: 6,
@@ -706,12 +691,8 @@ async function buildPptx(
           x: W - 6.8, y: 0.7, w: 6, h: 0.4,
           fontFace: t.headFont, fontSize: 12, bold: true, color: t.accent, charSpacing: 6, align: "right",
         });
-        cover.addShape(SHAPES.line, {
-          x: 0.8, y: 1.2, w: W - 1.6, h: 0,
-          line: { color: t.accent, width: 1 },
-        });
         cover.addText(content.title, {
-          x: 0.8, y: 1.8, w: W - 1.6, h: 3.8,
+          x: 0.8, y: 1.9, w: W - 1.6, h: 3.8,
           fontFace: t.headFont, fontSize: 72, bold: true, italic: true, color: t.ink,
         });
         cover.addText(subtitle, {
