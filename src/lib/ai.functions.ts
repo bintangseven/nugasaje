@@ -217,6 +217,19 @@ const presentationToolGateway = {
                     additionalProperties: false,
                   },
                   footer: { type: "string", description: "Teks kecil bawah slide (opsional)." },
+                  regions: {
+                    type: "object",
+                    description:
+                      "OPSIONAL tapi SANGAT dianjurkan. Koordinat area teks utama pada kanvas 13.333×7.5 inci (satuan inci) supaya renderer bisa menaruh text-box editable persis di atas snapshot HTML. Isi hanya region yang benar-benar dipakai layout ini. Warna hex 6-digit tanpa '#'.",
+                    properties: {
+                      title:    { type: "object", properties: regionShape(), required: ["x","y","w","h"], additionalProperties: false },
+                      subtitle: { type: "object", properties: regionShape(), required: ["x","y","w","h"], additionalProperties: false },
+                      body:     { type: "object", properties: regionShape(), required: ["x","y","w","h"], additionalProperties: false },
+                      quote:    { type: "object", properties: regionShape(), required: ["x","y","w","h"], additionalProperties: false },
+                      footer:   { type: "object", properties: regionShape(), required: ["x","y","w","h"], additionalProperties: false },
+                    },
+                    additionalProperties: false,
+                  },
                 },
                 required: ["layout", "title"],
                 additionalProperties: false,
