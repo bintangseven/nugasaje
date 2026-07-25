@@ -51,12 +51,47 @@ export function DownloadPptxButton({ slides, filename, disabled }: Props) {
         await new Promise<void>((resolve) => {
           iframe.addEventListener("load", () => resolve(), { once: true });
         });
-        // Beri waktu font & gambar Unsplash selesai load.
-        await new Promise((r) => setTimeout(r, 900));
         const doc = iframe.contentDocument!;
+        const win = iframe.contentWindow as (Window & typeof globalThis) | null;
         const target = (doc.querySelector(".slide-wrap") as HTMLElement) ?? doc.body;
-        // Reset scale untuk snapshot penuh 1280x720.
+        // Kunci ukuran kanvas 1280x720 tanpa scaling agar font-size & posisi
+        // absolut identik dengan preview. body-nya kita reset dari flex-center
+        // supaya tidak menggeser konten ketika transform dilepas.
         target.style.transform = "none";
+        target.style.transformOrigin = "top left";
+        doc.body.style.cssText =
+          "margin:0;padding:0;background:#fff;width:1280px;height:720px;overflow:hidden;";
+        // Tunggu font web + Font Awesome siap agar metrik teks stabil.
+        if (win && (win.document as Document & { fonts?: FontFaceSet }).fonts) {
+          try {
+            await (win.document as Document & { fonts: FontFaceSet }).fonts.ready;
+          } catch {
+            /* noop */
+          }
+        }
+        // Set crossOrigin agar html2canvas bisa membaca pixel gambar Unsplash
+        // (kalau tidak, canvas akan tainted dan toDataURL gagal senyap).
+        const imgs = Array.from(doc.images);
+        for (const img of imgs) {
+          if (!img.crossOrigin) {
+            const src = img.src;
+            img.crossOrigin = "anonymous";
+            // Force reload dengan crossOrigin baru.
+            img.src = src;
+          }
+        }
+        await Promise.all(
+          imgs.map((img) => {
+            if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+            return new Promise<void>((resolve) => {
+              const done = () => resolve();
+              img.addEventListener("load", done, { once: true });
+              img.addEventListener("error", done, { once: true });
+            });
+          }),
+        );
+        // Buffer kecil untuk layout final (CSS Grid / MathML).
+        await new Promise((r) => setTimeout(r, 150));
         const canvas = await html2canvas(target, {
           width: 1280,
           height: 720,
@@ -65,7 +100,10 @@ export function DownloadPptxButton({ slides, filename, disabled }: Props) {
           backgroundColor: "#ffffff",
           useCORS: true,
           allowTaint: false,
-          scale: 1.5,
+          imageTimeout: 15000,
+          logging: false,
+          // 2x → ~2560x1440, cukup tajam untuk slide 13.333x7.5 inch pada 200+ dpi.
+          scale: 2,
         });
         const dataUrl = canvas.toDataURL("image/png");
         const slide = pres.addSlide();
