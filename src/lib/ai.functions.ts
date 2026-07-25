@@ -225,7 +225,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
 
     const answers = (project.answers ?? {}) as Record<string, string>;
     const isPaper = project.mission === "paper";
-    const toolName = isPaper ? paperTool.function.name : presentationTool.name;
+    const toolName = isPaper ? paperTool.function.name : presentationToolGateway.function.name;
 
     // Terjemahkan pilihan user jadi instruksi konkret untuk AI
     const toneRaw = (answers.style ?? "").toLowerCase();
