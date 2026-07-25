@@ -395,6 +395,7 @@ function Workspace({
                       content?: {
                         slides?: Array<{
                           notes?: string;
+                          html?: string;
                           imageUrl?: string;
                           imageCredit?: string;
                           structured?: Parameters<
