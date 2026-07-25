@@ -456,30 +456,6 @@ export const generateProjectContent = createServerFn({ method: "POST" })
         text: `Gunakan isi file terlampir "${att.name}" sebagai bahan utama. Ekstrak poin-poin penting, kutipan, dan data yang relevan; jangan menyalin mentah-mentah.`,
       });
     }
-    // ---- Anthropic Claude (presentation) attachment format ----
-    const anthropicUserContent: Array<Record<string, unknown>> = [];
-    if (att) {
-      const mime = att.mime || "application/octet-stream";
-      if (mime.startsWith("image/")) {
-        anthropicUserContent.push({
-          type: "image",
-          source: { type: "base64", media_type: mime, data: att.base64 },
-        });
-      } else if (mime === "application/pdf") {
-        anthropicUserContent.push({
-          type: "document",
-          source: { type: "base64", media_type: "application/pdf", data: att.base64 },
-        });
-      }
-    }
-    anthropicUserContent.push({ type: "text", text: userPrompt });
-    if (att) {
-      anthropicUserContent.push({
-        type: "text",
-        text: `Gunakan isi file terlampir "${att.name}" sebagai bahan utama. Ekstrak poin-poin penting, kutipan, dan data yang relevan; jangan menyalin mentah-mentah.`,
-      });
-    }
-
     // ===== Multi-stage generation (4 panggilan Gemini) =====
     // Tiap stage memanggil tool yang sama; hasilnya jadi konteks untuk stage berikutnya
     // supaya konten makin tebal, contoh konkret, dan catatan pembicara/paragraf
@@ -494,7 +470,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-3.6-flash",
           messages,
           tools: [gatewayTool],
           tool_choice: { type: "function", function: { name: gatewayToolName } },
@@ -518,9 +494,8 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       }
     };
 
-    // Presentation via Claude — DINONAKTIFKAN SEMENTARA. Sekarang presentasi
-    // juga memakai Lovable AI Gateway (Gemini) lewat callGatewayTool.
-    void anthropicUserContent;
+    // Paper & presentasi sama-sama pakai Lovable AI Gateway (Gemini Flash).
+    // Claude API (ANTHROPIC_API_KEY) di-unbind sementara.
     void toolName;
 
     const stageInstruction = (stage: 1 | 2 | 3 | 4, prev: Record<string, unknown> | null): string => {
