@@ -166,7 +166,7 @@ function HtmlSlideCard({ index, slide }: { index: number; slide: HtmlSlide }) {
         <iframe
           title={`Slide ${index}`}
           srcDoc={srcDoc}
-          sandbox="allow-same-origin"
+          sandbox="allow-scripts"
           className="absolute inset-0 h-full w-full border-0"
           loading="lazy"
         />
