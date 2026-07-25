@@ -25,24 +25,20 @@ type PaperContent = {
   references?: string[];
 };
 
-type SlideContent = {
-  title: string;
-  layout: "section" | "content" | "two_column" | "quote" | "stats";
-  bullets?: string[];
-  blocks?: PaperBlock[];
-  bullets_right?: string[];
-  stats?: { value: string; label: string }[];
-  quote?: string;
-  quote_source?: string;
+// HTML-first slide payload (baru).
+type HtmlSlide = {
+  kind?: "cover" | "agenda" | "content" | "quote" | "stats" | "closing";
+  html?: string;
   notes?: string;
+  imageCredit?: string;
 };
 
 type PresentationContent = {
+  meta?: { title?: string; subtitle?: string };
+  // Field lama (fallback), tidak dipakai renderer baru.
   title?: string;
   subtitle?: string;
-  agenda?: string[];
-  closing?: { message?: string; cta?: string };
-  slides?: SlideContent[];
+  slides?: HtmlSlide[];
 };
 
 function renderBlocks(section: { paragraphs?: string[]; blocks?: PaperBlock[] }): ReactNode {
