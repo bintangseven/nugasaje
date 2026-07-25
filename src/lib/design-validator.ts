@@ -61,7 +61,16 @@ type Slide = { title?: string; layout?: string; design?: SlideDesign; [key: stri
 export type ValidationIssue = {
   slideIndex: number;
   elementIndex: number;
-  kind: "out_of_canvas" | "footer_collision" | "degenerate_size" | "text_overflow" | "text_overlap";
+  kind:
+    | "out_of_canvas"
+    | "footer_collision"
+    | "degenerate_size"
+    | "text_overflow"
+    | "text_overlap"
+    | "edge_stripe"
+    | "cream_background"
+    | "low_contrast_text"
+    | "unsafe_font";
   detail: string;
   autoFixed: boolean;
 };
@@ -194,12 +203,87 @@ function round3(n: number): number {
 }
 
 // ---------------------------------------------------------------
+// Tambahan: safe-list font, whitelist cream bg, kontras WCAG, edge stripe
+// (diadaptasi dari skill PPTX Claude — lihat .agents/skills/pptx-numu)
+// ---------------------------------------------------------------
+const SAFE_FONTS = new Set(["heading", "body"]); // fontFace di schema kita hanya 2 nilai; kalau ada nilai lain → warn
+const CREAM_BGS = new Set(["F5F5DC", "FAF0E6", "FAEBD7", "FFF8E1", "FDF6E3", "FFF5E1", "F5EFE6"]);
+
+function normHex(v: string | undefined): string | null {
+  if (!v) return null;
+  const h = v.replace("#", "").trim().toUpperCase();
+  return /^[0-9A-F]{6}$/.test(h) ? h : null;
+}
+function relLum(hex: string): number {
+  const n = parseInt(hex, 16);
+  const rgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+}
+function contrast(a: string, b: string): number {
+  const l1 = relLum(a);
+  const l2 = relLum(b);
+  const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+// Deteksi rect tipis (stripe) menempel salah satu tepi kanvas.
+function isEdgeStripe(el: DesignElement): boolean {
+  if (el.type !== "rect" && el.type !== "roundRect" && el.type !== "line") return false;
+  const thin = el.w < 0.18 || el.h < 0.18;
+  if (!thin) return false;
+  const nearLeft = el.x <= 0.15;
+  const nearRight = el.x + el.w >= CANVAS_W - 0.15;
+  const nearTop = el.y <= 0.15;
+  const nearBottom = el.y + el.h >= CANVAS_H - 0.15;
+  return nearLeft || nearRight || nearTop || nearBottom;
+}
+
+// Cari fill shape terdekat di belakang text (elemen index lebih kecil, overlap dgn text).
+// Kalau tidak ada, jatuh ke slide background.
+function findBackgroundFill(
+  textEl: DesignElement,
+  textIdx: number,
+  elements: DesignElement[],
+  slideBg: string | undefined,
+): string {
+  for (let i = textIdx - 1; i >= 0; i--) {
+    const el = elements[i];
+    if (el.type === "text" || el.type === "line") continue;
+    if (!el.fill) continue;
+    const overlap =
+      Math.min(textEl.x + textEl.w, el.x + el.w) - Math.max(textEl.x, el.x) > 0.05 &&
+      Math.min(textEl.y + textEl.h, el.y + el.h) - Math.max(textEl.y, el.y) > 0.05;
+    if (overlap) {
+      const hex = normHex(el.fill);
+      if (hex) return hex;
+    }
+  }
+  return normHex(slideBg) ?? "FFFFFF";
+}
+
+// ---------------------------------------------------------------
 // Fungsi utama: perbaiki satu slide, kembalikan issue log
 // ---------------------------------------------------------------
 function fixSlideDesign(slide: Slide, slideIndex: number): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const design = slide.design;
   if (!design || !Array.isArray(design.elements)) return issues;
+
+  // Auto-fix cream/beige background
+  const bgHex = normHex(design.background);
+  if (bgHex && CREAM_BGS.has(bgHex)) {
+    design.background = "FFFFFF";
+    issues.push({
+      slideIndex,
+      elementIndex: -1,
+      kind: "cream_background",
+      detail: `Latar slide cream/beige "${bgHex}" diganti ke FFFFFF (larangan default AI).`,
+      autoFixed: true,
+    });
+  }
 
   design.elements.forEach((el, elementIndex) => {
     const { changed, before } = clampToCanvas(el);
@@ -222,6 +306,48 @@ function fixSlideDesign(slide: Slide, slideIndex: number): ValidationIssue[] {
         detail: `Elemen text menabrak area footer (y>=${FOOTER_Y}), digeser/diperkecil.`,
         autoFixed: true,
       });
+    }
+
+    // Edge stripe: rect tipis menempel tepi = ciri filler AI. Tandai (autoFix=false)
+    // supaya AI stage FIX yang menggantinya dengan solusi visual lebih baik.
+    if (isEdgeStripe(el)) {
+      issues.push({
+        slideIndex,
+        elementIndex,
+        kind: "edge_stripe",
+        detail: `${el.type} tipis (${el.w}x${el.h}in) menempel tepi kanvas — dilarang (edge stripe generik AI). Ganti dengan whitespace, kartu, atau icon.`,
+        autoFixed: false,
+      });
+    }
+
+    // Font unsafe (fontFace di luar 'heading'/'body') → autofix ke 'body'
+    if (el.type === "text" && el.fontFace && !SAFE_FONTS.has(el.fontFace)) {
+      el.fontFace = "body";
+      issues.push({
+        slideIndex,
+        elementIndex,
+        kind: "unsafe_font",
+        detail: `fontFace "${el.fontFace}" tidak dikenal → di-fallback ke 'body'.`,
+        autoFixed: true,
+      });
+    }
+
+    // Kontras teks vs latar terdekat
+    if (el.type === "text" && el.text && el.color) {
+      const textHex = normHex(el.color);
+      if (textHex) {
+        const bg = findBackgroundFill(el, elementIndex, design.elements, design.background);
+        const ratio = contrast(textHex, bg);
+        if (ratio < 4.5) {
+          issues.push({
+            slideIndex,
+            elementIndex,
+            kind: "low_contrast_text",
+            detail: `Text "${el.text.slice(0, 30)}..." warna #${textHex} vs latar #${bg} kontras ${ratio.toFixed(2)}:1 (< 4.5 WCAG AA). Ubah warna teks atau latar.`,
+            autoFixed: false,
+          });
+        }
+      }
     }
 
     if (estimateTextOverflow(el)) {
