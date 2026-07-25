@@ -615,8 +615,8 @@ export async function buildPptx(
           fit: "shrink",
         });
         cover.addText(`Disusun oleh: ${studentName}  ·  ${dateStr}`, {
-          x: 0.8, y: 5.8, w: 8.4, h: 0.35,
-          fontFace: t.bodyFont, fontSize: 12, color: t.muted,
+          x: 0.8, y: 5.68, w: 8.4, h: 0.32,
+          fontFace: t.bodyFont, fontSize: 12, color: t.ink, bold: true,
         });
         return; // skip generic footer credit below
       }
