@@ -328,6 +328,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
           `8. Layout: variasikan tiap slide (hero kiri + visual kanan, grid 2/3 kolom kartu, split 50/50, stat block angka besar, quote frame, timeline). Jangan 2 slide berturut komposisi identik.`,
           `9. Cover & closing pakai latar gelap (bg) dengan teks inkInverse otomatis (pilih warna terang). Slide konten latar putih atau warna surface lembut.`,
           `10. Whitespace lega: padding minimal 48px di dalam .slide.`,
+          `11. Field 'structured' WAJIB diisi untuk SETIAP slide dan HARUS sinkron dengan teks di 'html' (judul, bullet, paragraf, kutipan, angka statistik, dsb). Ini yang dipakai untuk membuat .pptx editable.`,
           ``,
           `=== LARANGAN ===`,
           `A. JANGAN pakai garis aksen tipis di bawah judul (ciri AI generik). Gunakan whitespace atau shift warna latar.`,
