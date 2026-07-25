@@ -427,6 +427,8 @@ export function buildAiFixInstruction(report: ValidationReport, parsed: Record<s
   lines.push(
     "\nUntuk 'text_overlap': geser salah satu elemen (biasanya yang datang belakangan) supaya tidak tumpang tindih >30% area, atau perkecil salah satu box.",
     "Untuk 'text_overflow': perbesar box (w/h) ATAU perkecil fontSize secukupnya supaya teks muat.",
+    "Untuk 'edge_stripe': HAPUS elemen stripe tipis di pinggir kanvas. Bila kamu ingin menandai area, pakai roundRect fill=accentSoft (kartu) atau ikon dalam ellipse — jangan garis tipis menempel tepi.",
+    "Untuk 'low_contrast_text': ubah color teks agar kontras ≥ 4.5:1 terhadap latarnya (mis. teks di atas bg gelap pakai FFFFFF; di atas surface terang pakai theme.ink).",
   );
   return lines.join("\n");
 }
