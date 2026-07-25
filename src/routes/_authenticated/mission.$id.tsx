@@ -18,6 +18,7 @@ import {
 import { getProject, updateProject } from "@/lib/projects.functions";
 import { generateProjectContent } from "@/lib/ai.functions";
 import { exportProject } from "@/lib/export.functions";
+import { DownloadPptxButton } from "@/components/DownloadPptxButton";
 import { PaperContentPreview, SlidesContentPreview } from "@/components/ContentPreview";
 
 export const Route = createFileRoute("/_authenticated/mission/$id")({
@@ -371,19 +372,31 @@ function Workspace({
             <div className="flex items-center gap-3">
               <SaveIndicator status={saveStatus} />
               <span className="text-xs text-muted-foreground">Sisa waktu {remaining}</span>
-              <button
-                type="button"
-                disabled={phase !== "done" || downloading}
-                onClick={() => handleDownload()}
-                className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {downloading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-                Unduh {missionType === "paper" ? ".docx" : ".pptx"}
-              </button>
+              {missionType === "paper" ? (
+                <button
+                  type="button"
+                  disabled={phase !== "done" || downloading}
+                  onClick={() => handleDownload()}
+                  className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {downloading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  Unduh .docx
+                </button>
+              ) : (
+                <DownloadPptxButton
+                  disabled={phase !== "done"}
+                  filename={`${name || "presentasi"}.pptx`}
+                  slides={
+                    (project.ai_context as {
+                      content?: { slides?: Array<{ html?: string; notes?: string }> };
+                    } | null)?.content?.slides ?? []
+                  }
+                />
+              )}
             </div>
           </div>
 
