@@ -1,48 +1,22 @@
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { buildPdf, buildPptx, type Palette, type SlideInput } from "@/lib/slide-renderer";
 
 // ============================================================================
-// EDITABLE PPTX BUILDER
-// Konsumsi field 'structured' + 'imageUrl' yang di-generate AI, lalu bangun
-// slide via pptxgenjs sebagai text box / shape / image asli — sehingga tiap
-// elemen bisa di-edit langsung di PowerPoint / Google Slides.
+// DOWNLOAD BUTTONS
+// PPTX dan PDF dibangun dari renderer bersama (src/lib/slide-renderer.ts)
+// sehingga tata letak, warna, dan konten selalu identik antar format.
 // ============================================================================
-
-type Palette = {
-  primary?: string;
-  accent?: string;
-  bg?: string;
-  ink?: string;
-  muted?: string;
-};
-
-type Structured = {
-  layout: "cover" | "agenda" | "content" | "two_column" | "stats" | "quote" | "closing";
-  kicker?: string;
-  title: string;
-  subtitle?: string;
-  paragraphs?: string[];
-  bullets?: string[];
-  columns?: { heading?: string; items: string[] }[];
-  stats?: { value: string; label: string }[];
-  quote?: { text: string; author?: string };
-  footer?: string;
-};
-
-type Slide = {
-  notes?: string;
-  imageUrl?: string;
-  imageCredit?: string;
-  structured?: Structured;
-};
 
 type Props = {
-  slides: Slide[];
+  slides: SlideInput[];
   meta?: { title?: string; subtitle?: string; palette?: Palette };
   filename: string;
   disabled?: boolean;
 };
+
+export type { SlideInput, Palette } from "@/lib/slide-renderer";
 
 // Warna default kalau AI belum memberi palette.
 const FALLBACK: Required<Palette> = {
