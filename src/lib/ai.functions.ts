@@ -342,6 +342,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
           `9. Cover & closing pakai latar gelap (bg) dengan teks inkInverse otomatis (pilih warna terang). Slide konten latar putih atau warna surface lembut.`,
           `10. Whitespace lega: padding minimal 48px di dalam .slide.`,
           `11. Field 'structured' WAJIB diisi untuk SETIAP slide dan HARUS sinkron dengan teks di 'html' (judul, bullet, paragraf, kutipan, angka statistik, dsb). Ini yang dipakai untuk membuat .pptx editable.`,
+          `12. Field 'structured.regions' WAJIB diisi. Kanvas .pptx = 13.333×7.5 inci. Konversi posisi teks di HTML kamu ke inci: 1 inci = 96 px (jadi 1280px = 13.333in, 720px = 7.5in). Isi region 'title' + 'body' (dan 'subtitle'/'quote'/'footer' bila ada) dengan x,y,w,h dalam inci yang MENUTUP area teks di HTML — supaya text-box editable di PowerPoint jatuh persis di atas teks yang di-render. Sertakan fontSize (pt, biasanya 10-60) & color (hex 6-digit tanpa '#') yang paling dekat dengan tampilan HTML.`,
           ``,
           `=== LARANGAN ===`,
           `A. JANGAN pakai garis aksen tipis di bawah judul (ciri AI generik). Gunakan whitespace atau shift warna latar.`,
