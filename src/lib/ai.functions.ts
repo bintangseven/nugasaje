@@ -21,14 +21,12 @@ const paperTool = {
         abstract: { type: "string", description: "Abstrak singkat 100-150 kata." },
         sections: {
           type: "array",
-          minItems: 3,
           items: {
             type: "object",
             properties: {
               heading: { type: "string" },
               paragraphs: {
                 type: "array",
-                minItems: 2,
                 items: { type: "string", description: "Satu paragraf utuh." },
               },
               blocks: {
@@ -60,7 +58,6 @@ const paperTool = {
                     heading: { type: "string", description: "Mis. '1.1 Latar Belakang'." },
                     paragraphs: {
                       type: "array",
-                      minItems: 1,
                       items: { type: "string" },
                     },
                     blocks: {
@@ -91,7 +88,6 @@ const paperTool = {
         conclusion: { type: "string" },
         references: {
           type: "array",
-          minItems: 4,
           items: { type: "string", description: "Referensi gaya APA." },
         },
       },
@@ -145,8 +141,6 @@ const presentationTool = {
       },
       agenda: {
         type: "array",
-        minItems: 3,
-        maxItems: 6,
         items: { type: "string", description: "Satu poin agenda singkat (3-6 kata)." },
       },
       closing: {
@@ -160,7 +154,6 @@ const presentationTool = {
       },
       slides: {
         type: "array",
-        minItems: 5,
         items: {
           type: "object",
           properties: {
@@ -173,7 +166,6 @@ const presentationTool = {
             },
             bullets: {
               type: "array",
-              minItems: 1,
               items: { type: "string" },
             },
             blocks: {
@@ -206,8 +198,6 @@ const presentationTool = {
             stats: {
               type: "array",
               description: "Hanya untuk layout stats: 2-4 item.",
-              minItems: 2,
-              maxItems: 4,
               items: {
                 type: "object",
                 properties: {
@@ -233,7 +223,6 @@ const presentationTool = {
                 },
                 elements: {
                   type: "array",
-                  minItems: 3,
                   description:
                     "Daftar elemen visual, digambar berurutan (elemen belakang dulu, depan terakhir). Minimal 3 elemen; slide konten biasanya butuh 8-20 elemen untuk terasa 'didesain'.",
                   items: {
