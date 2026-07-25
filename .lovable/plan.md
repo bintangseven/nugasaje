@@ -1,40 +1,64 @@
-## Masalah
-Saat ini `buildDocx` di `src/lib/export.functions.ts` hanya menulis paragraf bold biasa (Calibri, ukuran acak) — bukan **heading style asli Word**. Akibatnya:
-- Tidak ada hierarki Heading 1/2/3 → Navigation Pane & daftar isi otomatis Word tidak jalan.
-- Font default Calibri, bukan Times New Roman 12pt seperti standar makalah Indonesia.
-- AI hanya menghasilkan `sections[].paragraphs[]` flat — tidak ada sub-bab (1.1, 1.2), padahal makalah biasanya BAB I Pendahuluan → 1.1 Latar Belakang, 1.2 Rumusan Masalah, dst.
+## Stack Baru untuk PPT
 
-## Rencana Perbaikan
+**Model AI**: `google/gemini-3.6-flash` (via Lovable Gateway — sudah aktif, tidak perlu key baru).
+**Pencarian visual**: Unsplash API — butuh 1 secret baru dari user (`UNSPLASH_ACCESS_KEY`).
+**Rendering slide**: HTML5 + CSS3 (Grid/Flexbox) di dalam sandboxed iframe.
+**Tipografi**: Plus Jakarta Sans (body) + Space Grotesk (display) via Google Fonts.
+**Ikon**: Font Awesome 6 (via CDN).
+**Rumus**: MathML native (browser support langsung, tanpa lib tambahan).
 
-### 1. Upgrade skema AI (`src/lib/ai.functions.ts`)
-Ubah `paperTool` agar tiap section punya **subsections opsional**:
+## Perubahan File
+
+### 1. `src/lib/ai.functions.ts` — Ganti schema PPT
+Buang schema `design.elements` (koordinat inci pptxgenjs). Ganti jadi:
+```ts
+presentation: {
+  meta: { title, subtitle, palette: { primary, accent, bg, ink, muted } },
+  slides: [{
+    kind: "cover" | "content" | "quote" | "stats" | "closing",
+    html: string,          // fragment HTML lengkap slide (inline styles OK)
+    imageQuery?: string,   // query Unsplash, mis. "quantum computing"
+    notes: string
+  }]
+}
 ```
-sections[]: { heading, paragraphs[], subsections?: [{ heading, paragraphs[] }] }
+Prompt Gemini: "You are a senior web designer. Return semantic HTML with inline CSS Grid/Flexbox. Gunakan class `.slide` root 1280×720 px. Font Awesome via `<i class='fa-solid fa-*'>`. Rumus dalam `<math>...</math>`. Sertakan `imageQuery` bila slide butuh foto."
+
+### 2. `src/lib/unsplash.functions.ts` — BARU
+```ts
+searchUnsplash({ query }) → { url, alt, credit }
 ```
-Prompt diperbarui untuk mengikuti struktur makalah standar:
-- BAB I Pendahuluan (1.1 Latar Belakang, 1.2 Rumusan Masalah, 1.3 Tujuan)
-- BAB II Pembahasan (sub-bab sesuai topik)
-- BAB III Penutup (3.1 Kesimpulan, 3.2 Saran)
+Server function pakai `process.env.UNSPLASH_ACCESS_KEY`. Setelah AI generate, loop `slides[]` yang punya `imageQuery`, resolve jadi `imageUrl`, inject ke HTML sebagai `<img src="...">`.
 
-### 2. Rewrite `buildDocx` dengan style asli Word
-- **Default font**: Times New Roman 12pt (size: 24 half-points), spasi 1.5 (line: 360), justify.
-- **Heading 1** (BAB): TNR 14pt bold, center, uppercase, spasi before/after.
-- **Heading 2** (sub-bab 1.1): TNR 12pt bold, left.
-- **Heading 3** (sub-sub-bab): TNR 12pt bold italic.
-- Pakai `Document.styles.paragraphStyles` dengan id `"Heading1"`, `"Heading2"`, `"Heading3"` + `outlineLevel` agar Navigation Pane & TOC bisa membaca.
-- Paragraf body pakai `HeadingLevel.HEADING_1/2/3` (bukan TextRun bold manual) supaya benar-benar terdaftar sebagai heading.
-- Margin standar makalah: kiri 4cm, atas/kanan/bawah 3cm.
-- Indent paragraf pertama (firstLine: 720 = 0.5").
+### 3. `src/lib/export.functions.ts` — Rewrite total PPT part
+- Hapus semua template pptxgenjs (`buildPptx`, cover templates, dsb) — sisakan DOCX untuk makalah.
+- Server function baru `generatePresentation` = generate + resolve gambar + simpan array `slides[]` ke `projects.content`.
 
-### 3. Cover & daftar pustaka
-- Cover tetap center, judul TNR 14pt bold uppercase, info mahasiswa TNR 12pt.
-- Abstrak: heading 1 "ABSTRAK", body italic.
-- Daftar Pustaka: heading 1, item dengan hanging indent (sudah ada, ganti ke TNR 12pt).
+### 4. `src/components/SlideViewer.tsx` — BARU
+Komponen preview: render tiap slide di `<iframe sandbox>` dengan boilerplate HTML (font, FA, reset CSS) + HTML fragment dari AI. Navigasi prev/next, thumbnail strip.
 
-### 4. File yang disentuh
-- `src/lib/ai.functions.ts` — skema + prompt subsections.
-- `src/lib/export.functions.ts` — `buildDocx` lengkap pakai Word heading styles + TNR.
-- Tidak menyentuh PPT, UI, login, atau bagian lain.
+### 5. `src/components/DownloadPptxButton.tsx` — BARU
+Client-side rendering ke PPTX:
+- Loop tiap slide → render di offscreen iframe → `html2canvas` → PNG base64.
+- Build `.pptx` pakai `pptxgenjs` (sudah installed) dengan satu full-bleed image per slide + speaker notes.
+- Fidelity 100% karena setiap slide jadi gambar.
 
-## Catatan
-Konten lama yang sudah ter-generate (tanpa subsections) tetap kompatibel — builder fallback render section sebagai Heading 1 + paragraf saja jika `subsections` kosong.
+### 6. `src/routes/_authenticated/mission.$id.tsx` — Ganti tampilan hasil PPT
+Untuk mission type presentation: tampilkan `<SlideViewer />` + `<DownloadPptxButton />`. Untuk paper: tetap seperti sekarang.
+
+## Yang Dibuang
+- File `src/lib/pptx-templates.ts`
+- File `src/lib/design-validator.ts`
+- `.agents/skills/pptx-numu/SKILL.md` (aturan koordinat sudah tidak relevan)
+- Semua fungsi `buildPptx`, `renderCover*`, `renderSection*` di `export.functions.ts`
+- Stage design/polish/fix di prompt PPT
+
+## Yang Butuh User
+Saya akan minta `UNSPLASH_ACCESS_KEY` via `add_secret` di langkah terakhir setelah kode siap. User ambil di https://unsplash.com/developers (Create app → copy Access Key, gratis 50 req/jam).
+
+## Catatan Fungsi yang Dipertahankan
+- Alur DOCX makalah, quota, auth, dashboard, projects — tidak disentuh.
+- `pptxgenjs` masih dipakai (di client) untuk assembly PPTX dari screenshot HTML.
+
+## Estimasi
+5 file baru/rewrite, 3 file dihapus. Testing manual di preview setelah user isi secret.

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useMemo } from "react";
 
 type PaperBlock =
   | { kind: "paragraph"; text: string }
@@ -25,24 +26,20 @@ type PaperContent = {
   references?: string[];
 };
 
-type SlideContent = {
-  title: string;
-  layout: "section" | "content" | "two_column" | "quote" | "stats";
-  bullets?: string[];
-  blocks?: PaperBlock[];
-  bullets_right?: string[];
-  stats?: { value: string; label: string }[];
-  quote?: string;
-  quote_source?: string;
+// HTML-first slide payload (baru).
+type HtmlSlide = {
+  kind?: "cover" | "agenda" | "content" | "quote" | "stats" | "closing";
+  html?: string;
   notes?: string;
+  imageCredit?: string;
 };
 
 type PresentationContent = {
+  meta?: { title?: string; subtitle?: string };
+  // Field lama (fallback), tidak dipakai renderer baru.
   title?: string;
   subtitle?: string;
-  agenda?: string[];
-  closing?: { message?: string; cta?: string };
-  slides?: SlideContent[];
+  slides?: HtmlSlide[];
 };
 
 function renderBlocks(section: { paragraphs?: string[]; blocks?: PaperBlock[] }): ReactNode {
@@ -132,124 +129,79 @@ export function PaperContentPreview({ content }: { content: PaperContent }) {
 
 export function SlidesContentPreview({ content }: { content: PresentationContent }) {
   const slides = content.slides ?? [];
+  const title = content.meta?.title ?? content.title;
+  const subtitle = content.meta?.subtitle ?? content.subtitle;
   return (
-    <div className="max-h-[600px] space-y-4 overflow-y-auto pr-1">
-      <div className="rounded-xl border border-border bg-gradient-to-br from-foreground to-foreground/70 p-6 text-background shadow-sm">
-        <p className="text-[11px] uppercase tracking-[0.2em] opacity-70">Cover</p>
-        <h3 className="mt-2 text-lg font-semibold">{content.title}</h3>
-        {content.subtitle && <p className="mt-1 text-[13px] opacity-80">{content.subtitle}</p>}
-      </div>
-
-      {content.agenda && content.agenda.length > 0 && (
-        <div className="rounded-xl border border-border bg-background p-5 shadow-sm">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Agenda</p>
-          <ul className="mt-2 list-decimal space-y-0.5 pl-5 text-[13px] text-foreground">
-            {content.agenda.map((a, i) => (
-              <li key={i}>{a}</li>
-            ))}
-          </ul>
+    <div className="max-h-[720px] space-y-4 overflow-y-auto pr-1">
+      {(title || subtitle) && (
+        <div className="rounded-xl border border-border bg-card p-4 text-foreground shadow-sm">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">Deck</p>
+          {title && <h3 className="mt-1 text-base font-semibold">{title}</h3>}
+          {subtitle && <p className="mt-0.5 text-[13px] text-muted-foreground">{subtitle}</p>}
         </div>
       )}
-
       {slides.map((s, i) => (
-        <SlideCard key={i} index={i + 1} slide={s} />
+        <HtmlSlideCard key={i} index={i + 1} slide={s} />
       ))}
-
-      {content.closing?.message && (
-        <div className="rounded-xl border border-border bg-gradient-to-br from-foreground to-foreground/70 p-6 text-center text-background shadow-sm">
-          <p className="text-[11px] uppercase tracking-[0.2em] opacity-70">Penutup</p>
-          <p className="mt-2 text-base font-semibold">{content.closing.message}</p>
-          {content.closing.cta && <p className="mt-1 text-[13px] opacity-80">{content.closing.cta}</p>}
-        </div>
-      )}
     </div>
   );
 }
 
-function SlideCard({ index, slide }: { index: number; slide: SlideContent }) {
-  const isSection = slide.layout === "section";
+function HtmlSlideCard({ index, slide }: { index: number; slide: HtmlSlide }) {
+  // Iframe sandbox: HTML dari AI dianggap untrusted. Font Awesome + Google Fonts
+  // dimuat di dalam iframe, konten discale down agar muat card 640px.
+  const srcDoc = useMemo(() => buildSlideSrcDoc(slide.html ?? ""), [slide.html]);
   return (
-    <div
-      className={`rounded-xl border border-border p-5 shadow-sm ${
-        isSection ? "bg-secondary" : "bg-background"
-      }`}
-    >
-      <div className="flex items-center justify-between">
+    <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
+      <div className="flex items-center justify-between border-b border-border bg-secondary/50 px-3 py-1.5">
         <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-          Slide {index} · {slide.layout}
+          Slide {index}
+          {slide.kind ? ` · ${slide.kind}` : ""}
         </p>
+        {slide.imageCredit && (
+          <p className="text-[10px] text-muted-foreground">{slide.imageCredit}</p>
+        )}
       </div>
-      <h4
-        className={`mt-1.5 font-semibold text-foreground ${
-          isSection ? "text-lg" : "text-[14px]"
-        }`}
-      >
-        {slide.title}
-      </h4>
-
-      {slide.layout === "quote" ? (
-        <blockquote className="mt-3 border-l-2 border-foreground/40 pl-3 text-[13px] italic text-foreground">
-          &ldquo;{slide.quote}&rdquo;
-          {slide.quote_source && (
-            <footer className="mt-1 text-[11px] not-italic text-muted-foreground">— {slide.quote_source}</footer>
-          )}
-        </blockquote>
-      ) : slide.layout === "stats" && slide.stats ? (
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {slide.stats.map((st, i) => (
-            <div key={i} className="rounded-lg border border-border p-2 text-center">
-              <p className="text-lg font-bold text-foreground">{st.value}</p>
-              <p className="text-[10px] text-muted-foreground">{st.label}</p>
-            </div>
-          ))}
-        </div>
-      ) : slide.layout === "two_column" ? (
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <ul className="list-disc space-y-0.5 pl-4 text-[12px] text-foreground">
-            {(slide.bullets ?? []).map((b, i) => (
-              <li key={i}>{b}</li>
-            ))}
-          </ul>
-          <ul className="list-disc space-y-0.5 pl-4 text-[12px] text-foreground">
-            {(slide.bullets_right ?? []).map((b, i) => (
-              <li key={i}>{b}</li>
-            ))}
-          </ul>
-        </div>
-      ) : (
-        (slide.blocks && slide.blocks.length > 0 ? (
-          <div className="mt-3 space-y-2">
-            {slide.blocks.map((b, i) =>
-              b.kind === "bullets" ? (
-                <ul key={i} className="list-disc space-y-0.5 pl-5 text-[13px] text-foreground">
-                  {b.items.map((it, j) => (
-                    <li key={j}>{it}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p key={i} className="text-justify text-[13px] leading-relaxed text-foreground">
-                  {b.text}
-                </p>
-              ),
-            )}
-          </div>
-        ) : (
-          (slide.bullets?.length ?? 0) > 0 && (
-            <ul className="mt-3 list-disc space-y-0.5 pl-5 text-[13px] text-foreground">
-              {slide.bullets!.map((b, i) => (
-                <li key={i}>{b}</li>
-              ))}
-            </ul>
-          )
-        ))
-      )}
-
+      <div className="relative w-full" style={{ aspectRatio: "16 / 9" }}>
+        <iframe
+          title={`Slide ${index}`}
+          srcDoc={srcDoc}
+          sandbox="allow-scripts"
+          className="absolute inset-0 h-full w-full border-0"
+          loading="lazy"
+        />
+      </div>
       {slide.notes && (
-        <details className="mt-3 rounded-md bg-secondary/60 px-2.5 py-1.5 text-[11px] text-muted-foreground">
+        <details className="border-t border-border bg-secondary/40 px-3 py-2 text-[11px] text-muted-foreground">
           <summary className="cursor-pointer font-medium text-foreground">Catatan pembicara</summary>
           <p className="mt-1 leading-relaxed">{slide.notes}</p>
         </details>
       )}
     </div>
   );
+}
+
+export function buildSlideSrcDoc(html: string): string {
+  return `<!doctype html><html><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+  html,body{margin:0;padding:0;background:#fff;font-family:'Plus Jakarta Sans',system-ui,sans-serif;}
+  body{display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .slide-wrap{width:1280px;height:720px;transform-origin:top left;}
+  .slide{width:1280px;height:720px;box-sizing:border-box;overflow:hidden;}
+  h1,h2,h3,h4{font-family:'Space Grotesk',system-ui,sans-serif;margin:0;}
+  p{margin:0;}
+</style>
+<script>
+  window.addEventListener('load',()=>{
+    const wrap=document.querySelector('.slide-wrap');
+    if(!wrap)return;
+    const fit=()=>{const s=Math.min(window.innerWidth/1280,window.innerHeight/720);wrap.style.transform='scale('+s+')';};
+    fit();window.addEventListener('resize',fit);
+  });
+<\/script>
+</head><body><div class="slide-wrap">${html}</div></body></html>`;
 }

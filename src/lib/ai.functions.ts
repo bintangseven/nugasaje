@@ -1,7 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { fixPresentationDesign, buildAiFixInstruction } from "./design-validator";
+
+// ============================================================================
+// PRESENTATION SCHEMA — HTML-first (Plus Jakarta Sans + Space Grotesk +
+// Font Awesome 6 + MathML). Renderer memakai HTML fragment langsung di iframe;
+// download PPTX dibuat di client via html2canvas + pptxgenjs.
+// ============================================================================
 
 const paperTool = {
   type: "function",
@@ -97,213 +102,72 @@ const paperTool = {
   },
 } as const;
 
-const presentationTool = {
-  name: "submit_presentation",
-  description: "Susun slide presentasi akademik berbahasa Indonesia.",
-  input_schema: {
-    type: "object",
-    properties: {
-      title: { type: "string" },
-      subtitle: { type: "string" },
-      cover_style: {
-        type: "string",
-        enum: [
-          "solid",
-          "gradient",
-          "split",
-          "geometric",
-          "minimal",
-          "editorial",
-          "band",
-          "duotone",
-          "ingoude",
-          "lovable",
-        ],
-        description:
-          "Pilih gaya cover slide yang paling cocok untuk topik & audiens. Boleh berbeda tiap presentasi — kamu bebas mendesain.",
-      },
-      theme: {
-        type: "object",
-        description:
-          "Palet warna deck yang KAMU rancang sendiri agar cocok dengan topik, audiens, & mood presentasi. Semua nilai berupa hex 6 digit TANPA '#'. Pastikan kontras teks selalu terbaca (mis. bg gelap → gunakan teks putih otomatis).",
-        properties: {
-          bg: { type: "string", description: "Warna latar utama slide gelap / cover (hex 6 digit tanpa #)." },
-          bg2: { type: "string", description: "Warna latar sekunder / band / gradient partner." },
-          surface: { type: "string", description: "Warna latar slide konten terang (biasanya putih/off-white)." },
-          ink: { type: "string", description: "Warna teks utama di atas surface (gelap, kontras tinggi)." },
-          inkInverse: { type: "string", description: "Warna teks di atas bg gelap (biasanya FFFFFF)." },
-          muted: { type: "string", description: "Warna teks sekunder / caption." },
-          accent: { type: "string", description: "Warna aksen utama (garis, chip, angka stats)." },
-          accentSoft: { type: "string", description: "Aksen lembut / dekorasi / highlight tipis." },
-        },
-        required: ["bg", "bg2", "surface", "ink", "inkInverse", "muted", "accent", "accentSoft"],
-        additionalProperties: false,
-      },
-      agenda: {
-        type: "array",
-        items: { type: "string", description: "Satu poin agenda singkat (3-6 kata)." },
-      },
-      closing: {
-        type: "object",
-        properties: {
-          message: { type: "string", description: "Pesan penutup singkat, mis. 'Terima kasih atas perhatiannya'." },
-          cta: { type: "string", description: "Ajakan/kalimat penutup tambahan, opsional." },
-        },
-        required: ["message"],
-        additionalProperties: false,
-      },
-      slides: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            title: { type: "string" },
-            layout: {
-              type: "string",
-              enum: ["section", "content", "two_column", "quote", "stats"],
-              description:
-                "section = pembatas bab; content = judul + bullet; two_column = dua kolom bullet; quote = kutipan tebal; stats = 2-4 angka highlight.",
-            },
-            bullets: {
-              type: "array",
-              items: { type: "string" },
-            },
-            blocks: {
-              type: "array",
-              description:
-                "WAJIB untuk layout 'content'. Campuran ±50% paragraf naratif + ±50% bullet list agar slide bergaya naratif-akademik, bukan sekadar deretan bullet. Pola ideal per slide: paragraf pembuka 2-3 kalimat → bullet list 2-4 poin → (opsional) paragraf penutup singkat. Bila diisi, renderer memakai 'blocks' dan mengabaikan 'bullets'.",
-              items: {
-                type: "object",
-                properties: {
-                  kind: { type: "string", enum: ["paragraph", "bullets"] },
-                  text: {
-                    type: "string",
-                    description: "Untuk kind=paragraph: 1 paragraf naratif 2-4 kalimat (~30-60 kata).",
-                  },
-                  items: {
-                    type: "array",
-                    description: "Untuk kind=bullets: 2-5 poin ringkas, tiap poin maks 14 kata.",
-                    items: { type: "string" },
-                  },
-                },
-                required: ["kind"],
-                additionalProperties: false,
-              },
-            },
-            bullets_right: {
-              type: "array",
-              description: "Hanya untuk layout two_column: bullet kolom kanan.",
-              items: { type: "string" },
-            },
-            stats: {
-              type: "array",
-              description: "Hanya untuk layout stats: 2-4 item.",
-              items: {
-                type: "object",
-                properties: {
-                  value: { type: "string", description: "Angka/teks pendek, mis. '85%'." },
-                  label: { type: "string", description: "Label singkat di bawah angka." },
-                },
-                required: ["value", "label"],
-                additionalProperties: false,
-              },
-            },
-            quote: { type: "string", description: "Hanya untuk layout quote: teks kutipan." },
-            quote_source: { type: "string", description: "Sumber kutipan, opsional." },
-            notes: { type: "string", description: "Catatan pembicara, 2-3 kalimat." },
-            design: {
-              type: "object",
-              description:
-                "SANGAT DIANJURKAN untuk semua slide 'content', 'two_column', 'stats', 'quote', 'section'. Rancang slide sebagai artboard 16:9 ukuran 13.333 x 7.5 INCI. Bila 'design.elements' diisi, renderer AKAN MENGABAIKAN layout/bullets/blocks bawaan dan menggambar elemen apa adanya persis di posisi (x,y,w,h) inci yang kamu tentukan. Pakai ini untuk membuat slide yang benar-benar didesain (hero, kartu, grid 2/3 kolom, timeline, callout besar, stat block, quote frame, dsb) — mirip artifact yang kamu buat di Claude.ai. Kamu bebas menumpuk shape (rect/ellipse/line) sebagai kartu/latar aksen lalu meletakkan text di atasnya. WAJIB sisakan margin ≥0.4in dari tepi, dan sisakan area 0.35in di bawah untuk footer (jangan menaruh elemen di y ≥ 7.1). Gunakan warna dari 'theme' (bg, bg2, surface, ink, inkInverse, muted, accent, accentSoft) — atau hex custom bila perlu, semua hex 6 digit TANPA '#'.",
-              properties: {
-                background: {
-                  type: "string",
-                  description:
-                    "Warna latar slide (hex 6 digit tanpa #). Kalau tidak diisi, dipakai theme.surface untuk slide konten atau theme.bg untuk slide 'section'.",
-                },
-                elements: {
-                  type: "array",
-                  description:
-                    "Daftar elemen visual, digambar berurutan (elemen belakang dulu, depan terakhir). Minimal 3 elemen; slide konten biasanya butuh 8-20 elemen untuk terasa 'didesain'.",
-                  items: {
-                    type: "object",
-                    properties: {
-                      type: {
-                        type: "string",
-                        enum: ["rect", "roundRect", "ellipse", "line", "triangle", "chevron", "text"],
-                        description: "Jenis primitif. text=kotak teks; shape lain=grafik.",
-                      },
-                      x: { type: "number", description: "Kiri (inci, 0-13.333)." },
-                      y: { type: "number", description: "Atas (inci, 0-7.5)." },
-                      w: { type: "number", description: "Lebar (inci)." },
-                      h: { type: "number", description: "Tinggi (inci)." },
-                      fill: {
-                        type: "string",
-                        description:
-                          "Warna isi hex 6 digit tanpa #. Boleh dikosongkan untuk line/text tanpa background.",
-                      },
-                      opacity: {
-                        type: "number",
-                        description:
-                          "Transparansi 0-100 (0=solid, 80=sangat transparan). Untuk membuat lapisan aksen lembut.",
-                      },
-                      stroke: { type: "string", description: "Warna garis (hex tanpa #). Untuk line WAJIB diisi." },
-                      strokeWidth: { type: "number", description: "Tebal garis (pt), 0.5-4 biasanya." },
-                      radius: {
-                        type: "number",
-                        description: "Radius sudut (inci) untuk roundRect. 0.08-0.25 lembut, 0.5+ pil.",
-                      },
-                      rotate: { type: "number", description: "Rotasi derajat (0-360)." },
-                      text: { type: "string", description: "Isi teks untuk type='text'. Boleh multiline pakai '\\n'." },
-                      fontSize: {
-                        type: "number",
-                        description:
-                          "Ukuran pt. 60-120 untuk hero angka; 32-44 title; 22-30 subjudul; 14-20 body; 9-11 caption.",
-                      },
-                      fontFace: {
-                        type: "string",
-                        enum: ["heading", "body"],
-                        description: "'heading' pakai font judul theme, 'body' pakai font body theme. Default: body.",
-                      },
-                      color: {
-                        type: "string",
-                        description: "Warna teks (hex tanpa #). WAJIB kontras terhadap fill/background di belakangnya.",
-                      },
-                      bold: { type: "boolean" },
-                      italic: { type: "boolean" },
-                      align: { type: "string", enum: ["left", "center", "right"] },
-                      valign: { type: "string", enum: ["top", "middle", "bottom"] },
-                      charSpacing: {
-                        type: "number",
-                        description: "Letter spacing (untuk KICKER uppercase pakai 4-8).",
-                      },
-                    },
-                    required: ["type", "x", "y", "w", "h"],
-                    additionalProperties: false,
-                  },
-                },
-              },
-              required: ["elements"],
-              additionalProperties: false,
-            },
-          },
-          required: ["title", "layout", "bullets", "notes"],
-          additionalProperties: false,
-        },
-      },
-    },
-    required: ["title", "subtitle", "cover_style", "theme", "agenda", "closing", "slides"],
-    additionalProperties: false,
-  },
-} as const;
-
-// OpenAI-compatible tool wrapper untuk Lovable AI Gateway (Gemini).
+// HTML-first presentation tool. Setiap slide adalah fragment HTML lengkap
+// yang akan di-mount di iframe 1280×720. Prompt mewajibkan pemakaian Plus
+// Jakarta Sans + Space Grotesk (Google Fonts sudah di-load boilerplate),
+// Font Awesome 6 icon class, dan MathML untuk rumus.
 const presentationToolGateway = {
   type: "function",
   function: {
-    name: presentationTool.name,
-    description: presentationTool.description,
-    parameters: presentationTool.input_schema,
+    name: "submit_presentation",
+    description:
+      "Susun deck presentasi akademik berbahasa Indonesia sebagai koleksi slide HTML modern.",
+    parameters: {
+      type: "object",
+      properties: {
+        meta: {
+          type: "object",
+          properties: {
+            title: { type: "string" },
+            subtitle: { type: "string" },
+            palette: {
+              type: "object",
+              description: "Palet warna deck (hex 6 digit TANPA '#').",
+              properties: {
+                primary: { type: "string", description: "Warna brand utama." },
+                accent: { type: "string", description: "Warna aksen tajam." },
+                bg: { type: "string", description: "Warna latar cover/gelap." },
+                ink: { type: "string", description: "Warna teks utama di atas latar terang." },
+                muted: { type: "string", description: "Warna teks sekunder / caption." },
+              },
+              required: ["primary", "accent", "bg", "ink", "muted"],
+              additionalProperties: false,
+            },
+          },
+          required: ["title", "subtitle", "palette"],
+          additionalProperties: false,
+        },
+        slides: {
+          type: "array",
+          description:
+            "Minimal 6 slide, urutan logis: cover → agenda → konten (variasi layout) → closing.",
+          items: {
+            type: "object",
+            properties: {
+              kind: {
+                type: "string",
+                enum: ["cover", "agenda", "content", "quote", "stats", "closing"],
+              },
+              html: {
+                type: "string",
+                description:
+                  "Fragment HTML lengkap satu slide. HARUS diawali <div class=\"slide\" ...> berukuran 1280x720. Boleh pakai inline style + CSS Grid/Flexbox. Font-family default 'Plus Jakarta Sans' untuk body, 'Space Grotesk' untuk heading (kedua font tersedia). Boleh <i class=\"fa-solid fa-*\"></i> (Font Awesome 6 tersedia global). Rumus matematika pakai <math>...</math> (MathML). Bila slide butuh foto, sisipkan <img data-unsplash=\"IMAGE_QUERY\" style=\"...\">, renderer akan mengisi src otomatis.",
+              },
+              imageQuery: {
+                type: "string",
+                description:
+                  "OPSIONAL. Query pencarian gambar Unsplash yang cocok (bahasa Inggris, 2-5 kata). Bila diisi, renderer memilih 1 foto dan meng-inject ke elemen <img data-unsplash> di dalam html.",
+              },
+              notes: { type: "string", description: "Catatan pembicara 2-3 kalimat." },
+            },
+            required: ["kind", "html", "notes"],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ["meta", "slides"],
+      additionalProperties: false,
+    },
   },
 } as const;
 
@@ -361,7 +225,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
 
     const answers = (project.answers ?? {}) as Record<string, string>;
     const isPaper = project.mission === "paper";
-    const toolName = isPaper ? paperTool.function.name : presentationTool.name;
+    const toolName = isPaper ? paperTool.function.name : presentationToolGateway.function.name;
 
     // Terjemahkan pilihan user jadi instruksi konkret untuk AI
     const toneRaw = (answers.style ?? "").toLowerCase();
@@ -387,34 +251,29 @@ export const generateProjectContent = createServerFn({ method: "POST" })
     const systemPrompt = isPaper
       ? `Kamu adalah asisten akademik untuk mahasiswa Indonesia. Tugasmu menyusun paper berbahasa Indonesia yang rapi, runtut, dan dapat langsung diserahkan. ${toneInstruction} ${citationInstruction} Selalu panggil fungsi submit_paper.`
       : [
-          `Kamu adalah SENIOR PRESENTATION DESIGNER (setara desainer yang membuat artifact di Claude.ai).`,
-          `Tugasmu MERANCANG deck presentasi akademik berbahasa Indonesia yang setingkat portfolio desainer profesional — bukan template generik.`,
+          `Kamu adalah SENIOR PRESENTATION DESIGNER yang membuat deck HTML modern.`,
+          `Tugasmu MERANCANG deck presentasi akademik berbahasa Indonesia sebagai kumpulan slide HTML5+CSS3 (Grid/Flexbox) berukuran 1280×720 px, gaya editorial-modern setara portfolio desainer profesional.`,
           toneInstruction,
-          `\n\n=== KANVAS ===`,
-          `Setiap slide adalah artboard 16:9 berukuran 13.333 x 7.5 INCI (LAYOUT_WIDE PowerPoint). Origin (0,0) di kiri-atas. Sumbu X ke kanan, Y ke bawah.`,
-          `Aman: konten utama di dalam rectangle x∈[0.4, 12.9], y∈[0.4, 7.1]. Bawah y=7.15..7.5 dipakai footer otomatis.`,
-          `\n=== ATURAN DESAIN (WAJIB) ===`,
-          `1. Untuk SETIAP slide, isi field 'design.elements' — susun elemen (rect / roundRect / ellipse / line / triangle / chevron / text) di koordinat inci PERSIS seperti kamu mendesain di Figma. Jangan hanya mengandalkan 'layout' preset.`,
-          `2. Tumpuk shape sebagai latar dekoratif, kartu, band warna, sidebar, hero panel, dsb. Elemen teks selalu digambar di atas shape. Urutan array = urutan gambar (belakang → depan).`,
-          `3. Variasikan komposisi antar slide: hero teks besar kiri + visual kanan, grid 2 kolom, grid 3 kartu, timeline horizontal, callout besar tengah, split-screen 50/50, sidebar kiri berwarna, dsb. Jangan pernah 2 slide berturut-turut dengan komposisi persis sama.`,
-          `4. Hierarki tipografi: EYEBROW/KICKER uppercase 10-12pt (charSpacing 4-6, color=accent) → TITLE 30-44pt bold (color=ink) → SUBTITLE 18-24pt (color=muted) → BODY 14-18pt (color=ink) → BULLETS 14-16pt.`,
-          `5. Warna: pakai palet 'theme' yang kamu rancang. bg untuk latar gelap/section, surface untuk latar konten terang, ink teks utama, muted teks sekunder, accent untuk highlight & angka besar, accentSoft untuk latar kartu lembut. Kontras teks WAJIB ≥ 4.5:1.`,
-          `6. Untuk data / stat: buat KARTU (roundRect fill=accentSoft radius=0.15) berisi angka 60-96pt bold color=accent + label 12-14pt color=ink. Jangan pakai stats layout preset kalau bisa mendesain sendiri lebih baik.`,
-          `7. Untuk section divider: latar bg gelap penuh, ada band warna accent tipis, judul 44-60pt inkInverse, plus 1-2 shape dekoratif (lingkaran besar transparan / segitiga sudut).`,
-          `8. Untuk konten narasi: gabungkan blok paragraf (text box lebar, fontSize 15-17, valign top) dengan kartu bullet berlatar accentSoft. Target ±50% paragraf + ±50% bullet secara visual.`,
-          `9. Kartu / panel dekoratif menggunakan opacity 10-25 untuk aksen lembut, atau roundRect solid untuk kartu.`,
-          `10. Setiap slide 'content' butuh 8-20 elemen agar terasa didesain. Slide section boleh 5-10 elemen.`,
-          `\n=== LARANGAN KERAS (ciri khas AI slide generik — HINDARI) ===`,
-          `A. JANGAN pernah menaruh garis aksen (rect tipis h<0.1 lebar>1 in) tepat di bawah judul — itu ciri AI-generated. Ganti dengan whitespace atau shift warna latar.`,
-          `B. JANGAN pakai color-bar / accent-stripe dekoratif: header bar full-width, sidebar vertical stripe menempel tepi, thin edge stripe di kartu, single-side border. Bila mau menonjolkan kartu pakai roundRect fill=accentSoft + drop shadow atau icon di lingkaran, BUKAN stripe pinggir.`,
-          `C. JANGAN default latar cream/beige (F5F5DC, FAF0E6, FAEBD7, FFF8E1). Latar konten: putih atau warna dari palet 'theme'. Latar section: bg gelap.`,
-          `D. JANGAN buat slide teks-saja (title + bullets tanpa visual). Setiap slide WAJIB minimal 1 elemen visual: shape besar, kartu, ikon (bentuk ellipse/roundRect), atau angka besar.`,
-          `E. JANGAN pakai teks yang overflow container. Kalau tidak muat: perkecil fontSize, split ke slide baru, atau perbesar w/h box.`,
-          `F. JANGAN pakai font default "Aptos" atau nama tak umum. Palet font aman untuk theme.headFont & theme.bodyFont: Calibri, Arial, Cambria, Times New Roman, Bookman Old Style, Century Schoolbook. Pilih satu serif untuk head + satu sans untuk body, atau sebaliknya.`,
-          `G. Body text left-align; hanya title yang boleh center. Margin dari tepi kanvas ≥ 0.5 inci; gap antar blok 0.3-0.5 inci konsisten.`,
-          `H. Motif visual harus KONSISTEN antar slide (ulangi mis. ikon dalam lingkaran accent, atau kartu roundRect dengan radius sama). Palet: satu warna dominan 60-70% berat visual, 1-2 pendukung, 1 aksen tajam.`,
-          `\n=== KELUARAN ===`,
-          `Tetap isi 'layout', 'bullets', 'blocks', dst sebagai fallback teks — tapi PRIORITASKAN merancang 'design.elements'. Renderer memakai 'design.elements' bila ada, dan mengabaikan layout preset.`,
+          ``,
+          `=== SPEK TEKNIS SLIDE ===`,
+          `1. Setiap 'html' WAJIB berupa satu element <div class="slide" style="width:1280px;height:720px;..."> yang isinya self-contained (boleh nested div/section/grid). JANGAN sertakan <html>, <head>, <body>, <script>, <link>, atau <style>. Semua styling INLINE via atribut style="" atau class utility tailwind (Tailwind tidak tersedia — pakai inline style saja).`,
+          `2. Font sudah tersedia global: 'Plus Jakarta Sans' (body) & 'Space Grotesk' (heading). Pakai lewat inline style font-family.`,
+          `3. Ikon: Font Awesome 6 sudah dimuat. Pakai <i class="fa-solid fa-lightbulb" style="color:#..;font-size:32px"></i> dsb.`,
+          `4. Rumus matematika WAJIB pakai MathML: <math xmlns="http://www.w3.org/1998/Math/MathML">...</math>.`,
+          `5. Gambar: sisipkan <img data-unsplash="query kata kunci inggris" alt="..." style="width:100%;height:100%;object-fit:cover;border-radius:16px" />. Renderer akan mengganti src otomatis dari Unsplash. Bila tidak butuh gambar, jangan pakai tag <img>.`,
+          `6. Warna: gunakan palet dari meta.palette (primary, accent, bg, ink, muted). Kontras teks WAJIB ≥ 4.5:1.`,
+          `7. Hierarki: Cover judul 64-88px bold Space Grotesk; section title 44-56px; body 18-22px Plus Jakarta Sans; caption 13-15px.`,
+          `8. Layout: variasikan tiap slide (hero kiri + visual kanan, grid 2/3 kolom kartu, split 50/50, stat block angka besar, quote frame, timeline). Jangan 2 slide berturut komposisi identik.`,
+          `9. Cover & closing pakai latar gelap (bg) dengan teks inkInverse otomatis (pilih warna terang). Slide konten latar putih atau warna surface lembut.`,
+          `10. Whitespace lega: padding minimal 48px di dalam .slide.`,
+          ``,
+          `=== LARANGAN ===`,
+          `A. JANGAN pakai garis aksen tipis di bawah judul (ciri AI generik). Gunakan whitespace atau shift warna latar.`,
+          `B. JANGAN pakai <script>, JS interaktif, animasi kompleks, atau resource eksternal selain Font Awesome/Google Fonts (sudah dimuat).`,
+          `C. JANGAN slide teks-saja tanpa elemen visual (kartu / ikon / angka besar / gambar).`,
+          `D. JANGAN pakai warna cream/beige generik.`,
+          `E. JANGAN buat html melebihi 1280×720; konten harus fit.`,
+          ``,
           `Selalu panggil fungsi submit_presentation.`,
         ].join("\n");
 
@@ -522,59 +381,61 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       } else {
         switch (stage) {
           case 1:
-            return "STAGE 1 (DRAFT): Susun outline presentasi — title, subtitle, agenda, dan minimal 7 slide isi. Setiap slide layout 'content' WAJIB pakai 'blocks' dengan minimal 1 paragraf pembuka + 1 bullet list draft (±50/50). Fokus struktur dulu.";
+            return "STAGE 1 (DRAFT DECK): Susun meta (title, subtitle, palette) + minimal 7 slide dalam bentuk fragment HTML lengkap sesuai spek. Wajib: 1 cover, 1 agenda, minimal 4 slide content (variasi layout), 1 closing. Setiap slide berukuran 1280x720, self-contained, memakai Plus Jakarta Sans / Space Grotesk, warna dari palette.";
           case 2:
-            return `STAGE 2 (EXPAND NARRATIVE): Draft awal:\n\n${JSON.stringify(prev).slice(0, 8000)}\n\nPerluas SETIAP slide 'content': pastikan 'blocks' berisi ±50% paragraf naratif (2-4 kalimat, 30-60 kata) + ±50% bullet (2-4 poin, maks 14 kata). Pola: paragraf pembuka → bullet list → paragraf penghubung/penutup. Tambahkan 1-2 slide baru jika topik butuh. Jangan tipis, jangan 100% bullet.`;
+            return `STAGE 2 (POLISH DECK): Draft awal:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nSempurnakan tiap slide: pastikan variasi layout (tidak monoton), tambah elemen visual (kartu, ikon Font Awesome, angka besar, atau <img data-unsplash="..."> dengan query bahasa Inggris yang relevan) di setiap slide, isi notes 3-5 kalimat, dan pastikan tidak ada teks overflow. Kembalikan deck FINAL utuh.`;
           case 3:
-            return `STAGE 3 (DESIGN ARTBOARDS): Versi terkini:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nSekarang DESAIN ULANG setiap slide sebagai artboard. Isi 'design.elements' untuk SEMUA slide (termasuk section), pakai koordinat inci pada kanvas 13.333 x 7.5. Variasikan komposisi antar slide (hero, grid 2 kolom, 3 kartu, timeline, callout, split, sidebar berwarna, dsb). Setiap slide 'content' butuh 8-20 elemen. Pakai palet 'theme': shape latar (rect/roundRect/ellipse) → panel/kartu → text di atasnya. Sisakan y ≥ 7.1 untuk footer. Pertahankan 'blocks' & 'bullets' sebagai fallback teks.`;
           case 4:
-            return `STAGE 4 (POLISH DESIGN + NOTES): Versi siap-poles:\n\n${JSON.stringify(prev).slice(0, 14000)}\n\nFinal pass: (a) Rapikan 'design.elements' tiap slide — periksa tidak ada elemen keluar kanvas atau menabrak footer (y ≥ 7.1), kontras teks jelas, hierarki tipografi konsisten, dan komposisi bervariasi antar slide (tidak monoton). (b) Isi notes tiap slide 4-6 kalimat (konteks + contoh + transisi). (c) Agenda sinkron urutan slide; closing.message + cta kuat; ada 1-2 slide 'section' sebagai pembatas. Kembalikan presentasi FINAL utuh.`;
+            return `PASS FINAL: Konten sekarang:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nKembalikan deck yang sama tanpa perubahan besar — cukup rapikan konsistensi warna, spacing padding 48px, dan tambahkan imageQuery bila slide punya <img data-unsplash>.`;
         }
       }
       return "";
     };
 
     let parsed: Record<string, unknown> | null = null;
+    // Presentasi cukup 2 stage supaya cepat & tidak boros token.
+    const stages: readonly (1 | 2 | 3 | 4)[] = isPaper ? ([1, 2, 3, 4] as const) : ([1, 2] as const);
     const baseMessages: ChatMsg[] = [
       { role: "system", content: systemPrompt },
       { role: "user", content: gatewayUserContent },
     ];
-    for (const stage of [1, 2, 3, 4] as const) {
+    for (const stage of stages) {
       const stageMsg = stageInstruction(stage, parsed);
       const messages: ChatMsg[] = [...baseMessages, { role: "user", content: stageMsg }];
       parsed = await callGatewayTool(messages);
-
-      // ---- Validasi & auto-fix layout spasial (hanya presentasi, hanya setelah
-      // stage desain/polish diisi) ----
-      if (!isPaper && (stage === 3 || stage === 4)) {
-        const { fixed, report } = fixPresentationDesign(parsed);
-        parsed = fixed;
-        if (report.issues.length > 0) {
-          console.warn(
-            `[design-validator] stage ${stage}: ${report.issues.length} issue(s) ditemukan` +
-              (report.needsAiFix
-                ? `, ${report.slidesNeedingRegeneration.length} slide perlu fix AI`
-                : ", semua auto-fixed"),
-          );
-        }
-
-        // Kalau ini stage terakhir (polish) dan masih ada masalah yang tidak
-        // bisa diperbaiki otomatis (overlap/overflow teks) -> satu panggilan
-        // tambahan yang presisi, hanya menyebut slide & elemen bermasalah.
-        if (stage === 4 && report.needsAiFix) {
-          const fixMsg = buildAiFixInstruction(report, parsed);
-          const fixMessages: ChatMsg[] = [...baseMessages, { role: "user", content: fixMsg }];
-          try {
-            parsed = await callGatewayTool(fixMessages);
-          } catch (fixErr) {
-            console.error("[design-validator] stage FIX gagal, pakai hasil sebelum fix:", fixErr);
-          }
-          // Jaring pengaman terakhir: clamp keras tetap jalan apa pun hasil stage FIX
-          parsed = fixPresentationDesign(parsed).fixed;
-        }
-      }
     }
     if (!parsed) throw new Error("AI tidak menghasilkan konten.");
+
+    // Resolve gambar Unsplash untuk presentasi — inject URL ke slides.
+    if (!isPaper) {
+      try {
+        const slidesArr = Array.isArray((parsed as { slides?: unknown }).slides)
+          ? ((parsed as { slides: Array<Record<string, unknown>> }).slides)
+          : [];
+        const queries = slidesArr
+          .map((s) => (typeof s.imageQuery === "string" ? s.imageQuery.trim() : ""))
+          .filter((q) => q.length > 0);
+        if (queries.length > 0) {
+          const { resolveUnsplashImages } = await import("./unsplash.functions");
+          const { images } = await resolveUnsplashImages({ data: { queries } });
+          for (const s of slidesArr) {
+            const q = typeof s.imageQuery === "string" ? s.imageQuery.trim() : "";
+            const hit = q ? images[q] : undefined;
+            if (hit && typeof s.html === "string") {
+              // Ganti atribut data-unsplash="..." menjadi src="..." (yang pertama saja).
+              s.html = s.html.replace(
+                /<img\s+([^>]*?)data-unsplash="[^"]*"([^>]*)>/i,
+                (_m, pre, post) => `<img ${pre}src="${hit.url}" alt="${hit.alt.replace(/"/g, "&quot;")}"${post}>`,
+              );
+              s.imageCredit = hit.credit;
+              s.imageUrl = hit.url;
+            }
+          }
+        }
+      } catch (unsplashErr) {
+        console.warn("[unsplash] gagal resolve gambar:", unsplashErr);
+      }
+    }
 
     // Beautiful.ai dinonaktifkan sementara — PPT dibangun via pptxgenjs
     // dari konten AI yang sama (gemini-2.5-flash) seperti paper.
