@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Check, Sparkles, Loader2, Crown } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { ArrowRight, Check, Sparkles, Loader2, Crown, ShieldCheck } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/AppHeader";
@@ -8,6 +8,7 @@ import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { createProUpgradeInvoice } from "@/lib/payments.functions";
+import { getProfile } from "@/lib/projects.functions";
 
 export const Route = createFileRoute("/harga")({
   head: () => ({
@@ -33,6 +34,24 @@ function HargaPage() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const upgradeFn = useServerFn(createProUpgradeInvoice);
+  const profileFn = useServerFn(getProfile);
+  const profileQuery = useQuery({
+    queryKey: ["profile"],
+    queryFn: () => profileFn(),
+    enabled: !!user,
+  });
+  const profile = profileQuery.data;
+  const isProActive =
+    !!profile &&
+    profile.plan === "pro" &&
+    (!profile.pro_until || new Date(profile.pro_until).getTime() > Date.now());
+  const proUntilLabel = profile?.pro_until
+    ? new Date(profile.pro_until).toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
   const upgrade = useMutation({
     mutationFn: () => upgradeFn(),
     onSuccess: (res) => {
@@ -45,6 +64,14 @@ function HargaPage() {
   function handleUpgrade() {
     if (!user) {
       navigate({ to: "/auth" });
+      return;
+    }
+    if (isProActive) {
+      toast.info(
+        proUntilLabel
+          ? `Kamu sudah PRO — aktif sampai ${proUntilLabel}.`
+          : "Kamu sudah PRO aktif.",
+      );
       return;
     }
     upgrade.mutate();
@@ -149,10 +176,15 @@ function HargaPage() {
               <button
                 type="button"
                 onClick={handleUpgrade}
-                disabled={upgrade.isPending}
+                disabled={upgrade.isPending || isProActive}
                 className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-3 text-sm font-bold text-slate-900 shadow-lg shadow-amber-500/30 transition-all hover:-translate-y-0.5 hover:opacity-95 disabled:opacity-60"
               >
-                {upgrade.isPending ? (
+                {isProActive ? (
+                  <>
+                    <ShieldCheck className="h-4 w-4" />
+                    PRO aktif{proUntilLabel ? ` s.d. ${proUntilLabel}` : ""}
+                  </>
+                ) : upgrade.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Menyiapkan pembayaran…
@@ -165,6 +197,11 @@ function HargaPage() {
                   </>
                 )}
               </button>
+              {isProActive && (
+                <p className="mt-3 text-center text-xs text-white/80">
+                  Paket kamu masih aktif. Kamu bisa upgrade lagi setelah masa berlaku habis.
+                </p>
+              )}
             </div>
           </Reveal>
         </div>

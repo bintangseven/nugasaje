@@ -202,7 +202,11 @@ export function DashboardHome({ user }: { user: User }) {
             <div className="flex min-w-0 items-center gap-4">
             <Link
               to="/profile"
-                className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-full border-2 border-white/40 bg-white/10 transition-transform hover:scale-105"
+                className={`relative block h-16 w-16 shrink-0 overflow-hidden rounded-full bg-white/10 transition-transform hover:scale-105 ${
+                  isProActive
+                    ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-900 shadow-[0_0_18px_rgba(251,191,36,0.55)] border-2 border-amber-300"
+                    : "border-2 border-white/40"
+                }`}
               aria-label="Buka profil"
             >
               {avatarUrl ? (
@@ -210,6 +214,11 @@ export function DashboardHome({ user }: { user: User }) {
               ) : (
                   <span className="flex h-full w-full items-center justify-center text-lg font-semibold text-white">
                   {displayName.slice(0, 1).toUpperCase()}
+                </span>
+              )}
+              {isProActive && (
+                <span className="absolute -bottom-1 -right-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-orange-500 text-slate-900 shadow-md ring-2 ring-slate-900">
+                  <Crown className="h-3.5 w-3.5" />
                 </span>
               )}
             </Link>
