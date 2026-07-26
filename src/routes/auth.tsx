@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import numuLogo from "@/assets/numu-logo.svg.asset.json";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -99,11 +100,8 @@ function AuthPage() {
           <div className="pointer-events-none absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-tertiary/30 blur-3xl" />
 
           <div className="relative">
-            <Link to="/" className="flex items-center gap-2 font-display text-2xl font-black">
-              <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                auto_awesome
-              </span>
-              Numu AI
+            <Link to="/" aria-label="Numu AI" className="flex items-center">
+              <img src={numuLogo.url} alt="Numu AI" className="h-10 w-auto brightness-0 invert" />
             </Link>
             <span className="eyebrow mt-14 block text-primary-fixed">Ruang kerja akademik</span>
             <h1 className="mt-3 font-display text-4xl font-black leading-tight lg:text-[2.75rem]">
@@ -140,11 +138,8 @@ function AuthPage() {
         {/* Right: form */}
         <div className="flex items-center justify-center bg-surface-container-lowest px-6 py-12 md:px-12 md:py-14">
           <div className="w-full max-w-sm">
-            <div className="mb-8 flex items-center gap-2 md:hidden">
-              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                auto_awesome
-              </span>
-              <span className="font-display text-xl font-black text-on-surface">Numu AI</span>
+            <div className="mb-8 flex items-center md:hidden">
+              <img src={numuLogo.url} alt="Numu AI" className="h-8 w-auto" />
             </div>
 
             <h2 className="font-display text-2xl font-bold text-on-surface">

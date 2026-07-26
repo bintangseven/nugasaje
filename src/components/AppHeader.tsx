@@ -6,6 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { getProfile } from "@/lib/projects.functions";
+import numuLogo from "@/assets/numu-logo.svg.asset.json";
 
 export function AppHeader() {
   const [user, setUser] = useState<User | null>(null);
@@ -81,9 +82,8 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-outline-variant bg-surface/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <Link to="/" className="flex items-center gap-2 font-display text-[1.35rem] font-bold tracking-tight text-primary">
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1", fontSize: 26 }}>auto_awesome</span>
-          Numu AI
+        <Link to="/" aria-label="Numu AI" className="flex items-center">
+          <img src={numuLogo.url} alt="Numu AI" className="h-8 w-auto" />
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex text-[0.92rem] font-semibold" style={{ color: "var(--ink-soft)" }}>
