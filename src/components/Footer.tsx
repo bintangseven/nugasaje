@@ -20,8 +20,6 @@ export function Footer() {
               <li><Link to="/" hash="misi" className="hover:text-primary">Paper Research Assistant</Link></li>
               <li><Link to="/" hash="misi" className="hover:text-primary">Presentation Maker</Link></li>
               <li><Link to="/" hash="misi" className="hover:text-primary">Citation Finder (Coming soon)</Link></li>
-              <li><Link to="/harga" className="hover:text-primary">Harga</Link></li>
-              <li><Link to="/projects" className="hover:text-primary">Proyek saya</Link></li>
             </ul>
           </div>
           <div>
