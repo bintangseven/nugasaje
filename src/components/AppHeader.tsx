@@ -7,8 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { getProfile } from "@/lib/projects.functions";
 import numuLogo from "@/assets/numu-logo.svg.asset.json";
+import { LanguageSwitcher, useT } from "@/lib/i18n";
 
 export function AppHeader() {
+  const { t } = useT();
   const [user, setUser] = useState<User | null>(null);
   const [progress, setProgress] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -90,21 +92,23 @@ export function AppHeader() {
         <nav className="hidden items-center gap-7 md:flex text-[0.92rem] font-semibold" style={{ color: "var(--ink-soft)" }}>
           {user ? (
             <>
-              <NavItem to="/" exact label="Dashboard" />
-              <NavItem to="/projects" label="Proyek" />
-              <NavItem to="/harga" label="Harga" />
-              <NavItem to="/faq" label="FAQ" />
-              <NavItem to="/profile" label="Profil" />
+              <NavItem to="/" exact label={t("nav.dashboard")} />
+              <NavItem to="/projects" label={t("nav.projects")} />
+              <NavItem to="/harga" label={t("nav.pricing")} />
+              <NavItem to="/faq" label={t("nav.faq")} />
+              <NavItem to="/profile" label={t("nav.profile")} />
             </>
           ) : (
             <>
-              <NavItem to="/" exact label="Beranda" />
-              <NavItem to="/harga" label="Harga" />
-              <NavItem to="/faq" label="FAQ" />
+              <NavItem to="/" exact label={t("nav.home")} />
+              <NavItem to="/harga" label={t("nav.pricing")} />
+              <NavItem to="/faq" label={t("nav.faq")} />
             </>
           )}
         </nav>
 
+        <div className="flex items-center gap-3">
+        <LanguageSwitcher />
         {user ? (
           <div className="relative" ref={menuRef}>
             <button
@@ -142,27 +146,27 @@ export function AppHeader() {
                   </div>
                 </div>
                 <dl className="grid gap-2 px-4 py-3 text-xs">
-                  <MenuRow label="Universitas" value={profile?.university} />
-                  <MenuRow label="Jurusan" value={profile?.major} />
-                  <MenuRow label="Semester" value={profile?.semester} />
+                  <MenuRow label={t("menu.university")} value={profile?.university} notFilled={t("menu.notFilled")} />
+                  <MenuRow label={t("menu.major")} value={profile?.major} notFilled={t("menu.notFilled")} />
+                  <MenuRow label={t("menu.semester")} value={profile?.semester} notFilled={t("menu.notFilled")} />
                 </dl>
                 <div className="border-t border-border p-1.5">
                   <MenuLink
                     to="/"
                     icon={<LayoutDashboard className="h-3.5 w-3.5" />}
-                    label="Dashboard"
+                    label={t("menu.dashboard")}
                     onSelect={() => setMenuOpen(false)}
                   />
                   <MenuLink
                     to="/projects"
                     icon={<FolderKanban className="h-3.5 w-3.5" />}
-                    label="Proyek saya"
+                    label={t("menu.myProjects")}
                     onSelect={() => setMenuOpen(false)}
                   />
                   <MenuLink
                     to="/profile"
                     icon={<UserIcon className="h-3.5 w-3.5" />}
-                    label="Edit profil"
+                    label={t("menu.editProfile")}
                     onSelect={() => setMenuOpen(false)}
                   />
                   <button
@@ -171,7 +175,7 @@ export function AppHeader() {
                     className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50"
                   >
                     <LogOut className="h-3.5 w-3.5" />
-                    Keluar
+                    {t("menu.signOut")}
                   </button>
                 </div>
               </div>
@@ -182,9 +186,10 @@ export function AppHeader() {
             to="/auth"
             className="ai-gradient-bg rounded-full px-5 py-2 text-[0.88rem] font-semibold text-on-primary shadow-sm transition-all hover:opacity-90 hover:shadow-md"
           >
-            Get Started
+            {t("nav.getStarted")}
           </Link>
         )}
+        </div>
       </div>
       <div
         aria-hidden
@@ -216,14 +221,14 @@ function NavItem({ to, label, exact }: { to: "/" | "/projects" | "/harga" | "/fa
   );
 }
 
-function MenuRow({ label, value }: { label: string; value?: string | null }) {
+function MenuRow({ label, value, notFilled }: { label: string; value?: string | null; notFilled: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
       <dt className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         {label}
       </dt>
       <dd className="truncate text-right text-xs font-medium text-foreground">
-        {value?.trim() ? value : <span className="text-muted-foreground/60">Belum diisi</span>}
+        {value?.trim() ? value : <span className="text-muted-foreground/60">{notFilled}</span>}
       </dd>
     </div>
   );
