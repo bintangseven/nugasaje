@@ -17,9 +17,11 @@ import {
   CheckCircle2,
   Clock,
   Pin,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { ProjectCard } from "@/components/ProjectCard";
 import {
