@@ -82,8 +82,11 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-outline-variant bg-surface/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <Link to="/" aria-label="Numu AI" className="flex items-center">
-          <img src={numuLogo.url} alt="Numu AI" className="h-8 w-auto" />
+        <Link to="/" aria-label="Numu AI" className="flex items-center gap-2">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-inset ring-primary/20">
+            <img src={numuLogo.url} alt="Numu AI" className="h-7 w-7" />
+          </span>
+          <span className="font-display text-base font-bold tracking-tight text-on-surface">Numu AI</span>
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex text-[0.92rem] font-semibold" style={{ color: "var(--ink-soft)" }}>

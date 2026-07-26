@@ -10,6 +10,7 @@ import { ProjectCard } from "@/components/ProjectCard";
 import { Reveal } from "@/components/Reveal";
 import { Footer } from "@/components/Footer";
 import { ArrowRight, Sparkles, Zap, ShieldCheck, Clock3, Brain, FileInput, FileDown, Gauge, Users, Star } from "lucide-react";
+import { Quote } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { defaultProjectName, missions, type MissionType, type ProjectRow } from "@/lib/mock-data";
 import { createProject, listProjects } from "@/lib/projects.functions";
@@ -90,7 +91,7 @@ function Index() {
           <Reveal>
             <span className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1 text-xs font-semibold text-on-surface-variant">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
-              AI penyusun tugas kuliah
+              AI Research Assistant
             </span>
             <h1
               className="mt-5 font-display font-semibold text-on-surface"
@@ -174,7 +175,7 @@ function Index() {
                 className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] blur-2xl numu-halo"
                 style={{ background: "var(--gradient-ai)" }}
               />
-              <div className="rounded-3xl border border-outline-variant bg-surface-container-lowest p-6 shadow-elegant">
+              <div className="rounded-3xl border-2 border-primary/20 bg-surface-container p-6 shadow-elegant ring-1 ring-inset ring-white/40">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 rounded-full bg-primary" />
@@ -249,18 +250,18 @@ function Index() {
 
         <section id="misi" className="mt-20 scroll-mt-24">
           <Reveal className="mb-10 max-w-2xl">
-            <span className="eyebrow">Dua alat · Satu alur kerja</span>
+            <span className="eyebrow">Research tools Terpercaya</span>
             <h2 className="mt-3 font-display text-3xl font-semibold md:text-4xl">
               Dari topik kosong sampai file siap kumpul
             </h2>
           </Reveal>
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-3">
           {missions.map((m, i) => (
             <Reveal key={m.id} delay={i * 90}>
               <MissionCard
                 missionType={m.id}
                 icon={m.icon}
-                title={m.title}
+                title={m.id === "paper" ? "Paper Research" : "Presentation"}
                 description={m.description}
                 estimate={m.estimate}
                 output={m.output}
@@ -269,6 +270,38 @@ function Index() {
               />
             </Reveal>
           ))}
+          <Reveal delay={missions.length * 90}>
+            <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-dashed border-outline-variant bg-surface-container-lowest p-8 opacity-90">
+              <span className="absolute right-4 top-4 rounded-full bg-tertiary-container px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-on-tertiary-container">
+                Coming soon
+              </span>
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-tertiary-container text-on-tertiary-container">
+                <Quote className="h-5 w-5" />
+              </div>
+              <span className="eyebrow mb-2">Sitasi AI</span>
+              <h3 className="font-display text-2xl font-semibold text-on-surface">
+                Citation Finder
+              </h3>
+              <p className="mt-3 text-[0.98rem] leading-relaxed text-on-surface-variant">
+                Cari, validasi, dan format sitasi APA/IEEE otomatis dari jurnal terpercaya pasca-2020.
+              </p>
+              <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-on-surface-variant">
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock3 className="h-3.5 w-3.5" />
+                  Segera hadir
+                </span>
+                <span className="h-1 w-1 rounded-full bg-outline-variant" />
+                <span>Output: BibTeX / .docx</span>
+              </div>
+              <button
+                type="button"
+                disabled
+                className="mt-7 inline-flex w-fit items-center gap-2 rounded-xl border border-outline-variant bg-surface-container px-5 py-3 text-sm font-semibold text-on-surface-variant"
+              >
+                Coming soon
+              </button>
+            </div>
+          </Reveal>
           </div>
         </section>
 
