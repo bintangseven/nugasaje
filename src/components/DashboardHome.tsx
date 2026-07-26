@@ -17,9 +17,11 @@ import {
   CheckCircle2,
   Clock,
   Pin,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { ProjectCard } from "@/components/ProjectCard";
 import {
@@ -80,6 +82,14 @@ export function DashboardHome({ user }: { user: User }) {
   const [sortBy, setSortBy] = useState<SortKey>("recent");
   const [view, setView] = useState<ViewMode>("grid");
   const [pinned, setPinned] = useState<string[]>([]);
+  const sliderRef = useRef<HTMLDivElement>(null);
+
+  function slide(dir: 1 | -1) {
+    const el = sliderRef.current;
+    if (!el) return;
+    const amount = Math.max(280, Math.floor(el.clientWidth * 0.9));
+    el.scrollBy({ left: dir * amount, behavior: "smooth" });
+  }
 
   useEffect(() => {
     setPinned(readPinned());
@@ -239,6 +249,15 @@ export function DashboardHome({ user }: { user: User }) {
               <Presentation className="h-4 w-4" />
               PPT baru
             </button>
+              {!isProActive && (
+                <Link
+                  to="/harga"
+                  className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-amber-500/30 transition-transform hover:scale-[1.02]"
+                >
+                  <Crown className="h-4 w-4" />
+                  Upgrade Pro
+                </Link>
+              )}
             </div>
           </div>
         </section>
@@ -444,7 +463,7 @@ export function DashboardHome({ user }: { user: User }) {
           ) : view === "list" ? (
             <div className="mt-5 overflow-hidden rounded-2xl border border-border bg-card">
               <ul className="divide-y divide-border">
-                {filtered.map((p) => (
+                {filtered.slice(0, 6).map((p) => (
                   <ProjectRowItem
                     key={p.id}
                     project={p}
@@ -453,27 +472,77 @@ export function DashboardHome({ user }: { user: User }) {
                   />
                 ))}
               </ul>
+              {filtered.length > 6 && (
+                <Link
+                  to="/projects"
+                  className="flex items-center justify-center gap-1 border-t border-border bg-secondary/30 py-2.5 text-xs font-medium text-foreground hover:bg-secondary"
+                >
+                  Lihat {filtered.length - 6} proyek lainnya <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              )}
             </div>
           ) : (
-            <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((p) => (
-                <ProjectCard
-                  key={p.id}
-                  project={p}
-                  pinned={pinned.includes(p.id)}
-                  onTogglePin={togglePin}
-                />
-              ))}
-              {!atCap && (
-                <button
-                  type="button"
-                  onClick={() => handleStart("paper")}
-                  className="flex min-h-[180px] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-card p-5 text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-foreground/40 hover:text-foreground"
-                >
-                  <Plus className="h-6 w-6" />
-                  <span className="text-sm font-medium">Tambah proyek</span>
-                  <span className="text-xs">{MAX_PROJECTS - projectCount} slot tersisa</span>
-                </button>
+            <div className="relative mt-5">
+              <div
+                ref={sliderRef}
+                className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-3 [scrollbar-width:thin]"
+              >
+                {filtered.slice(0, 6).map((p) => (
+                  <div
+                    key={p.id}
+                    className="w-[85%] shrink-0 snap-start sm:w-[48%] lg:w-[32%]"
+                  >
+                    <ProjectCard
+                      project={p}
+                      pinned={pinned.includes(p.id)}
+                      onTogglePin={togglePin}
+                    />
+                  </div>
+                ))}
+                {filtered.length > 6 ? (
+                  <Link
+                    to="/projects"
+                    className="flex w-[85%] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-card p-5 text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-foreground/40 hover:text-foreground sm:w-[48%] lg:w-[32%]"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                    <span className="text-sm font-medium">
+                      Lihat {filtered.length - 6} lainnya
+                    </span>
+                    <span className="text-xs">Buka semua proyek</span>
+                  </Link>
+                ) : (
+                  !atCap && (
+                    <button
+                      type="button"
+                      onClick={() => handleStart("paper")}
+                      className="flex w-[85%] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-card p-5 text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-foreground/40 hover:text-foreground sm:w-[48%] lg:w-[32%]"
+                    >
+                      <Plus className="h-6 w-6" />
+                      <span className="text-sm font-medium">Tambah proyek</span>
+                      <span className="text-xs">{MAX_PROJECTS - projectCount} slot tersisa</span>
+                    </button>
+                  )
+                )}
+              </div>
+              {filtered.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => slide(-1)}
+                    aria-label="Sebelumnya"
+                    className="absolute left-1 top-1/2 hidden -translate-y-1/2 rounded-full border border-border bg-background/95 p-2 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-secondary md:inline-flex"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => slide(1)}
+                    aria-label="Selanjutnya"
+                    className="absolute right-1 top-1/2 hidden -translate-y-1/2 rounded-full border border-border bg-background/95 p-2 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-secondary md:inline-flex"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </>
               )}
             </div>
           )}
