@@ -111,6 +111,41 @@ export const deleteProject = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const duplicateProject = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { count, error: countErr } = await context.supabase
+      .from("projects")
+      .select("id", { count: "exact", head: true });
+    if (countErr) throw new Error(countErr.message);
+    if ((count ?? 0) >= MAX_PROJECTS) {
+      throw new Error(
+        `Batas maksimum ${MAX_PROJECTS} proyek tercapai. Hapus proyek lama sebelum menduplikasi.`,
+      );
+    }
+    const { data: src, error: getErr } = await context.supabase
+      .from("projects")
+      .select("name,mission,answers,ai_context")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (getErr) throw new Error(getErr.message);
+    if (!src) throw new Error("Proyek tidak ditemukan");
+    const { data: row, error } = await context.supabase
+      .from("projects")
+      .insert({
+        user_id: context.userId,
+        mission: src.mission,
+        name: `${src.name} (salinan)`.slice(0, 200),
+        answers: src.answers ?? {},
+        ai_context: src.ai_context ?? {},
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
 export const getProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
