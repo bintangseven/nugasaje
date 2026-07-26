@@ -27,7 +27,7 @@ export function MissionCard({
       <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-fixed text-2xl text-primary">
         {icon}
       </div>
-      <span className="eyebrow mb-2">{missionType === "paper" ? "Makalah AI" : "PPT AI"}</span>
+      
       <h3 className="font-display text-2xl font-semibold text-on-surface">{title}</h3>
       <p className="mt-3 text-[0.98rem] leading-relaxed text-on-surface-variant">{description}</p>
 
