@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
-import numuLogo from "@/assets/numu-logo.svg.asset.json";
+import numuLogo from "@/assets/numu-logo-footer.svg.asset.json";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
