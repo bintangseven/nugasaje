@@ -1,9 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Sparkles, Loader2, Crown } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { AppHeader } from "@/components/AppHeader";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { useCurrentUser } from "@/hooks/use-auth";
+import { createProUpgradeInvoice } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/harga")({
   head: () => ({
@@ -28,6 +32,23 @@ export const Route = createFileRoute("/harga")({
 function HargaPage() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
+  const upgradeFn = useServerFn(createProUpgradeInvoice);
+  const upgrade = useMutation({
+    mutationFn: () => upgradeFn(),
+    onSuccess: (res) => {
+      if (res?.invoice_url) window.location.href = res.invoice_url;
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : "Gagal membuat invoice"),
+  });
+
+  function handleUpgrade() {
+    if (!user) {
+      navigate({ to: "/auth" });
+      return;
+    }
+    upgrade.mutate();
+  }
 
   return (
     <div className="min-h-screen bg-surface">
@@ -127,11 +148,22 @@ function HargaPage() {
               </ul>
               <button
                 type="button"
-                onClick={() => (user ? navigate({ to: "/profile" }) : navigate({ to: "/auth" }))}
-                className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-primary transition-all hover:-translate-y-0.5 hover:opacity-95"
+                onClick={handleUpgrade}
+                disabled={upgrade.isPending}
+                className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-3 text-sm font-bold text-slate-900 shadow-lg shadow-amber-500/30 transition-all hover:-translate-y-0.5 hover:opacity-95 disabled:opacity-60"
               >
-                Upgrade ke Pro
-                <ArrowRight className="h-4 w-4" />
+                {upgrade.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Menyiapkan pembayaran…
+                  </>
+                ) : (
+                  <>
+                    <Crown className="h-4 w-4" />
+                    Upgrade ke Pro
+                    <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
               </button>
             </div>
           </Reveal>
