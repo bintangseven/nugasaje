@@ -120,7 +120,7 @@ function AuthPage() {
                   { icon: "insights", text: "Pantau progres akademik" },
                 ].map((f) => (
                   <li key={f.text} className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-on-primary/15 text-tertiary backdrop-blur-sm">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-400 text-primary shadow-sm">
                       <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                         {f.icon}
                       </span>
