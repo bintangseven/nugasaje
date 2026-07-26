@@ -175,7 +175,7 @@ function Index() {
                 className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] blur-2xl numu-halo"
                 style={{ background: "var(--gradient-ai)" }}
               />
-              <div className="rounded-3xl border border-outline-variant bg-surface-container-lowest p-6 shadow-elegant">
+              <div className="rounded-3xl border-2 border-primary/20 bg-surface-container p-6 shadow-elegant ring-1 ring-inset ring-white/40">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 rounded-full bg-primary" />
