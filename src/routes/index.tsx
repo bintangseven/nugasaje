@@ -8,7 +8,7 @@ import { MissionCard } from "@/components/MissionCard";
 import { ProjectCard } from "@/components/ProjectCard";
 import { Reveal } from "@/components/Reveal";
 import { Footer } from "@/components/Footer";
-import { ArrowRight, Check, Sparkles, Zap, ShieldCheck, Clock3 } from "lucide-react";
+import { ArrowRight, Sparkles, Zap, ShieldCheck, Clock3 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { defaultProjectName, missions, type MissionType, type ProjectRow } from "@/lib/mock-data";
 import { createProject, listProjects } from "@/lib/projects.functions";
@@ -274,123 +274,6 @@ function Index() {
           </div>
         </section>
 
-        {/* PRICING */}
-        <section id="harga" className="mt-24 scroll-mt-24">
-          <Reveal className="mb-10 max-w-2xl">
-            <span className="eyebrow">Harga</span>
-            <h2 className="mt-3 font-display text-3xl font-semibold md:text-4xl">
-              Mulai gratis, naik kelas saat butuh
-            </h2>
-            <p className="mt-3 text-[1rem] text-on-surface-variant">
-              Promo pembukaan: paket Pro turun dari{" "}
-              <span className="text-on-surface-variant/70 line-through">Rp100.000</span>{" "}
-              jadi cuma <span className="mark-highlight font-semibold">Rp50.000 / bulan</span>.
-            </p>
-          </Reveal>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* BASIC */}
-            <Reveal>
-              <div className="bento-card flex h-full flex-col rounded-3xl p-8 transition-all hover:-translate-y-1">
-                <span className="eyebrow">Basic</span>
-                <h3 className="mt-3 font-display text-2xl font-semibold text-on-surface">
-                  Gratis selamanya
-                </h3>
-                <p className="mt-2 text-sm text-on-surface-variant">
-                  Cocok buat coba-coba dan tugas ringan.
-                </p>
-
-                <div className="mt-6 flex items-baseline gap-2">
-                  <span className="font-display text-5xl font-bold text-on-surface">Rp0</span>
-                  <span className="text-sm text-on-surface-variant">/bulan</span>
-                </div>
-
-                <ul className="mt-6 space-y-3 text-sm text-on-surface">
-                  {[
-                    "2 submission per hari",
-                    "Akses kedua misi (Makalah & PPT)",
-                    "Riwayat proyek tersinkron",
-                    "Unduh .docx & .pptx",
-                  ].map((f) => (
-                    <li key={f} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  type="button"
-                  onClick={() => (user ? navigate({ to: "/" }) : navigate({ to: "/auth" }))}
-                  className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant bg-transparent px-5 py-3 text-sm font-bold text-on-surface transition-all hover:-translate-y-0.5 hover:border-primary hover:text-primary"
-                >
-                  Mulai gratis
-                </button>
-              </div>
-            </Reveal>
-
-            {/* PRO */}
-            <Reveal delay={100}>
-              <div
-                className="relative flex h-full flex-col overflow-hidden rounded-3xl p-8 shadow-glow"
-                style={{
-                  background:
-                    "linear-gradient(135deg, var(--primary) 0%, var(--tertiary) 100%)",
-                  color: "var(--on-primary)",
-                }}
-              >
-                <div
-                  className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full"
-                  style={{ background: "radial-gradient(circle, rgba(255,255,255,0.28), transparent 70%)" }}
-                />
-                <div className="flex items-center justify-between">
-                  <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-white/80">
-                    ● Pro
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-[0.7rem] font-bold uppercase tracking-wider text-white backdrop-blur">
-                    <Sparkles className="h-3 w-3" />
-                    Promo 50%
-                  </span>
-                </div>
-
-                <h3 className="mt-3 font-display text-2xl font-semibold">Buat yang serius</h3>
-                <p className="mt-2 text-sm text-white/75">
-                  Untuk minggu UTS, UAS, dan revisi dosen yang nggak ada habisnya.
-                </p>
-
-                <div className="mt-6 flex items-baseline gap-3">
-                  <span className="font-display text-5xl font-bold">Rp50rb</span>
-                  <span className="text-sm text-white/70">/bulan</span>
-                  <span className="text-sm text-white/50 line-through">Rp100rb</span>
-                </div>
-
-                <ul className="mt-6 space-y-3 text-sm text-white/90">
-                  {[
-                    "10 submission per hari",
-                    "Prioritas antrian generate",
-                    "Template PPT premium (Beautiful.ai)",
-                    "Riwayat & ekspor tanpa batas",
-                    "Dukungan via WhatsApp",
-                  ].map((f) => (
-                    <li key={f} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-white" />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  type="button"
-                  onClick={() => (user ? navigate({ to: "/profile" }) : navigate({ to: "/auth" }))}
-                  className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-primary transition-all hover:-translate-y-0.5"
-                >
-                  Upgrade ke Pro
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </Reveal>
-          </div>
-        </section>
 
         {user && (
         <section className="mt-20">
@@ -440,55 +323,6 @@ function Index() {
 
         {/* FINAL CTA */}
         <section className="mt-24">
-          <Reveal className="mb-12 max-w-2xl" >
-            <span className="eyebrow">FAQ</span>
-            <h2 id="faq" className="mt-3 scroll-mt-24 font-display text-3xl font-semibold md:text-4xl">
-              Pertanyaan yang sering ditanya
-            </h2>
-          </Reveal>
-          <div className="mb-24 grid gap-4 md:grid-cols-2">
-            {[
-              {
-                q: "Apakah hasilnya bisa diedit?",
-                a: "Bisa. File .docx bisa dibuka di Word/Google Docs, dan .pptx bisa diedit di PowerPoint, Keynote, atau Canva. Semua isi bebas kamu ubah.",
-              },
-              {
-                q: "Apakah hasilnya akan terdeteksi AI?",
-                a: "Kami menyusun struktur dan kalimat ala mahasiswa, bukan hasil mentah model. Tapi tetap baca ulang, tambahkan referensi pribadi, dan sesuaikan gaya kamu sendiri sebelum dikumpulkan.",
-              },
-              {
-                q: "Bagaimana kalau hasilnya kurang sesuai?",
-                a: "Kamu bisa ulangi dengan brief yang lebih spesifik (tambah outline, gaya bahasa, atau lampirkan PDF referensi). Tiap submission gratis di paket Basic dan murah di Pro.",
-              },
-              {
-                q: "Apakah datanya aman?",
-                a: "Brief, jawaban, dan hasilmu hanya bisa diakses oleh akunmu sendiri. Lihat halaman kebijakan privasi untuk detail penyimpanan dan retensi.",
-              },
-              {
-                q: "Bagaimana cara upgrade ke Pro?",
-                a: "Masuk ke menu Profil dan tekan Upgrade. Selama masa promo, paket Pro hanya Rp50.000/bulan dengan 10 submission/hari.",
-              },
-              {
-                q: "Bisa dipakai untuk skripsi/jurnal?",
-                a: "Bisa untuk bab pendukung, ringkasan, dan kerangka. Untuk karya akhir, gunakan sebagai asisten — referensi dan analisis utama tetap perlu kamu validasi.",
-              },
-            ].map((item, i) => (
-              <Reveal key={item.q} delay={i * 60}>
-                <details className="bento-card group rounded-2xl p-5 transition-all">
-                  <summary className="flex cursor-pointer list-none items-start justify-between gap-3 font-display text-base font-semibold text-on-surface">
-                    <span>{item.q}</span>
-                    <span className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-outline-variant text-sm text-on-surface-variant transition-transform group-open:rotate-45">
-                      +
-                    </span>
-                  </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">
-                    {item.a}
-                  </p>
-                </details>
-              </Reveal>
-            ))}
-          </div>
-
           <Reveal>
             <div
               className="relative overflow-hidden rounded-3xl p-10 shadow-glow md:p-14"
@@ -528,17 +362,18 @@ function Index() {
                     Mulai misi pertama
                     <ArrowRight className="h-4 w-4" />
                   </button>
-                  <a
-                    href="#harga"
+                  <Link
+                    to="/harga"
                     className="text-sm font-semibold text-white/90 hover:text-white hover:underline"
                   >
                     Lihat paket Pro →
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
           </Reveal>
         </section>
+
       </main>
       <Footer />
     </div>
