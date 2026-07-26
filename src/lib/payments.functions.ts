@@ -15,6 +15,28 @@ export const createProUpgradeInvoice = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Cegah user membeli PRO dua kali selama paket masih aktif.
+    const { data: profile, error: profErr } = await supabaseAdmin
+      .from("profiles")
+      .select("plan, pro_until")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (profErr) throw new Error(profErr.message);
+    if (
+      profile?.plan === "pro" &&
+      profile.pro_until &&
+      new Date(profile.pro_until).getTime() > Date.now()
+    ) {
+      const until = new Date(profile.pro_until).toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+      throw new Error(
+        `Paket PRO kamu masih aktif sampai ${until}. Kamu belum perlu upgrade lagi.`,
+      );
+    }
+
     const orderId = `pro_${context.userId.replace(/-/g, "").slice(0, 12)}_${Date.now()}`;
     const origin = process.env.PUBLIC_SITE_URL ?? "https://nugasaje.lovable.app";
 
