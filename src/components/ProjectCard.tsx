@@ -3,9 +3,22 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Download, ArrowRight, FileText, Presentation, Trash2, Loader2, FolderOpen } from "lucide-react";
+import {
+  Download,
+  ArrowRight,
+  FileText,
+  Presentation,
+  Trash2,
+  Loader2,
+  FolderOpen,
+  MoreHorizontal,
+  Copy,
+  Pencil,
+  Pin,
+  PinOff,
+} from "lucide-react";
 import { formatRelativeTime, type ProjectRow } from "@/lib/mock-data";
-import { deleteProject } from "@/lib/projects.functions";
+import { deleteProject, duplicateProject, updateProject } from "@/lib/projects.functions";
 import { exportProject } from "@/lib/export.functions";
 import {
   AlertDialog,
@@ -17,13 +30,42 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
-export function ProjectCard({ project }: { project: ProjectRow }) {
+export function ProjectCard({
+  project,
+  pinned = false,
+  onTogglePin,
+  compact = false,
+}: {
+  project: ProjectRow;
+  pinned?: boolean;
+  onTogglePin?: (id: string) => void;
+  compact?: boolean;
+}) {
   const completed = project.progress >= 100;
   const Icon = project.mission === "paper" ? FileText : Presentation;
   const missionLabel = project.mission === "paper" ? "Paper" : "Presentasi";
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameVal, setRenameVal] = useState(project.name);
   const deleteFn = useServerFn(deleteProject);
+  const duplicateFn = useServerFn(duplicateProject);
+  const updateFn = useServerFn(updateProject);
   const exportFn = useServerFn(exportProject);
   const [downloading, setDownloading] = useState(false);
   const qc = useQueryClient();
@@ -34,6 +76,24 @@ export function ProjectCard({ project }: { project: ProjectRow }) {
       qc.invalidateQueries({ queryKey: ["projects"] });
     },
     onError: (e: Error) => toast.error(e.message || "Gagal menghapus proyek"),
+  });
+  const dup = useMutation({
+    mutationFn: () => duplicateFn({ data: { id: project.id } }),
+    onSuccess: () => {
+      toast.success("Proyek diduplikasi");
+      qc.invalidateQueries({ queryKey: ["projects"] });
+    },
+    onError: (e: Error) => toast.error(e.message || "Gagal menduplikasi"),
+  });
+  const rename = useMutation({
+    mutationFn: (name: string) =>
+      updateFn({ data: { id: project.id, patch: { name } } }),
+    onSuccess: () => {
+      toast.success("Nama diperbarui");
+      setRenameOpen(false);
+      qc.invalidateQueries({ queryKey: ["projects"] });
+    },
+    onError: (e: Error) => toast.error(e.message || "Gagal mengubah nama"),
   });
 
   async function handleDownload() {
@@ -61,7 +121,11 @@ export function ProjectCard({ project }: { project: ProjectRow }) {
   }
 
   return (
-    <div className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors hover:border-foreground/20">
+    <div
+      className={`group relative flex flex-col rounded-2xl border bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:shadow-md ${
+        pinned ? "border-amber-300/70 ring-1 ring-amber-200/50" : "border-border hover:border-foreground/25"
+      }`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
@@ -70,30 +134,74 @@ export function ProjectCard({ project }: { project: ProjectRow }) {
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             {missionLabel}
           </span>
+          {pinned && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+              <Pin className="h-2.5 w-2.5" /> Pin
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">
+        <div className="flex items-center gap-1">
+          <span className="hidden text-xs text-muted-foreground sm:inline">
             {formatRelativeTime(project.updated_at)}
           </span>
-          <button
-            type="button"
-            onClick={() => setConfirmOpen(true)}
-            aria-label="Hapus proyek"
-            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Aksi proyek"
+                className="rounded-md p-1 text-muted-foreground opacity-70 transition-colors hover:bg-secondary hover:text-foreground group-hover:opacity-100"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              {onTogglePin && (
+                <DropdownMenuItem onSelect={() => onTogglePin(project.id)}>
+                  {pinned ? (
+                    <>
+                      <PinOff className="mr-2 h-3.5 w-3.5" /> Lepas pin
+                    </>
+                  ) : (
+                    <>
+                      <Pin className="mr-2 h-3.5 w-3.5" /> Sematkan
+                    </>
+                  )}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onSelect={() => {
+                  setRenameVal(project.name);
+                  setRenameOpen(true);
+                }}
+              >
+                <Pencil className="mr-2 h-3.5 w-3.5" /> Ubah nama
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={dup.isPending}
+                onSelect={() => dup.mutate()}
+              >
+                <Copy className="mr-2 h-3.5 w-3.5" /> Duplikasi
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={() => setConfirmOpen(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-3.5 w-3.5" /> Hapus
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
-      <h3 className="mt-3 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground">
+      <h3 className={`mt-3 line-clamp-2 font-semibold leading-snug text-foreground ${compact ? "text-sm" : "text-[15px]"}`}>
         {project.name}
       </h3>
 
       <div className="mt-4 flex items-center gap-3">
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
           <div
-            className="h-full rounded-full bg-foreground transition-all"
+            className={`h-full rounded-full transition-all ${completed ? "bg-emerald-500" : "bg-foreground"}`}
             style={{ width: `${project.progress}%` }}
           />
         </div>
@@ -164,6 +272,41 @@ export function ProjectCard({ project }: { project: ProjectRow }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ubah nama proyek</DialogTitle>
+          </DialogHeader>
+          <Input
+            autoFocus
+            value={renameVal}
+            onChange={(e) => setRenameVal(e.target.value)}
+            maxLength={200}
+            placeholder="Nama proyek"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && renameVal.trim()) rename.mutate(renameVal.trim());
+            }}
+          />
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setRenameOpen(false)}
+              className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-secondary"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              disabled={!renameVal.trim() || rename.isPending}
+              onClick={() => rename.mutate(renameVal.trim())}
+              className="rounded-lg bg-foreground px-3 py-1.5 text-sm font-medium text-background disabled:opacity-50"
+            >
+              {rename.isPending ? "Menyimpan…" : "Simpan"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
