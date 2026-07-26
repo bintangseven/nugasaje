@@ -208,7 +208,7 @@ function NavItem({ to, label, exact }: { to: "/" | "/projects" | "/harga" | "/fa
     <Link
       to={to}
       activeOptions={exact ? { exact: true } : undefined}
-      className="relative px-1 py-1 font-medium text-on-surface-variant transition-colors hover:text-primary data-[status=active]:font-bold data-[status=active]:text-primary"
+      className="numu-nav-link px-1 py-1 font-medium text-on-surface-variant transition-colors hover:text-primary data-[status=active]:font-bold data-[status=active]:text-primary"
     >
       {label}
     </Link>
