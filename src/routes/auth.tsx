@@ -101,7 +101,7 @@ function AuthPage() {
 
           <div className="relative">
             <Link to="/" aria-label="Numu AI" className="flex items-center">
-              <img src={numuLogo.url} alt="Numu AI" className="h-10 w-auto brightness-0 invert" />
+              <img src={numuLogo.url} alt="Numu AI" className="h-10 w-auto" />
             </Link>
             <span className="eyebrow mt-14 block text-primary-fixed">Ruang kerja akademik</span>
             <h1 className="mt-3 font-display text-4xl font-black leading-tight lg:text-[2.75rem]">
