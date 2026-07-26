@@ -428,3 +428,53 @@ function Index() {
     </div>
   );
 }
+
+function FlowNode({
+  icon,
+  label,
+  glow,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  glow?: boolean;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div
+        className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-outline-variant bg-surface-container-lowest text-primary numu-icon-hover ${
+          glow ? "numu-pulse-ring" : ""
+        }`}
+      >
+        {icon}
+      </div>
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function StatBox({
+  icon,
+  label,
+  value,
+  prefix,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  prefix?: string;
+}) {
+  return (
+    <div className="rounded-xl bg-surface-container-low px-3 py-2.5 text-center transition-transform hover:-translate-y-0.5">
+      <div className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
+        <span className="numu-icon-hover text-primary">{icon}</span>
+        {label}
+      </div>
+      <div className="mt-1 font-display text-base font-semibold text-on-surface">
+        {prefix}
+        {value}
+      </div>
+    </div>
+  );
+}
