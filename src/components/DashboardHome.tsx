@@ -241,6 +241,15 @@ export function DashboardHome({ user }: { user: User }) {
               <Presentation className="h-4 w-4" />
               PPT baru
             </button>
+              {!isProActive && (
+                <Link
+                  to="/harga"
+                  className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-amber-500/30 transition-transform hover:scale-[1.02]"
+                >
+                  <Crown className="h-4 w-4" />
+                  Upgrade Pro
+                </Link>
+              )}
             </div>
           </div>
         </section>
