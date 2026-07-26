@@ -23,10 +23,10 @@ export const Route = createFileRoute("/")({
         content:
           "Numu AI adalah ruang kerja akademik untuk mahasiswa Indonesia. Pilih misi, jawab beberapa pertanyaan, dan tugasmu selesai.",
       },
-      { property: "og:title", content: "Numu AI" },
+      { property: "og:title", content: "Numu AI — Selesaikan tugas kuliahmu lebih cepat" },
       {
         property: "og:description",
-        content: "Ruang kerja akademik untuk menyelesaikan paper dan presentasi.",
+        content: "Numu AI adalah ruang kerja akademik untuk mahasiswa Indonesia. Pilih misi, jawab beberapa pertanyaan, dan tugasmu selesai.",
       },
     ],
   }),
