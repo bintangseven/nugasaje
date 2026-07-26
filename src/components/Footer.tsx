@@ -17,8 +17,9 @@ export function Footer() {
           <div>
             <h4 className="mb-4 text-sm font-bold text-on-surface">Produk</h4>
             <ul className="space-y-3 text-sm text-on-surface-variant">
-              <li><Link to="/" hash="misi" className="hover:text-primary">Paper Generator</Link></li>
-              <li><Link to="/" hash="misi" className="hover:text-primary">PPT Maker</Link></li>
+              <li><Link to="/" hash="misi" className="hover:text-primary">Paper Research Assistant</Link></li>
+              <li><Link to="/" hash="misi" className="hover:text-primary">Presentation Maker</Link></li>
+              <li><Link to="/" hash="misi" className="hover:text-primary">Citation Finder (Coming soon)</Link></li>
               <li><Link to="/harga" className="hover:text-primary">Harga</Link></li>
               <li><Link to="/projects" className="hover:text-primary">Proyek saya</Link></li>
             </ul>
