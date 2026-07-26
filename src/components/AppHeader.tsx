@@ -83,9 +83,7 @@ export function AppHeader() {
     <header className="sticky top-0 z-40 border-b border-outline-variant bg-surface/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link to="/" aria-label="Numu AI" className="flex items-center gap-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 ring-1 ring-inset ring-primary/20">
-            <img src={numuLogo.url} alt="Numu AI" className="h-8 w-8" />
-          </span>
+          <img src={numuLogo.url} alt="Numu AI" className="h-9 w-9" />
           <span className="font-display text-base font-bold tracking-tight text-on-surface">Numu AI</span>
         </Link>
 
