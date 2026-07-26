@@ -11,7 +11,7 @@ export function Footer() {
               <img src={numuLogo.url} alt="Numu AI" className="h-9 w-auto" />
             </Link>
             <p className="mt-3 max-w-[34ch] text-sm leading-relaxed text-on-surface-variant">
-              Platform AI cerdas yang membantu mahasiswa Indonesia meningkatkan kualitas akademik dengan teknologi masa depan.
+              Platform AI cerdas yang membantu mahasiswa dan peneliti di seluruh dunia meningkatkan kualitas akademik dengan teknologi masa depan.
             </p>
           </div>
           <div>

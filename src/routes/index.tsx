@@ -172,7 +172,7 @@ function Index() {
               style={{ transform: `translateY(${scrollY * -0.04}px)` }}
             >
               <div
-                className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] blur-2xl numu-halo"
+                className="pointer-events-none absolute -inset-2 -z-10 rounded-[2rem] blur-lg numu-halo"
                 style={{ background: "var(--gradient-ai)" }}
               />
               <div className="rounded-3xl border-2 border-primary/20 bg-surface-container p-6 shadow-elegant ring-1 ring-inset ring-white/40">
@@ -278,7 +278,7 @@ function Index() {
               <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-tertiary-container text-on-tertiary-container">
                 <Quote className="h-5 w-5" />
               </div>
-              <span className="eyebrow mb-2">Sitasi AI</span>
+              
               <h3 className="font-display text-2xl font-semibold text-on-surface">
                 Citation Finder
               </h3>
