@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import numuLogo from "@/assets/numu-logo.svg.asset.json";
 
 export function Footer() {
   return (
@@ -6,9 +7,8 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-6 py-14">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <Link to="/" className="flex items-center gap-2 font-display text-2xl font-black text-on-surface">
-              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-              Numu AI
+            <Link to="/" aria-label="Numu AI" className="flex items-center">
+              <img src={numuLogo.url} alt="Numu AI" className="h-9 w-auto" />
             </Link>
             <p className="mt-3 max-w-[34ch] text-sm leading-relaxed text-on-surface-variant">
               Platform AI cerdas yang membantu mahasiswa Indonesia meningkatkan kualitas akademik dengan teknologi masa depan.
