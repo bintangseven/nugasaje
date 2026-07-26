@@ -8,7 +8,7 @@ import { MissionCard } from "@/components/MissionCard";
 import { ProjectCard } from "@/components/ProjectCard";
 import { Reveal } from "@/components/Reveal";
 import { Footer } from "@/components/Footer";
-import { ArrowRight, Check, Sparkles, Zap, ShieldCheck, Clock3 } from "lucide-react";
+import { ArrowRight, Sparkles, Zap, ShieldCheck, Clock3 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { defaultProjectName, missions, type MissionType, type ProjectRow } from "@/lib/mock-data";
 import { createProject, listProjects } from "@/lib/projects.functions";
