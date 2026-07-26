@@ -82,6 +82,14 @@ export function DashboardHome({ user }: { user: User }) {
   const [sortBy, setSortBy] = useState<SortKey>("recent");
   const [view, setView] = useState<ViewMode>("grid");
   const [pinned, setPinned] = useState<string[]>([]);
+  const sliderRef = useRef<HTMLDivElement>(null);
+
+  function slide(dir: 1 | -1) {
+    const el = sliderRef.current;
+    if (!el) return;
+    const amount = Math.max(280, Math.floor(el.clientWidth * 0.9));
+    el.scrollBy({ left: dir * amount, behavior: "smooth" });
+  }
 
   useEffect(() => {
     setPinned(readPinned());
