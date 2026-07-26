@@ -112,22 +112,24 @@ function AuthPage() {
             <p className="mt-4 max-w-md text-[1.02rem] leading-relaxed text-primary-fixed/90">
               Susun makalah dan presentasi otomatis, kelola proyek, dan pantau progres akademikmu — semua di satu tempat.
             </p>
-            <ul className="mt-10 space-y-4">
-              {[
-                { icon: "task_alt", text: "Kelola tugas dengan mudah" },
-                { icon: "auto_stories", text: "Susun makalah & presentasi otomatis" },
-                { icon: "insights", text: "Pantau progres akademik" },
-              ].map((f) => (
-                <li key={f.text} className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-on-primary/15 text-tertiary backdrop-blur-sm">
-                    <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      {f.icon}
+            <div className="mt-10 rounded-[2rem] border border-on-primary/15 bg-on-primary/10 p-5 backdrop-blur-md">
+              <ul className="space-y-4">
+                {[
+                  { icon: "task_alt", text: "Kelola tugas dengan mudah" },
+                  { icon: "auto_stories", text: "Susun makalah & presentasi otomatis" },
+                  { icon: "insights", text: "Pantau progres akademik" },
+                ].map((f) => (
+                  <li key={f.text} className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-on-primary/15 text-tertiary backdrop-blur-sm">
+                      <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                        {f.icon}
+                      </span>
                     </span>
-                  </span>
-                  <span className="text-sm font-medium">{f.text}</span>
-                </li>
-              ))}
-            </ul>
+                    <span className="text-sm font-medium">{f.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           <span className="relative text-xs text-primary-fixed/70">
