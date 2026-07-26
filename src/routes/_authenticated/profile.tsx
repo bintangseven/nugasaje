@@ -198,7 +198,7 @@ function ProfilePage() {
                 type="button"
                 onClick={() => upgrade.mutate()}
                 disabled={upgrade.isPending}
-                className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-amber-500/30 transition-transform hover:scale-[1.02] disabled:opacity-60"
               >
                 {upgrade.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
