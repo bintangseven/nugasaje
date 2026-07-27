@@ -144,8 +144,8 @@ function OnboardingPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FAF6EC]">
-        <Loader2 className="h-6 w-6 animate-spin text-[#1B2A4A]" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -160,13 +160,13 @@ function OnboardingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAF6EC] px-6 py-12">
+    <div className="min-h-screen bg-background px-6 py-12">
       <div className="mx-auto max-w-lg">
         <div className="mb-6 flex items-center justify-center gap-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1B2A4A] text-white">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-on-primary">
             <GraduationCap className="h-5 w-5" />
           </span>
-          <span className="font-semibold text-[#1B2A4A]" style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.4rem" }}>
+          <span className="font-semibold text-primary" style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.4rem" }}>
             Numu AI
           </span>
         </div>
@@ -174,26 +174,26 @@ function OnboardingPage() {
         {/* Progress */}
         <div className="mb-6 flex items-center gap-2">
           {Array.from({ length: totalSteps }).map((_, i) => (
-            <div key={i} className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#E7E1D2]">
+            <div key={i} className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
               <div
-                className="h-full bg-[#1B2A4A] transition-all"
+                className="h-full bg-gradient-to-r from-primary to-amber-400 transition-all"
                 style={{ width: i <= step ? "100%" : "0%" }}
               />
             </div>
           ))}
         </div>
 
-        <div className="rounded-2xl border-2 border-[#1B2A4A]/10 bg-white p-8 shadow-[0_10px_40px_-15px_rgba(27,42,74,0.25)]">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#C9A44C]">
+        <div className="rounded-2xl border border-border bg-card p-8 shadow-[0_10px_40px_-15px_rgb(from_var(--primary)_r_g_b/0.25)]">
+          <p className="text-xs font-semibold uppercase tracking-wider text-amber-500">
             Langkah {step + 1} dari {totalSteps}
           </p>
           <h1
-            className="mt-2 text-2xl font-semibold text-[#1B2A4A]"
+            className="mt-2 text-2xl font-semibold text-primary"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
             {stepTitles[step].title}
           </h1>
-          <p className="mt-1 text-sm text-[#55524C]">{stepTitles[step].sub}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{stepTitles[step].sub}</p>
 
           <div className="mt-6 space-y-4">
             {step === 0 && (
@@ -207,7 +207,7 @@ function OnboardingPage() {
 
             {step === 1 && (
               <div>
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-[#1B2A4A]/70">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-primary/70">
                   Jenis kelamin
                 </span>
                 <div className="grid grid-cols-3 gap-2">
@@ -218,8 +218,8 @@ function OnboardingPage() {
                       onClick={() => setGender(g.id)}
                       className={`rounded-xl border-2 px-3 py-3 text-sm font-medium transition-all ${
                         gender === g.id
-                          ? "border-[#1B2A4A] bg-[#1B2A4A] text-white shadow-md"
-                          : "border-[#1B2A4A]/15 bg-white text-[#1B2A4A] hover:border-[#1B2A4A]/40"
+                          ? "border-primary bg-primary text-on-primary shadow-md"
+                          : "border-primary/15 bg-background text-primary hover:border-primary/40"
                       }`}
                     >
                       {g.label}
@@ -249,7 +249,7 @@ function OnboardingPage() {
 
             {step === 4 && (
               <div>
-                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-[#1B2A4A]/70">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-primary/70">
                   Semester
                 </span>
                 <div className="grid grid-cols-3 gap-2">
@@ -260,8 +260,8 @@ function OnboardingPage() {
                       onClick={() => setSemester(s)}
                       className={`rounded-xl border-2 px-3 py-2.5 text-sm font-medium transition-all ${
                         semester === s
-                          ? "border-[#1B2A4A] bg-[#1B2A4A] text-white shadow-md"
-                          : "border-[#1B2A4A]/15 bg-white text-[#1B2A4A] hover:border-[#1B2A4A]/40"
+                          ? "border-primary bg-primary text-on-primary shadow-md"
+                          : "border-primary/15 bg-background text-primary hover:border-primary/40"
                       }`}
                     >
                       {s}
@@ -284,13 +284,13 @@ function OnboardingPage() {
                         aria-label={a.label}
                         className={`relative aspect-square overflow-hidden rounded-full transition-transform ${
                           active
-                            ? "scale-110 ring-4 ring-[#C9A44C] ring-offset-2 ring-offset-white"
-                            : "ring-1 ring-[#1B2A4A]/10 hover:scale-105"
+                            ? "scale-110 ring-4 ring-amber-400 ring-offset-2 ring-offset-background"
+                            : "ring-1 ring-primary/10 hover:scale-105"
                         }`}
                       >
                         <img src={a.url} alt={a.label} className="h-full w-full object-cover" />
                         {active && (
-                          <span className="absolute right-0 top-0 flex h-5 w-5 items-center justify-center rounded-full bg-[#C9A44C] text-white shadow">
+                          <span className="absolute right-0 top-0 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-primary shadow">
                             <Check className="h-3 w-3" strokeWidth={3} />
                           </span>
                         )}
@@ -301,7 +301,7 @@ function OnboardingPage() {
                     type="button"
                     onClick={() => fileRef.current?.click()}
                     disabled={uploading}
-                    className="flex aspect-square flex-col items-center justify-center gap-0.5 rounded-full border-2 border-dashed border-[#1B2A4A]/30 text-[#55524C] transition-colors hover:border-[#1B2A4A] hover:text-[#1B2A4A] disabled:opacity-50"
+                    className="flex aspect-square flex-col items-center justify-center gap-0.5 rounded-full border-2 border-dashed border-primary/30 text-muted-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
                     aria-label="Unggah foto"
                   >
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
@@ -320,9 +320,9 @@ function OnboardingPage() {
                   />
                 </div>
                 {avatarUrl && (
-                  <div className="mt-4 flex items-center gap-3 rounded-xl bg-[#FAF6EC] p-3">
+                  <div className="mt-4 flex items-center gap-3 rounded-xl bg-secondary p-3">
                     <img src={avatarUrl} alt="preview" className="h-10 w-10 rounded-full object-cover" />
-                    <p className="text-xs text-[#55524C]">Foto profil siap disimpan.</p>
+                    <p className="text-xs text-muted-foreground">Foto profil siap disimpan.</p>
                   </div>
                 )}
               </div>
@@ -342,7 +342,7 @@ function OnboardingPage() {
                   setStep(step - 1);
                 }
               }}
-              className="text-sm font-medium text-[#55524C] hover:text-[#1B2A4A]"
+              className="text-sm font-medium text-muted-foreground hover:text-primary"
             >
               {step === 0 ? "Nanti saja" : "Kembali"}
             </button>
@@ -351,7 +351,7 @@ function OnboardingPage() {
                 type="button"
                 disabled={!canNext}
                 onClick={() => setStep(step + 1)}
-                className="rounded-lg bg-[#1B2A4A] px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-40 disabled:hover:translate-y-0"
+                className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-on-primary shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-40 disabled:hover:translate-y-0"
               >
                 Lanjut
               </button>
@@ -360,7 +360,7 @@ function OnboardingPage() {
                 type="button"
                 disabled={save.isPending}
                 onClick={() => save.mutate()}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#1B2A4A] px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-2.5 text-sm font-semibold text-primary shadow-lg shadow-amber-500/30 transition-all hover:-translate-y-0.5 disabled:opacity-50"
               >
                 {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                 Selesai
@@ -386,7 +386,7 @@ function OField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#1B2A4A]/70">
+      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-primary/70">
         {label}
       </span>
       <input
@@ -394,7 +394,7 @@ function OField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border-2 border-[#1B2A4A]/15 bg-white px-4 py-2.5 text-sm text-[#1B2A4A] placeholder:text-[#55524C]/50 focus:border-[#1B2A4A] focus:outline-none focus:ring-4 focus:ring-[#1B2A4A]/10"
+        className="w-full rounded-lg border-2 border-primary/15 bg-background px-4 py-2.5 text-sm text-primary placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
       />
     </label>
   );

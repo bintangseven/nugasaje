@@ -415,7 +415,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-3.6-flash",
+          model: "google/gemini-2.5-flash-lite",
           messages,
           tools: [gatewayTool],
           tool_choice: { type: "function", function: { name: gatewayToolName } },

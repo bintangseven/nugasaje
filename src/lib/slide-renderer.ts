@@ -386,6 +386,110 @@ function textOptsToPptx(o: TextOpts) {
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 // ---------------------------------------------------------------------------
+// SVG ADAPTER — untuk preview di browser. Menghasilkan elemen SVG dengan
+// viewBox sesuai kanvas 13.333×7.5 inci sehingga tata letaknya identik dengan
+// output PPTX/PDF. Adapter mengumpulkan node lalu dikembalikan sebagai string.
+// ---------------------------------------------------------------------------
+
+function esc(s: string): string {
+  return s.replace(/[&<>"']/g, (c) =>
+    c === "&" ? "&amp;" : c === "<" ? "&lt;" : c === ">" ? "&gt;" : c === '"' ? "&quot;" : "&#39;",
+  );
+}
+
+function fontFamilyFor(face: string): string {
+  if (/space grotesk/i.test(face)) return "'Space Grotesk', system-ui, sans-serif";
+  if (/plus jakarta/i.test(face)) return "'Plus Jakarta Sans', system-ui, sans-serif";
+  return "'Plus Jakarta Sans', system-ui, sans-serif";
+}
+
+export function createSvgAdapter(nodes: string[]): SlideAdapter {
+  const push = (n: string) => nodes.push(n);
+  const textEl = (text: string, o: TextOpts, bulletPrefix = "") => {
+    const family = fontFamilyFor(o.fontFace);
+    // Ukuran font pptxgenjs = pt; svg viewBox pakai inch → 1pt = 1/72 in.
+    const fontIn = o.fontSize / 72;
+    const lineHeight = fontIn * 1.2;
+    const align = o.align ?? "left";
+    const anchor = align === "center" ? "middle" : align === "right" ? "end" : "start";
+    const xAnchor = align === "center" ? o.x + o.w / 2 : align === "right" ? o.x + o.w : o.x;
+    // Word wrap kasar (approx 0.5 em per char).
+    const charW = fontIn * 0.52;
+    const maxChars = Math.max(1, Math.floor(o.w / charW));
+    const words = text.split(/\s+/);
+    const lines: string[] = [];
+    let cur = "";
+    for (const w of words) {
+      const cand = cur ? cur + " " + w : w;
+      if (cand.length > maxChars && cur) {
+        lines.push(cur);
+        cur = w;
+      } else cur = cand;
+    }
+    if (cur) lines.push(cur);
+    const totalH = lines.length * lineHeight;
+    let yStart = o.y;
+    if (o.valign === "middle") yStart += (o.h - totalH) / 2;
+    else if (o.valign === "bottom") yStart += o.h - totalH;
+    const weight = o.bold ? 700 : 500;
+    const style = o.italic ? "italic" : "normal";
+    const tspans = lines
+      .map((ln, i) => `<tspan x="${xAnchor.toFixed(3)}" dy="${(i === 0 ? fontIn : lineHeight).toFixed(3)}">${esc((i === 0 ? bulletPrefix : "") + ln)}</tspan>`)
+      .join("");
+    push(
+      `<text x="${xAnchor.toFixed(3)}" y="${yStart.toFixed(3)}" fill="#${o.color}" font-family="${family}" font-size="${fontIn.toFixed(4)}" font-weight="${weight}" font-style="${style}" text-anchor="${anchor}" letter-spacing="${((o.charSpacing ?? 0) / 100).toFixed(3)}">${tspans}</text>`,
+    );
+    return totalH;
+  };
+  return {
+    setBackground(color) {
+      push(`<rect x="0" y="0" width="${CANVAS_W}" height="${CANVAS_H}" fill="#${color}" />`);
+    },
+    addRect({ x, y, w, h, fillHex, transparency, lineHex, lineWidth }) {
+      const opacity = transparency ? (1 - transparency / 100).toFixed(2) : "1";
+      const fill = fillHex ? `fill="#${fillHex}" fill-opacity="${opacity}"` : `fill="none"`;
+      const stroke = lineHex ? `stroke="#${lineHex}" stroke-width="${(lineWidth ?? 0.75) / 72}"` : "";
+      push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" ${fill} ${stroke} />`);
+    },
+    addEllipse({ x, y, w, h, fillHex }) {
+      push(
+        `<ellipse cx="${x + w / 2}" cy="${y + h / 2}" rx="${w / 2}" ry="${h / 2}" fill="#${fillHex}" />`,
+      );
+    },
+    addImage({ data, x, y, w, h, cover }) {
+      const preserve = cover ? "xMidYMid slice" : "none";
+      push(
+        `<image href="${data}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="${preserve}" />`,
+      );
+    },
+    addText(text, o) {
+      textEl(text, o);
+    },
+    addBullets(items, o) {
+      const fontIn = o.fontSize / 72;
+      const lineHeight = fontIn * 1.35;
+      let cursorY = o.y;
+      for (const it of items) {
+        if (cursorY > o.y + o.h) break;
+        const used = textEl(it, { ...o, y: cursorY, valign: "top" }, "•  ");
+        cursorY += Math.max(lineHeight, used) + (o.paraSpaceAfter ?? 0) / 72;
+      }
+    },
+  };
+}
+
+export async function renderSlideToSvg(
+  s: SlideInput,
+  palette: Required<Palette>,
+  imgData: string | null,
+): Promise<string> {
+  const nodes: string[] = [];
+  const adapter = createSvgAdapter(nodes);
+  renderSlide(adapter, structuredOrFallback(s.structured), palette, imgData);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${CANVAS_W} ${CANVAS_H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;">${nodes.join("")}</svg>`;
+}
+
+// ---------------------------------------------------------------------------
 // PDF ADAPTER (jsPDF)
 // Semua koordinat inch dikonversi ke points (72 pt / inch). Font PDF terbatas
 // (helvetica/times); FONT_HEAD & FONT_BODY dipetakan ke helvetica agar
