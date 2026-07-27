@@ -1,5 +1,12 @@
 import type { ReactNode } from "react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  buildImageDataMap,
+  normalizePalette,
+  renderSlideToSvg,
+  type Palette,
+  type SlideInput,
+} from "@/lib/slide-renderer";
 
 type PaperBlock =
   | { kind: "paragraph"; text: string }
@@ -26,20 +33,11 @@ type PaperContent = {
   references?: string[];
 };
 
-// HTML-first slide payload (baru).
-type HtmlSlide = {
-  kind?: "cover" | "agenda" | "content" | "quote" | "stats" | "closing";
-  html?: string;
-  notes?: string;
-  imageCredit?: string;
-};
-
 type PresentationContent = {
-  meta?: { title?: string; subtitle?: string };
-  // Field lama (fallback), tidak dipakai renderer baru.
+  meta?: { title?: string; subtitle?: string; palette?: Palette };
   title?: string;
   subtitle?: string;
-  slides?: HtmlSlide[];
+  slides?: SlideInput[];
 };
 
 function renderBlocks(section: { paragraphs?: string[]; blocks?: PaperBlock[] }): ReactNode {
@@ -131,6 +129,17 @@ export function SlidesContentPreview({ content }: { content: PresentationContent
   const slides = content.slides ?? [];
   const title = content.meta?.title ?? content.title;
   const subtitle = content.meta?.subtitle ?? content.subtitle;
+  const palette = useMemo(() => normalizePalette(content.meta?.palette), [content.meta?.palette]);
+  const [images, setImages] = useState<Map<string, string | null>>(new Map());
+  useEffect(() => {
+    let cancelled = false;
+    buildImageDataMap(slides).then((m) => {
+      if (!cancelled) setImages(m);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [slides]);
   return (
     <div className="max-h-[720px] space-y-4 overflow-y-auto pr-1">
       {(title || subtitle) && (
@@ -141,36 +150,56 @@ export function SlidesContentPreview({ content }: { content: PresentationContent
         </div>
       )}
       {slides.map((s, i) => (
-        <HtmlSlideCard key={i} index={i + 1} slide={s} />
+        <SlideSvgCard
+          key={i}
+          index={i + 1}
+          slide={s}
+          palette={palette}
+          imgData={s.imageUrl ? images.get(s.imageUrl) ?? null : null}
+        />
       ))}
     </div>
   );
 }
 
-function HtmlSlideCard({ index, slide }: { index: number; slide: HtmlSlide }) {
-  // Iframe sandbox: HTML dari AI dianggap untrusted. Font Awesome + Google Fonts
-  // dimuat di dalam iframe, konten discale down agar muat card 640px.
-  const srcDoc = useMemo(() => buildSlideSrcDoc(slide.html ?? ""), [slide.html]);
+function SlideSvgCard({
+  index,
+  slide,
+  palette,
+  imgData,
+}: {
+  index: number;
+  slide: SlideInput;
+  palette: ReturnType<typeof normalizePalette>;
+  imgData: string | null;
+}) {
+  const [svg, setSvg] = useState<string>("");
+  useEffect(() => {
+    let cancelled = false;
+    renderSlideToSvg(slide, palette, imgData).then((s) => {
+      if (!cancelled) setSvg(s);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [slide, palette, imgData]);
+  const kind = slide.structured?.layout;
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
       <div className="flex items-center justify-between border-b border-border bg-secondary/50 px-3 py-1.5">
         <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
           Slide {index}
-          {slide.kind ? ` · ${slide.kind}` : ""}
+          {kind ? ` · ${kind}` : ""}
         </p>
         {slide.imageCredit && (
           <p className="text-[10px] text-muted-foreground">{slide.imageCredit}</p>
         )}
       </div>
-      <div className="relative w-full" style={{ aspectRatio: "16 / 9" }}>
-        <iframe
-          title={`Slide ${index}`}
-          srcDoc={srcDoc}
-          sandbox="allow-scripts"
-          className="absolute inset-0 h-full w-full border-0"
-          loading="lazy"
-        />
-      </div>
+      <div
+        className="relative w-full bg-white"
+        style={{ aspectRatio: "13.333 / 7.5" }}
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
       {slide.notes && (
         <details className="border-t border-border bg-secondary/40 px-3 py-2 text-[11px] text-muted-foreground">
           <summary className="cursor-pointer font-medium text-foreground">Catatan pembicara</summary>
@@ -179,32 +208,4 @@ function HtmlSlideCard({ index, slide }: { index: number; slide: HtmlSlide }) {
       )}
     </div>
   );
-}
-
-export function buildSlideSrcDoc(html: string): string {
-  return `<!doctype html><html><head><meta charset="utf-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<style>
-  html,body{margin:0;padding:0;background:#fff;font-family:'Plus Jakarta Sans',system-ui,sans-serif;overflow:hidden;}
-  html,body{width:100%;height:100%;}
-  .slide-wrap{position:absolute;top:0;left:0;width:1280px;height:720px;transform-origin:top left;}
-  .slide{width:1280px;height:720px;box-sizing:border-box;overflow:hidden;}
-  h1,h2,h3,h4{font-family:'Space Grotesk',system-ui,sans-serif;margin:0;}
-  p{margin:0;}
-</style>
-<script>
-  window.addEventListener('load',()=>{
-    const wrap=document.querySelector('.slide-wrap');
-    if(!wrap)return;
-    const fit=()=>{
-      const s=Math.min(window.innerWidth/1280,window.innerHeight/720);
-      wrap.style.transform='scale('+s+')';
-    };
-    fit();window.addEventListener('resize',fit);
-  });
-<\/script>
-</head><body><div class="slide-wrap">${html}</div></body></html>`;
 }
