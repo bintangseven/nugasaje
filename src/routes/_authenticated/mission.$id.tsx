@@ -20,6 +20,7 @@ import { generateProjectContent } from "@/lib/ai.functions";
 import { exportProject } from "@/lib/export.functions";
 import { DownloadPptxButton } from "@/components/DownloadPptxButton";
 import { PaperContentPreview, SlidesContentPreview } from "@/components/ContentPreview";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/mission/$id")({
   head: () => ({
@@ -37,6 +38,7 @@ function MissionWorkspace() {
   const { id } = useParams({ from: "/_authenticated/mission/$id" });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useT();
   const getFn = useServerFn(getProject);
   const updateFn = useServerFn(updateProject);
   const generateFn = useServerFn(generateProjectContent);
@@ -57,10 +59,10 @@ function MissionWorkspace() {
   // Redirect if project not found
   useEffect(() => {
     if (projectQuery.isSuccess && !projectQuery.data) {
-      toast.error("Proyek tidak ditemukan");
+      toast.error(t("mission.notFound"));
       navigate({ to: "/projects" });
     }
-  }, [projectQuery.isSuccess, projectQuery.data, navigate]);
+  }, [projectQuery.isSuccess, projectQuery.data, navigate, t]);
 
   if (projectQuery.isLoading || !projectQuery.data) {
     return (
@@ -68,7 +70,7 @@ function MissionWorkspace() {
         <AppHeader />
         <div className="flex h-[60vh] items-center justify-center text-sm text-muted-foreground">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Memuat proyek…
+          {t("mission.loading")}
         </div>
       </div>
     );
@@ -98,6 +100,7 @@ function Workspace({
   exportFn: ReturnType<typeof useServerFn<typeof exportProject>>;
   queryClient: ReturnType<typeof useQueryClient>;
 }) {
+  const { t } = useT();
   const missionType: MissionType = project.mission;
   const mission = missions.find((m) => m.id === missionType)!;
   const questions = missionQuestions[missionType];
@@ -355,7 +358,7 @@ function Workspace({
             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Kembali ke proyek
+            {t("mission.back")}
           </Link>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
@@ -371,7 +374,7 @@ function Workspace({
 
             <div className="flex items-center gap-3">
               <SaveIndicator status={saveStatus} />
-              <span className="text-xs text-muted-foreground">Sisa waktu {remaining}</span>
+              <span className="text-xs text-muted-foreground">{t("mission.timeLeft")} {remaining}</span>
               {missionType === "paper" ? (
                 <button
                   type="button"
@@ -384,7 +387,7 @@ function Workspace({
                   ) : (
                     <Download className="h-4 w-4" />
                   )}
-                  Unduh .docx
+                  {t("mission.downloadDocx")}
                 </button>
               ) : (
                 <DownloadPptxButton
@@ -447,7 +450,7 @@ function Workspace({
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary">
               <Sparkles className="h-3.5 w-3.5 text-foreground" />
             </span>
-            <h2 className="text-sm font-semibold text-foreground">Asisten</h2>
+            <h2 className="text-sm font-semibold text-foreground">{t("mission.assistant")}</h2>
           </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto pr-1">
@@ -462,20 +465,16 @@ function Workspace({
 
             {interviewDone && phase === "interview" && (
               <Bubble role="ai">
-                Aku punya semua yang aku butuhkan. Klik <strong>Mulai kerjakan</strong> dan aku
-                akan menyusun {missionType === "paper" ? "papermu" : "presentasimu"}.
+                {t("mission.readyToStart")}
               </Bubble>
             )}
 
             {phase === "working" && (
-              <Bubble role="ai">Sedang aku kerjakan. Kamu bisa rebahan sebentar 🌿</Bubble>
+              <Bubble role="ai">{t("mission.working")}</Bubble>
             )}
 
             {phase === "done" && (
-              <Bubble role="ai">
-                Selesai! File siap diunduh dan diedit di Word
-                {missionType === "presentation" ? " / PowerPoint" : ""}.
-              </Bubble>
+              <Bubble role="ai">{t("mission.finished")}</Bubble>
             )}
           </div>
 
@@ -494,7 +493,7 @@ function Workspace({
                     </button>
                   ))}
                   <div className="pt-1 text-xs text-muted-foreground">
-                    Pertanyaan {qIndex + 1} dari {questions.length}
+                    {t("mission.questionOf")} {qIndex + 1} {t("mission.of")} {questions.length}
                   </div>
                 </div>
               ) : (
@@ -509,14 +508,14 @@ function Workspace({
                   />
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">
-                      Pertanyaan {qIndex + 1} dari {questions.length}
+                      {t("mission.questionOf")} {qIndex + 1} {t("mission.of")} {questions.length}
                     </span>
                     <button
                       type="submit"
                       disabled={!draft.trim()}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      Lanjut
+                      {t("mission.next")}
                       <Send className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -528,10 +527,9 @@ function Workspace({
           {interviewDone && phase !== "done" && (
             <div className="mt-4 space-y-4 border-t border-border pt-4">
               <div className="space-y-2">
-                <div className="text-xs font-medium text-foreground">Lampiran (opsional)</div>
+                <div className="text-xs font-medium text-foreground">{t("mission.attachOptional")}</div>
                 <p className="text-[11px] text-muted-foreground">
-                  Unggah materi referensi (PDF, TXT, MD, atau gambar, maks 10MB). AI akan
-                  menjadikannya bahan utama.
+                  {t("mission.attachHint")}
                 </p>
                 <input
                   ref={fileInputRef}
@@ -553,7 +551,7 @@ function Workspace({
                       type="button"
                       onClick={() => setAttachment(null)}
                       className="text-muted-foreground hover:text-foreground"
-                      aria-label="Hapus lampiran"
+                      aria-label={t("mission.removeAttach")}
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -565,7 +563,7 @@ function Workspace({
                     className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-background px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
                   >
                     <Paperclip className="h-3.5 w-3.5" />
-                    Pilih file
+                    {t("mission.pickFile")}
                   </button>
                 )}
               </div>
@@ -573,14 +571,14 @@ function Workspace({
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-xs text-foreground">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Sedang dikerjakan AI… kamu bebas menutup halaman ini.
+                    {t("mission.workingHint")}
                   </div>
                   <button
                     type="button"
                     onClick={startGeneration}
                     className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
                   >
-                    Jalankan ulang jika macet
+                    {t("mission.rerun")}
                   </button>
                 </div>
               ) : (
@@ -589,7 +587,7 @@ function Workspace({
                   onClick={startGeneration}
                   className="w-full rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
                 >
-                  Mulai kerjakan
+                  {t("mission.start")}
                 </button>
               )}
             </div>
@@ -599,9 +597,9 @@ function Workspace({
         <section className="flex flex-col gap-6 lg:col-span-3">
           <div className="flex min-h-[360px] flex-col rounded-2xl border border-border bg-card p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">Preview</h2>
+              <h2 className="text-sm font-semibold text-foreground">{t("mission.preview")}</h2>
               <span className="text-xs text-muted-foreground">
-                {missionType === "paper" ? "Dokumen Word" : "Slide PowerPoint"}
+                {missionType === "paper" ? t("mission.docPreview") : t("mission.slidePreview")}
               </span>
             </div>
 
@@ -629,7 +627,7 @@ function Workspace({
           </div>
 
           <div className="rounded-2xl border border-border bg-card p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-            <h2 className="mb-3 text-sm font-semibold text-foreground">Aktivitas AI</h2>
+            <h2 className="mb-3 text-sm font-semibold text-foreground">{t("mission.aiActivity")}</h2>
             <AIStatusChecklist steps={steps} currentIndex={stepIndex} />
           </div>
         </section>
@@ -639,11 +637,12 @@ function Workspace({
 }
 
 function SaveIndicator({ status }: { status: SaveStatus }) {
+  const { t } = useT();
   if (status === "saving") {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
         <Cloud className="h-3.5 w-3.5 animate-pulse" />
-        Menyimpan…
+        {t("mission.saving")}
       </span>
     );
   }
@@ -651,17 +650,17 @@ function SaveIndicator({ status }: { status: SaveStatus }) {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
         <Check className="h-3.5 w-3.5" />
-        Tersimpan
+        {t("mission.saved")}
       </span>
     );
   }
   if (status === "error") {
-    return <span className="text-xs text-destructive">Gagal menyimpan</span>;
+    return <span className="text-xs text-destructive">{t("mission.syncFail")}</span>;
   }
   return (
     <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
       <Cloud className="h-3.5 w-3.5" />
-      Sinkron
+      {t("mission.sync")}
     </span>
   );
 }
@@ -671,8 +670,8 @@ function Bubble({ role, children }: { role: "ai" | "user"; children: React.React
     <div
       className={`max-w-[90%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
         role === "ai"
-          ? "bg-secondary text-foreground"
-          : "ml-auto bg-foreground text-background"
+          ? "bg-secondary text-on-secondary"
+          : "ml-auto bg-primary text-on-primary"
       }`}
     >
       {children}
@@ -681,12 +680,12 @@ function Bubble({ role, children }: { role: "ai" | "user"; children: React.React
 }
 
 function EmptyPreview({ missionType }: { missionType: MissionType }) {
+  const { t } = useT();
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center">
       <div className="rounded-xl border border-dashed border-border bg-background/50 px-8 py-10">
         <p className="text-sm text-muted-foreground">
-          Preview akan muncul di sini saat aku mulai menyusun
-          {missionType === "paper" ? " paper" : " slide"}.
+          {t("mission.emptyPreview")}
         </p>
       </div>
     </div>
