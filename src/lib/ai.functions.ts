@@ -297,6 +297,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
 
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("LOVABLE_API_KEY tidak tersedia");
+    const geminiExternalKey = process.env.GEMINI_API_KEY;
 
     const answers = (project.answers ?? {}) as Record<string, string>;
     const isPaper = project.mission === "paper";
@@ -439,6 +440,84 @@ export const generateProjectContent = createServerFn({ method: "POST" })
       }
     };
 
+    // Strip fields yang tidak didukung Gemini native API (additionalProperties, dsb).
+    const sanitizeGeminiSchema = (node: unknown): unknown => {
+      if (Array.isArray(node)) return node.map(sanitizeGeminiSchema);
+      if (node && typeof node === "object") {
+        const out: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+          if (k === "additionalProperties") continue;
+          out[k] = sanitizeGeminiSchema(v);
+        }
+        return out;
+      }
+      return node;
+    };
+
+    // Gemini eksternal (generativelanguage.googleapis.com) — KHUSUS PPT.
+    const callGeminiExternalTool = async (messages: ChatMsg[]): Promise<Record<string, unknown>> => {
+      if (!geminiExternalKey) throw new Error("GEMINI_API_KEY tidak tersedia");
+      const sys = messages.find((m) => m.role === "system");
+      const systemText = typeof sys?.content === "string" ? sys.content : "";
+      const contents: Array<{ role: string; parts: Array<Record<string, unknown>> }> = [];
+      for (const m of messages) {
+        if (m.role === "system") continue;
+        const parts: Array<Record<string, unknown>> = [];
+        if (typeof m.content === "string") {
+          parts.push({ text: m.content });
+        } else if (Array.isArray(m.content)) {
+          for (const block of m.content as Array<Record<string, unknown>>) {
+            if (block.type === "text" && typeof block.text === "string") {
+              parts.push({ text: block.text });
+            } else if (block.type === "image_url") {
+              const url = (block.image_url as { url?: string } | undefined)?.url ?? "";
+              const match = url.match(/^data:([^;]+);base64,(.+)$/);
+              if (match) parts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+            } else if (block.type === "file") {
+              const f = block.file as { file_data?: string } | undefined;
+              const match = f?.file_data?.match(/^data:([^;]+);base64,(.+)$/);
+              if (match) parts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+            }
+          }
+        }
+        if (parts.length > 0) contents.push({ role: m.role === "assistant" ? "model" : "user", parts });
+      }
+      const fnDecl = {
+        name: presentationToolGateway.function.name,
+        description: presentationToolGateway.function.description,
+        parameters: sanitizeGeminiSchema(presentationToolGateway.function.parameters),
+      };
+      const body: Record<string, unknown> = {
+        contents,
+        tools: [{ functionDeclarations: [fnDecl] }],
+        toolConfig: {
+          functionCallingConfig: { mode: "ANY", allowedFunctionNames: [fnDecl.name] },
+        },
+      };
+      if (systemText) body.systemInstruction = { parts: [{ text: systemText }] };
+      const res = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-goog-api-key": geminiExternalKey },
+          body: JSON.stringify(body),
+        },
+      );
+      if (res.status === 429) throw new Error("Batas pemakaian AI tercapai. Coba lagi sebentar lagi.");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Gemini eksternal error ${res.status}: ${text.slice(0, 300)}`);
+      }
+      const j = (await res.json()) as {
+        candidates?: Array<{
+          content?: { parts?: Array<{ functionCall?: { args?: Record<string, unknown> } }> };
+        }>;
+      };
+      const args = j.candidates?.[0]?.content?.parts?.find((p) => p.functionCall)?.functionCall?.args;
+      if (!args || typeof args !== "object") throw new Error("Gemini tidak mengembalikan function call.");
+      return args;
+    };
+
     // Paper & presentasi sama-sama pakai Lovable AI Gateway (Gemini Flash).
     // Claude API (ANTHROPIC_API_KEY) di-unbind sementara.
     void toolName;
@@ -479,7 +558,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
     for (const stage of stages) {
       const stageMsg = stageInstruction(stage, parsed);
       const messages: ChatMsg[] = [...baseMessages, { role: "user", content: stageMsg }];
-      parsed = await callGatewayTool(messages);
+      parsed = isPaper ? await callGatewayTool(messages) : await callGeminiExternalTool(messages);
     }
     if (!parsed) throw new Error("AI tidak menghasilkan konten.");
 
