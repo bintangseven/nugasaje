@@ -156,7 +156,7 @@ const presentationToolGateway = {
               imageQuery: {
                 type: "string",
                 description:
-                  "OPSIONAL. Query pencarian gambar Unsplash yang cocok (bahasa Inggris, 2-5 kata). Bila diisi, renderer memilih 1 foto dan meng-inject ke elemen <img data-unsplash> di dalam html.",
+                  "WAJIB untuk layout cover/content/closing/stats (boleh dikosongkan HANYA untuk agenda & quote). Query pencarian gambar Unsplash yang cocok dengan topik slide — WAJIB bahasa Inggris, 2-5 kata, konkret & fotogenik (mis. 'students studying library', 'solar panel farm', 'microscope laboratory'). Renderer memilih 1 foto Unsplash dan memasukkannya ke PPTX/PDF/preview + inject ke <img data-unsplash> di html.",
               },
               notes: { type: "string", description: "Catatan pembicara 2-3 kalimat." },
               structured: {
@@ -235,7 +235,7 @@ const presentationToolGateway = {
                 additionalProperties: false,
               },
             },
-            required: ["kind", "html", "notes", "structured"],
+            required: ["kind", "html", "notes", "structured", "imageQuery"],
             additionalProperties: false,
           },
         },
