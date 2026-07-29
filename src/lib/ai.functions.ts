@@ -156,7 +156,7 @@ const presentationToolGateway = {
               imageQuery: {
                 type: "string",
                 description:
-                  "OPSIONAL. Query pencarian gambar Unsplash yang cocok (bahasa Inggris, 2-5 kata). Bila diisi, renderer memilih 1 foto dan meng-inject ke elemen <img data-unsplash> di dalam html.",
+                  "WAJIB untuk layout cover/content/closing/stats (boleh dikosongkan HANYA untuk agenda & quote). Query pencarian gambar Unsplash yang cocok dengan topik slide — WAJIB bahasa Inggris, 2-5 kata, konkret & fotogenik (mis. 'students studying library', 'solar panel farm', 'microscope laboratory'). Renderer memilih 1 foto Unsplash dan memasukkannya ke PPTX/PDF/preview + inject ke <img data-unsplash> di html.",
               },
               notes: { type: "string", description: "Catatan pembicara 2-3 kalimat." },
               structured: {
@@ -235,7 +235,7 @@ const presentationToolGateway = {
                 additionalProperties: false,
               },
             },
-            required: ["kind", "html", "notes", "structured"],
+            required: ["kind", "html", "notes", "structured", "imageQuery"],
             additionalProperties: false,
           },
         },
@@ -539,7 +539,7 @@ export const generateProjectContent = createServerFn({ method: "POST" })
           case 1:
             return "STAGE 1 (DRAFT DECK): Susun meta (title, subtitle, palette) + minimal 7 slide dalam bentuk fragment HTML lengkap sesuai spek. Wajib: 1 cover, 1 agenda, minimal 4 slide content (variasi layout), 1 closing. Setiap slide berukuran 1280x720, self-contained, memakai Plus Jakarta Sans / Space Grotesk, warna dari palette.";
           case 2:
-            return `STAGE 2 (POLISH DECK): Draft awal:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nSempurnakan tiap slide: pastikan variasi layout (tidak monoton), tambah elemen visual (kartu, ikon Font Awesome, angka besar, atau <img data-unsplash="..."> dengan query bahasa Inggris yang relevan) di setiap slide, isi notes 3-5 kalimat, dan pastikan tidak ada teks overflow. Kembalikan deck FINAL utuh.`;
+            return `STAGE 2 (POLISH DECK): Draft awal:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nSempurnakan tiap slide: pastikan variasi layout (tidak monoton), tambah elemen visual (kartu, ikon Font Awesome, angka besar), isi notes 3-5 kalimat, tidak ada teks overflow. WAJIB: setiap slide cover/content/closing/stats HARUS punya field 'imageQuery' berisi 2-5 kata BAHASA INGGRIS yang konkret & fotogenik untuk dicari di Unsplash (mis. 'students studying library', 'renewable energy wind turbine'), dan HTML-nya WAJIB memuat <img data-unsplash="query yang sama" alt="..." style="width:100%;height:100%;object-fit:cover;border-radius:16px" /> di posisi visual yang cocok. Hanya slide agenda & quote yang boleh tanpa imageQuery. Kembalikan deck FINAL utuh.`;
           case 3:
           case 4:
             return `PASS FINAL: Konten sekarang:\n\n${JSON.stringify(prev).slice(0, 12000)}\n\nKembalikan deck yang sama tanpa perubahan besar — cukup rapikan konsistensi warna, spacing padding 48px, dan tambahkan imageQuery bila slide punya <img data-unsplash>.`;
