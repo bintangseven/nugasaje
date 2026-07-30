@@ -351,6 +351,7 @@ function Workspace({
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <AppHeader />
+      <AssistantTips missionType={missionType} projectId={project.id} />
 
       <div className="border-b border-border bg-card">
         <div className="mx-auto max-w-6xl px-6 py-5">
