@@ -201,7 +201,7 @@ export function ProjectCard({
       <div className="mt-4 flex items-center gap-3">
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
           <div
-            className={`h-full rounded-full transition-all ${completed ? "bg-emerald-500" : "bg-foreground"}`}
+            className={`h-full rounded-full transition-all ${completed ? "bg-emerald-500" : "bg-primary"}`}
             style={{ width: `${project.progress}%` }}
           />
         </div>
