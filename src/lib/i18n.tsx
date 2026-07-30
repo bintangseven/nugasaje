@@ -145,6 +145,7 @@ const translations: Record<Lang, Dict> = {
     "tips.presentation.2": "Jelaskan target audiens di kolom Catatan agar AI menyesuaikan kedalaman materi.",
     "tips.presentation.3": "AI akan mencari gambar Unsplash berbahasa Inggris. Deskripsikan visual yang diinginkan secara spesifik.",
     "tips.presentation.4": "Jumlah slide ideal 8–15. Terlalu sedikit kurang informatif, terlalu banyak membosankan audiens.",
+  },
   en: {
     // Header
     "nav.home": "Home",
