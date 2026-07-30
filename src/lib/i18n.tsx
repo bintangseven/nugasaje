@@ -286,6 +286,7 @@ const translations: Record<Lang, Dict> = {
     "tips.presentation.2": "Describe your target audience in the Notes field so the AI adjusts the depth of the material.",
     "tips.presentation.3": "The AI will search Unsplash using English queries. Describe the desired visuals specifically.",
     "tips.presentation.4": "The ideal slide count is 8–15. Too few slides lack information; too many bore the audience.",
+  },
 };
 
 type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (key: keyof typeof translations["id"]) => string };
