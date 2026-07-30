@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Footer } from "@/components/Footer";
 import { AppHeader } from "@/components/AppHeader";
 import { ProjectCard } from "@/components/ProjectCard";
 import {
@@ -552,16 +553,9 @@ export function DashboardHome({ user }: { user: User }) {
           )}
         </section>
       </main>
+      <Footer />
     </div>
   );
-}
-
-function greeting() {
-  const h = new Date().getHours();
-  if (h < 11) return "Selamat pagi";
-  if (h < 15) return "Selamat siang";
-  if (h < 18) return "Selamat sore";
-  return "Selamat malam";
 }
 
 function Segmented({
