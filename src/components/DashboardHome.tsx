@@ -575,7 +575,7 @@ function Segmented({
           type="button"
           onClick={() => onChange(o.id)}
           className={`rounded-md px-2.5 py-1.5 font-medium transition-colors ${
-            value === o.id ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+            value === o.id ? "bg-secondary text-on-secondary shadow-sm" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           {o.label}
@@ -618,7 +618,7 @@ function ProjectRowItem({
   const Icon = project.mission === "paper" ? FileText : Presentation;
   return (
     <li className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-secondary/40">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-on-secondary">
         <Icon className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1">

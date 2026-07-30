@@ -66,7 +66,7 @@ function ProjectsPage() {
               onClick={() => setTab(t.id)}
               className={`rounded-md px-3.5 py-1.5 font-medium transition-colors ${
                 tab === t.id
-                  ? "bg-secondary text-foreground"
+                  ? "bg-secondary text-on-secondary shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
