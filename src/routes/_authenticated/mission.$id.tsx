@@ -20,6 +20,7 @@ import { generateProjectContent } from "@/lib/ai.functions";
 import { exportProject } from "@/lib/export.functions";
 import { DownloadPptxButton } from "@/components/DownloadPptxButton";
 import { PaperContentPreview, SlidesContentPreview } from "@/components/ContentPreview";
+import { AssistantTips } from "@/components/AssistantTips";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/mission/$id")({
@@ -350,6 +351,7 @@ function Workspace({
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <AppHeader />
+      <AssistantTips missionType={missionType} projectId={project.id} />
 
       <div className="border-b border-border bg-card">
         <div className="mx-auto max-w-6xl px-6 py-5">
