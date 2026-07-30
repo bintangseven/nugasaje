@@ -20,6 +20,7 @@ import { generateProjectContent } from "@/lib/ai.functions";
 import { exportProject } from "@/lib/export.functions";
 import { DownloadPptxButton } from "@/components/DownloadPptxButton";
 import { PaperContentPreview, SlidesContentPreview } from "@/components/ContentPreview";
+import { AssistantTips } from "@/components/AssistantTips";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/mission/$id")({

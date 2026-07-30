@@ -129,7 +129,22 @@ const translations: Record<Lang, Dict> = {
     "mission.emptyPreview": "Preview akan muncul di sini saat aku mulai menyusun.",
     "mission.loading": "Memuat proyek…",
     "mission.notFound": "Proyek tidak ditemukan",
-  },
+
+    // Assistant tips
+    "tips.title": "Tips dari Asisten Numu",
+    "tips.from": "Asisten Numu",
+    "tips.for": "Tips untuk proyek ini",
+    "tips.close": "Tutup tips",
+    "tips.next": "Tips lain",
+    "tips.gotIt": "Mengerti",
+    "tips.paper.1": "Topik yang spesifik menghasilkan paper lebih fokus. Hindari topik yang terlalu luas.",
+    "tips.paper.2": "Gunakan lampiran PDF/TXT untuk memberikan materi dasar agar AI menyesuaikan gaya bahasamu.",
+    "tips.paper.3": "Tambahkan keterangan di kolom Catatan untuk arahan khusus, misalnya gaya bahasa atau sumber yang diinginkan.",
+    "tips.paper.4": "Sitasi otomatis sudah disetel pasca-2020. Selalu periksa ulang referensi sebelum pengumpulan.",
+    "tips.presentation.1": "Slide paling efektif menggabungkan narasi paragraf 50% + bullet 50%. Jangan hanya poin-poin kering.",
+    "tips.presentation.2": "Jelaskan target audiens di kolom Catatan agar AI menyesuaikan kedalaman materi.",
+    "tips.presentation.3": "AI akan mencari gambar Unsplash berbahasa Inggris. Deskripsikan visual yang diinginkan secara spesifik.",
+    "tips.presentation.4": "Jumlah slide ideal 8–15. Terlalu sedikit kurang informatif, terlalu banyak membosankan audiens.",
   en: {
     // Header
     "nav.home": "Home",
@@ -254,7 +269,22 @@ const translations: Record<Lang, Dict> = {
     "mission.emptyPreview": "The preview will appear here once I start drafting.",
     "mission.loading": "Loading project…",
     "mission.notFound": "Project not found",
-  },
+
+    // Assistant tips
+    "tips.title": "Tips from Numu Assistant",
+    "tips.from": "Numu Assistant",
+    "tips.for": "Tips for this project",
+    "tips.close": "Close tips",
+    "tips.next": "More tips",
+    "tips.gotIt": "Got it",
+    "tips.paper.1": "A specific topic produces a more focused paper. Avoid overly broad topics.",
+    "tips.paper.2": "Upload PDF/TXT attachments to give the AI source material so it matches your writing style.",
+    "tips.paper.3": "Use the Additional Notes field for special directions, such as tone or preferred sources.",
+    "tips.paper.4": "Automatic citations are set to post-2020 sources. Always double-check references before submitting.",
+    "tips.presentation.1": "The best slides mix 50% narrative paragraphs and 50% bullet points. Avoid dry lists only.",
+    "tips.presentation.2": "Describe your target audience in the Notes field so the AI adjusts the depth of the material.",
+    "tips.presentation.3": "The AI will search Unsplash using English queries. Describe the desired visuals specifically.",
+    "tips.presentation.4": "The ideal slide count is 8–15. Too few slides lack information; too many bore the audience.",
 };
 
 type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (key: keyof typeof translations["id"]) => string };
