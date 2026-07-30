@@ -216,15 +216,10 @@ export function DashboardHome({ user }: { user: User }) {
                   {displayName.slice(0, 1).toUpperCase()}
                 </span>
               )}
-              {isProActive && (
-                <span className="absolute -bottom-1 -right-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-orange-500 text-slate-900 shadow-md ring-2 ring-slate-900">
-                  <Crown className="h-3.5 w-3.5" />
-                </span>
-              )}
             </Link>
               <div className="min-w-0">
                 <span className="text-xs font-medium uppercase tracking-[0.15em] text-white/60">
-                  {greeting()}, selamat datang
+                  Selamat Datang Kembali,
                 </span>
                 <h1 className="mt-1 truncate font-display text-2xl font-semibold md:text-3xl">
                   {displayName}
@@ -650,7 +645,7 @@ function ProjectRowItem({
       <div className="hidden w-40 items-center gap-2 sm:flex">
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
           <div
-            className={`h-full rounded-full ${completed ? "bg-emerald-500" : "bg-foreground"}`}
+            className={`h-full rounded-full ${completed ? "bg-emerald-500" : "bg-primary"}`}
             style={{ width: `${project.progress}%` }}
           />
         </div>
@@ -690,7 +685,7 @@ function StatCard({
   progress: number;
   tone?: "default" | "warn";
 }) {
-  const barColor = tone === "warn" ? "bg-rose-500" : "bg-foreground";
+  const barColor = tone === "warn" ? "bg-rose-500" : "bg-primary";
   return (
     <div className="rounded-2xl border border-border bg-card p-5 transition-shadow hover:shadow-sm">
       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -699,7 +694,7 @@ function StatCard({
       </div>
       <p className="mt-2 text-2xl font-semibold text-foreground">{value}</p>
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-secondary">
-        <div className={`h-full ${barColor} transition-all`} style={{ width: `${progress}%` }} />
+        <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${progress}%` }} />
       </div>
       <p className="mt-2 text-xs text-muted-foreground">{sub}</p>
     </div>
