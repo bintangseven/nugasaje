@@ -621,6 +621,7 @@ function ProjectRowItem({
   pinned: boolean;
   onTogglePin: (id: string) => void;
 }) {
+  const { t } = useT();
   const completed = project.progress >= 100;
   const Icon = project.mission === "paper" ? FileText : Presentation;
   return (
@@ -640,7 +641,8 @@ function ProjectRowItem({
           {pinned && <Pin className="h-3 w-3 text-amber-500" />}
         </div>
         <p className="mt-0.5 truncate text-xs text-muted-foreground">
-          {project.mission === "paper" ? "Paper" : "Presentasi"} · {formatRelativeTime(project.updated_at)}
+          {project.mission === "paper" ? t("dash.paper") : t("dash.presentation")} ·{" "}
+          {formatRelativeTime(project.updated_at)}
         </p>
       </div>
       <div className="hidden w-40 items-center gap-2 sm:flex">
@@ -656,7 +658,7 @@ function ProjectRowItem({
         type="button"
         onClick={() => onTogglePin(project.id)}
         className="rounded-md p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
-        aria-label={pinned ? "Lepas pin" : "Sematkan"}
+        aria-label={pinned ? t("dash.unpin") : t("dash.pin")}
       >
         <Pin className={`h-3.5 w-3.5 ${pinned ? "fill-amber-400 text-amber-500" : ""}`} />
       </button>
@@ -665,7 +667,7 @@ function ProjectRowItem({
         params={{ id: project.id }}
         className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-secondary"
       >
-        Buka <ArrowRight className="h-3 w-3" />
+        {t("dash.open")} <ArrowRight className="h-3 w-3" />
       </Link>
     </li>
   );
