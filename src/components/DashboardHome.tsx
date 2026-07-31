@@ -347,17 +347,17 @@ export function DashboardHome({ user }: { user: User }) {
         <section className="mt-4 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-3">
           <InsightPill
             icon={<Sparkles className="h-4 w-4 text-indigo-500" />}
-            label="Dibuat 7 hari terakhir"
+            label={t("dash.createdWeek")}
             value={createdThisWeek}
           />
           <InsightPill
             icon={<Clock className="h-4 w-4 text-amber-500" />}
-            label="Diperbarui 7 hari terakhir"
+            label={t("dash.updatedWeek")}
             value={updatedThisWeek}
           />
           <InsightPill
             icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />}
-            label="Selesai total"
+            label={t("dash.doneTotal")}
             value={doneCount}
           />
         </section>
@@ -367,17 +367,17 @@ export function DashboardHome({ user }: { user: User }) {
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Proyek kamu
+                {t("dash.yourProjects")}
               </span>
               <h2 className="mt-1 font-display text-2xl font-semibold text-foreground">
-                Lanjutkan yang tertunda
+                {t("dash.continue")}
               </h2>
             </div>
             <Link
               to="/projects"
               className="text-sm font-medium text-foreground hover:underline"
             >
-              Lihat semua →
+              {t("dash.viewAll")}
             </Link>
           </div>
 
@@ -388,7 +388,7 @@ export function DashboardHome({ user }: { user: User }) {
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Cari nama proyek…"
+                placeholder={t("dash.searchPlaceholder")}
                 className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:border-foreground/40"
               />
             </div>
@@ -397,18 +397,18 @@ export function DashboardHome({ user }: { user: User }) {
                 value={mission}
                 onChange={(v) => setMission(v as MissionFilter)}
                 options={[
-                  { id: "all", label: "Semua" },
-                  { id: "paper", label: "Paper" },
-                  { id: "presentation", label: "PPT" },
+                  { id: "all", label: t("dash.all") },
+                  { id: "paper", label: t("dash.paper") },
+                  { id: "presentation", label: t("dash.ppt") },
                 ]}
               />
               <Segmented
                 value={status}
                 onChange={(v) => setStatus(v as StatusFilter)}
                 options={[
-                  { id: "all", label: "Status" },
-                  { id: "active", label: "Aktif" },
-                  { id: "done", label: "Selesai" },
+                  { id: "all", label: t("dash.status") },
+                  { id: "active", label: t("dash.active") },
+                  { id: "done", label: t("dash.done") },
                 ]}
               />
               <select
@@ -416,9 +416,9 @@ export function DashboardHome({ user }: { user: User }) {
                 onChange={(e) => setSortBy(e.target.value as SortKey)}
                 className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-foreground/40"
               >
-                <option value="recent">Terbaru</option>
-                <option value="progress">Progres</option>
-                <option value="name">Nama A-Z</option>
+                <option value="recent">{t("dash.sortRecent")}</option>
+                <option value="progress">{t("dash.sortProgress")}</option>
+                <option value="name">{t("dash.sortName")}</option>
               </select>
               <div className="inline-flex rounded-lg border border-border bg-background p-0.5">
                 <button
