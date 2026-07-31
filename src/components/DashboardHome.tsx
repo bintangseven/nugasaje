@@ -212,7 +212,7 @@ export function DashboardHome({ user }: { user: User }) {
                     ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-900 shadow-[0_0_18px_rgba(251,191,36,0.55)] border-2 border-amber-300"
                     : "border-2 border-white/40"
                 }`}
-              aria-label="Buka profil"
+              aria-label={t("dash.openProfile")}
             >
               {avatarUrl ? (
                 <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
@@ -224,7 +224,7 @@ export function DashboardHome({ user }: { user: User }) {
             </Link>
               <div className="min-w-0">
                 <span className="text-xs font-medium uppercase tracking-[0.15em] text-white/60">
-                  Selamat Datang Kembali,
+                  {t("dash.welcome")}
                 </span>
                 <h1 className="mt-1 truncate font-display text-2xl font-semibold md:text-3xl">
                   {displayName}
@@ -247,7 +247,7 @@ export function DashboardHome({ user }: { user: User }) {
                 className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-black/20 transition-transform hover:scale-[1.02] disabled:opacity-50"
             >
               <FileText className="h-4 w-4" />
-              Paper baru
+              {t("dash.newPaper")}
             </button>
             <button
               type="button"
@@ -256,7 +256,7 @@ export function DashboardHome({ user }: { user: User }) {
                 className="inline-flex items-center gap-2 rounded-lg border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/20 disabled:opacity-50"
             >
               <Presentation className="h-4 w-4" />
-              PPT baru
+              {t("dash.newPpt")}
             </button>
               {!isProActive && (
                 <Link
@@ -264,7 +264,7 @@ export function DashboardHome({ user }: { user: User }) {
                   className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-amber-500/30 transition-transform hover:scale-[1.02]"
                 >
                   <Crown className="h-4 w-4" />
-                  Upgrade Pro
+                  {t("dash.upgradePro")}
                 </Link>
               )}
             </div>
@@ -275,38 +275,38 @@ export function DashboardHome({ user }: { user: User }) {
         <section className="mt-6 grid gap-4 md:grid-cols-4">
           <StatCard
             icon={<Zap className="h-4 w-4" />}
-            label="Kuota hari ini"
+            label={t("dash.quotaToday")}
             value={`${usedToday} / ${dailyLimit}`}
             sub={
               remaining > 0
-                ? `Sisa ${remaining} generate. Reset otomatis besok.`
-                : "Kuota habis. Upgrade PRO untuk 10 generate/hari."
+                ? fmt(t("dash.quotaLeft"), { n: remaining })
+                : t("dash.quotaOut")
             }
             progress={dailyPct}
             tone={remaining === 0 ? "warn" : "default"}
           />
           <StatCard
             icon={<FileText className="h-4 w-4" />}
-            label="Proyek tersimpan"
+            label={t("dash.savedProjects")}
             value={`${projectCount} / ${MAX_PROJECTS}`}
             sub={
               atCap
-                ? "Batas maksimum tercapai. Hapus proyek lama untuk membuat yang baru."
-                : `${activeCount} berjalan · ${doneCount} selesai`
+                ? t("dash.atCap")
+                : fmt(t("dash.runningDone"), { a: activeCount, b: doneCount })
             }
             progress={projectPct}
             tone={atCap ? "warn" : "default"}
           />
           <StatCard
             icon={<TrendingUp className="h-4 w-4" />}
-            label="Rata-rata progres"
+            label={t("dash.avgProgress")}
             value={`${avgProgress}%`}
             sub={
               nearestActive
-                ? `Paling dekat selesai: “${nearestActive.name}” (${nearestActive.progress}%)`
+                ? fmt(t("dash.nearest"), { name: nearestActive.name, p: nearestActive.progress })
                 : projectCount === 0
-                  ? "Mulai proyek pertama untuk melihat progres."
-                  : "Semua proyek belum dimulai."
+                  ? t("dash.noProjectYet")
+                  : t("dash.notStarted")
             }
             progress={avgProgress}
           />
@@ -319,21 +319,25 @@ export function DashboardHome({ user }: { user: User }) {
           >
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {isProActive ? <Crown className="h-4 w-4 text-amber-600" /> : <Sparkles className="h-4 w-4" />}
-              {isProActive ? "Paket PRO" : "Paket Basic"}
+              {isProActive ? t("dash.planPro") : t("dash.planBasic")}
             </div>
             <p className="mt-2 text-lg font-semibold text-foreground">
-              {isProActive ? "Terima kasih!" : "Upgrade ke PRO"}
+              {isProActive ? t("dash.thanks") : t("dash.upgradeToPro")}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               {isProActive
-                ? `Aktif sampai ${profile?.pro_until ? new Date(profile.pro_until).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "—"}.`
-                : "10 generate/hari, prioritas antrian. Rp50rb/bulan."}
+                ? fmt(t("dash.activeUntil"), {
+                    date: profile?.pro_until
+                      ? new Date(profile.pro_until).toLocaleDateString(lang === "en" ? "en-US" : "id-ID", { day: "numeric", month: "short", year: "numeric" })
+                      : "—",
+                  })
+                : t("dash.proPitch")}
             </p>
             <Link
               to={isProActive ? "/profile" : "/harga"}
               className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
             >
-              {isProActive ? "Kelola profil" : "Upgrade sekarang"}
+              {isProActive ? t("dash.manageProfile") : t("dash.upgradeNow")}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
