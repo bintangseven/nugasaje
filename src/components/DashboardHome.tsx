@@ -453,14 +453,12 @@ export function DashboardHome({ user }: { user: User }) {
           ) : projects.length === 0 ? (
             <div className="mt-5 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
               <p className="text-sm text-muted-foreground">
-                Belum ada proyek. Mulai dari tombol{" "}
-                <span className="font-medium text-foreground">Paper baru</span> atau{" "}
-                <span className="font-medium text-foreground">PPT baru</span> di atas.
+                {t("dash.emptyProjects")}
               </p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="mt-5 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-              <p className="text-sm text-muted-foreground">Tidak ada proyek yang cocok dengan filter.</p>
+              <p className="text-sm text-muted-foreground">{t("dash.noMatch")}</p>
               <button
                 type="button"
                 onClick={() => {
@@ -470,7 +468,7 @@ export function DashboardHome({ user }: { user: User }) {
                 }}
                 className="mt-3 text-sm font-medium text-foreground hover:underline"
               >
-                Reset filter
+                {t("dash.resetFilter")}
               </button>
             </div>
           ) : view === "list" ? (
@@ -490,7 +488,8 @@ export function DashboardHome({ user }: { user: User }) {
                   to="/projects"
                   className="flex items-center justify-center gap-1 border-t border-border bg-secondary/30 py-2.5 text-xs font-medium text-foreground hover:bg-secondary"
                 >
-                  Lihat {filtered.length - 6} proyek lainnya <ChevronRight className="h-3.5 w-3.5" />
+                  {fmt(t("dash.viewMoreProjects"), { n: filtered.length - 6 })}{" "}
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </Link>
               )}
             </div>
@@ -519,9 +518,9 @@ export function DashboardHome({ user }: { user: User }) {
                   >
                     <ChevronRight className="h-6 w-6" />
                     <span className="text-sm font-medium">
-                      Lihat {filtered.length - 6} lainnya
+                      {fmt(t("dash.viewMore"), { n: filtered.length - 6 })}
                     </span>
-                    <span className="text-xs">Buka semua proyek</span>
+                    <span className="text-xs">{t("dash.openAll")}</span>
                   </Link>
                 ) : (
                   !atCap && (
@@ -531,8 +530,8 @@ export function DashboardHome({ user }: { user: User }) {
                       className="flex w-[85%] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-card p-5 text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-foreground/40 hover:text-foreground sm:w-[48%] lg:w-[32%]"
                     >
                       <Plus className="h-6 w-6" />
-                      <span className="text-sm font-medium">Tambah proyek</span>
-                      <span className="text-xs">{MAX_PROJECTS - projectCount} slot tersisa</span>
+                      <span className="text-sm font-medium">{t("dash.addProject")}</span>
+                      <span className="text-xs">{fmt(t("dash.slotsLeft"), { n: MAX_PROJECTS - projectCount })}</span>
                     </button>
                   )
                 )}
@@ -542,7 +541,7 @@ export function DashboardHome({ user }: { user: User }) {
                   <button
                     type="button"
                     onClick={() => slide(-1)}
-                    aria-label="Sebelumnya"
+                    aria-label={t("dash.prev")}
                     className="absolute left-1 top-1/2 hidden -translate-y-1/2 rounded-full border border-border bg-background/95 p-2 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-secondary md:inline-flex"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -550,7 +549,7 @@ export function DashboardHome({ user }: { user: User }) {
                   <button
                     type="button"
                     onClick={() => slide(1)}
-                    aria-label="Selanjutnya"
+                    aria-label={t("dash.next")}
                     className="absolute right-1 top-1/2 hidden -translate-y-1/2 rounded-full border border-border bg-background/95 p-2 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-secondary md:inline-flex"
                   >
                     <ChevronRight className="h-4 w-4" />
