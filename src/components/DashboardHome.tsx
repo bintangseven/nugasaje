@@ -33,6 +33,7 @@ import {
   listProjects,
 } from "@/lib/projects.functions";
 import { MAX_PROJECTS, dummyAvatars } from "@/lib/avatars";
+import { useT } from "@/lib/i18n";
 import { defaultProjectName, formatRelativeTime, type MissionType, type ProjectRow } from "@/lib/mock-data";
 
 type MissionFilter = "all" | "paper" | "presentation";
@@ -41,6 +42,10 @@ type SortKey = "recent" | "progress" | "name";
 type ViewMode = "grid" | "list";
 
 const PIN_STORAGE_KEY = "numu:pinned-projects";
+
+function fmt(s: string, vars: Record<string, string | number>) {
+  return Object.entries(vars).reduce((acc, [k, v]) => acc.split(`{${k}}`).join(String(v)), s);
+}
 
 function readPinned(): string[] {
   if (typeof window === "undefined") return [];
@@ -54,6 +59,7 @@ function readPinned(): string[] {
 
 export function DashboardHome({ user }: { user: User }) {
   const navigate = useNavigate();
+  const { t, lang } = useT();
   const qc = useQueryClient();
   const listFn = useServerFn(listProjects);
   const profileFn = useServerFn(getProfile);
@@ -163,7 +169,7 @@ export function DashboardHome({ user }: { user: User }) {
     profile?.name ||
     (user.user_metadata?.name as string | undefined) ||
     user.email?.split("@")[0] ||
-    "Mahasiswa";
+    t("dash.student");
 
   const avatarUrl =
     profile?.avatar_url ||
@@ -178,14 +184,12 @@ export function DashboardHome({ user }: { user: User }) {
       if (row?.id) navigate({ to: "/mission/$id", params: { id: row.id } });
     },
     onError: (err) =>
-      toast.error(err instanceof Error ? err.message : "Gagal membuat proyek"),
+      toast.error(err instanceof Error ? err.message : t("dash.createFail")),
   });
 
   function handleStart(mission: MissionType) {
     if (atCap) {
-      toast.error(
-        `Batas ${MAX_PROJECTS} proyek tercapai. Hapus proyek lama dulu.`,
-      );
+      toast.error(t("dash.capReached"));
       return;
     }
     create.mutate(mission);
