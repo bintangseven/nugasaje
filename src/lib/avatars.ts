@@ -1,9 +1,9 @@
-import Badboy from "@/assets/avatars/Badboy.png.asset.json";
-import Beutiful from "@/assets/avatars/Beutiful.png.asset.json";
-import Cool from "@/assets/avatars/Cool.png.asset.json";
-import Cubby from "@/assets/avatars/Cubby.png.asset.json";
-import Diliggent from "@/assets/avatars/Diliggent.png.asset.json";
-import Hijab from "@/assets/avatars/Hijab.png.asset.json";
+import Badboy from "@/assets/avatars/Badboy.svg.asset.json";
+import Beutiful from "@/assets/avatars/Beutiful.svg.asset.json";
+import Cool from "@/assets/avatars/Cool.svg.asset.json";
+import Cubby from "@/assets/avatars/Cubby.svg.asset.json";
+import Diliggent from "@/assets/avatars/Diliggent.svg.asset.json";
+import Hijab from "@/assets/avatars/Hijab.svg.asset.json";
 
 export type DummyAvatar = { id: string; label: string; url: string };
 

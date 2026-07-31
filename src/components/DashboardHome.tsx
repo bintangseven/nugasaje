@@ -33,6 +33,7 @@ import {
   listProjects,
 } from "@/lib/projects.functions";
 import { MAX_PROJECTS, dummyAvatars } from "@/lib/avatars";
+import { useT } from "@/lib/i18n";
 import { defaultProjectName, formatRelativeTime, type MissionType, type ProjectRow } from "@/lib/mock-data";
 
 type MissionFilter = "all" | "paper" | "presentation";
@@ -41,6 +42,10 @@ type SortKey = "recent" | "progress" | "name";
 type ViewMode = "grid" | "list";
 
 const PIN_STORAGE_KEY = "numu:pinned-projects";
+
+function fmt(s: string, vars: Record<string, string | number>) {
+  return Object.entries(vars).reduce((acc, [k, v]) => acc.split(`{${k}}`).join(String(v)), s);
+}
 
 function readPinned(): string[] {
   if (typeof window === "undefined") return [];
@@ -54,6 +59,7 @@ function readPinned(): string[] {
 
 export function DashboardHome({ user }: { user: User }) {
   const navigate = useNavigate();
+  const { t, lang } = useT();
   const qc = useQueryClient();
   const listFn = useServerFn(listProjects);
   const profileFn = useServerFn(getProfile);
@@ -163,7 +169,7 @@ export function DashboardHome({ user }: { user: User }) {
     profile?.name ||
     (user.user_metadata?.name as string | undefined) ||
     user.email?.split("@")[0] ||
-    "Mahasiswa";
+    t("dash.student");
 
   const avatarUrl =
     profile?.avatar_url ||
@@ -178,14 +184,12 @@ export function DashboardHome({ user }: { user: User }) {
       if (row?.id) navigate({ to: "/mission/$id", params: { id: row.id } });
     },
     onError: (err) =>
-      toast.error(err instanceof Error ? err.message : "Gagal membuat proyek"),
+      toast.error(err instanceof Error ? err.message : t("dash.createFail")),
   });
 
   function handleStart(mission: MissionType) {
     if (atCap) {
-      toast.error(
-        `Batas ${MAX_PROJECTS} proyek tercapai. Hapus proyek lama dulu.`,
-      );
+      toast.error(t("dash.capReached"));
       return;
     }
     create.mutate(mission);
@@ -208,7 +212,7 @@ export function DashboardHome({ user }: { user: User }) {
                     ? "ring-2 ring-amber-300 ring-offset-2 ring-offset-slate-900 shadow-[0_0_18px_rgba(251,191,36,0.55)] border-2 border-amber-300"
                     : "border-2 border-white/40"
                 }`}
-              aria-label="Buka profil"
+              aria-label={t("dash.openProfile")}
             >
               {avatarUrl ? (
                 <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
@@ -220,7 +224,7 @@ export function DashboardHome({ user }: { user: User }) {
             </Link>
               <div className="min-w-0">
                 <span className="text-xs font-medium uppercase tracking-[0.15em] text-white/60">
-                  Selamat Datang Kembali,
+                  {t("dash.welcome")}
                 </span>
                 <h1 className="mt-1 truncate font-display text-2xl font-semibold md:text-3xl">
                   {displayName}
@@ -243,7 +247,7 @@ export function DashboardHome({ user }: { user: User }) {
                 className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-black/20 transition-transform hover:scale-[1.02] disabled:opacity-50"
             >
               <FileText className="h-4 w-4" />
-              Paper baru
+              {t("dash.newPaper")}
             </button>
             <button
               type="button"
@@ -252,7 +256,7 @@ export function DashboardHome({ user }: { user: User }) {
                 className="inline-flex items-center gap-2 rounded-lg border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/20 disabled:opacity-50"
             >
               <Presentation className="h-4 w-4" />
-              PPT baru
+              {t("dash.newPpt")}
             </button>
               {!isProActive && (
                 <Link
@@ -260,7 +264,7 @@ export function DashboardHome({ user }: { user: User }) {
                   className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-amber-500/30 transition-transform hover:scale-[1.02]"
                 >
                   <Crown className="h-4 w-4" />
-                  Upgrade Pro
+                  {t("dash.upgradePro")}
                 </Link>
               )}
             </div>
@@ -271,38 +275,38 @@ export function DashboardHome({ user }: { user: User }) {
         <section className="mt-6 grid gap-4 md:grid-cols-4">
           <StatCard
             icon={<Zap className="h-4 w-4" />}
-            label="Kuota hari ini"
+            label={t("dash.quotaToday")}
             value={`${usedToday} / ${dailyLimit}`}
             sub={
               remaining > 0
-                ? `Sisa ${remaining} generate. Reset otomatis besok.`
-                : "Kuota habis. Upgrade PRO untuk 10 generate/hari."
+                ? fmt(t("dash.quotaLeft"), { n: remaining })
+                : t("dash.quotaOut")
             }
             progress={dailyPct}
             tone={remaining === 0 ? "warn" : "default"}
           />
           <StatCard
             icon={<FileText className="h-4 w-4" />}
-            label="Proyek tersimpan"
+            label={t("dash.savedProjects")}
             value={`${projectCount} / ${MAX_PROJECTS}`}
             sub={
               atCap
-                ? "Batas maksimum tercapai. Hapus proyek lama untuk membuat yang baru."
-                : `${activeCount} berjalan · ${doneCount} selesai`
+                ? t("dash.atCap")
+                : fmt(t("dash.runningDone"), { a: activeCount, b: doneCount })
             }
             progress={projectPct}
             tone={atCap ? "warn" : "default"}
           />
           <StatCard
             icon={<TrendingUp className="h-4 w-4" />}
-            label="Rata-rata progres"
+            label={t("dash.avgProgress")}
             value={`${avgProgress}%`}
             sub={
               nearestActive
-                ? `Paling dekat selesai: “${nearestActive.name}” (${nearestActive.progress}%)`
+                ? fmt(t("dash.nearest"), { name: nearestActive.name, p: nearestActive.progress })
                 : projectCount === 0
-                  ? "Mulai proyek pertama untuk melihat progres."
-                  : "Semua proyek belum dimulai."
+                  ? t("dash.noProjectYet")
+                  : t("dash.notStarted")
             }
             progress={avgProgress}
           />
@@ -315,21 +319,25 @@ export function DashboardHome({ user }: { user: User }) {
           >
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {isProActive ? <Crown className="h-4 w-4 text-amber-600" /> : <Sparkles className="h-4 w-4" />}
-              {isProActive ? "Paket PRO" : "Paket Basic"}
+              {isProActive ? t("dash.planPro") : t("dash.planBasic")}
             </div>
             <p className="mt-2 text-lg font-semibold text-foreground">
-              {isProActive ? "Terima kasih!" : "Upgrade ke PRO"}
+              {isProActive ? t("dash.thanks") : t("dash.upgradeToPro")}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               {isProActive
-                ? `Aktif sampai ${profile?.pro_until ? new Date(profile.pro_until).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "—"}.`
-                : "10 generate/hari, prioritas antrian. Rp50rb/bulan."}
+                ? fmt(t("dash.activeUntil"), {
+                    date: profile?.pro_until
+                      ? new Date(profile.pro_until).toLocaleDateString(lang === "en" ? "en-US" : "id-ID", { day: "numeric", month: "short", year: "numeric" })
+                      : "—",
+                  })
+                : t("dash.proPitch")}
             </p>
             <Link
               to={isProActive ? "/profile" : "/harga"}
               className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-foreground hover:underline"
             >
-              {isProActive ? "Kelola profil" : "Upgrade sekarang"}
+              {isProActive ? t("dash.manageProfile") : t("dash.upgradeNow")}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -339,17 +347,17 @@ export function DashboardHome({ user }: { user: User }) {
         <section className="mt-4 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-3">
           <InsightPill
             icon={<Sparkles className="h-4 w-4 text-indigo-500" />}
-            label="Dibuat 7 hari terakhir"
+            label={t("dash.createdWeek")}
             value={createdThisWeek}
           />
           <InsightPill
             icon={<Clock className="h-4 w-4 text-amber-500" />}
-            label="Diperbarui 7 hari terakhir"
+            label={t("dash.updatedWeek")}
             value={updatedThisWeek}
           />
           <InsightPill
             icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />}
-            label="Selesai total"
+            label={t("dash.doneTotal")}
             value={doneCount}
           />
         </section>
@@ -359,17 +367,17 @@ export function DashboardHome({ user }: { user: User }) {
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Proyek kamu
+                {t("dash.yourProjects")}
               </span>
               <h2 className="mt-1 font-display text-2xl font-semibold text-foreground">
-                Lanjutkan yang tertunda
+                {t("dash.continue")}
               </h2>
             </div>
             <Link
               to="/projects"
               className="text-sm font-medium text-foreground hover:underline"
             >
-              Lihat semua →
+              {t("dash.viewAll")}
             </Link>
           </div>
 
@@ -380,7 +388,7 @@ export function DashboardHome({ user }: { user: User }) {
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Cari nama proyek…"
+                placeholder={t("dash.searchPlaceholder")}
                 className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:border-foreground/40"
               />
             </div>
@@ -389,18 +397,18 @@ export function DashboardHome({ user }: { user: User }) {
                 value={mission}
                 onChange={(v) => setMission(v as MissionFilter)}
                 options={[
-                  { id: "all", label: "Semua" },
-                  { id: "paper", label: "Paper" },
-                  { id: "presentation", label: "PPT" },
+                  { id: "all", label: t("dash.all") },
+                  { id: "paper", label: t("dash.paper") },
+                  { id: "presentation", label: t("dash.ppt") },
                 ]}
               />
               <Segmented
                 value={status}
                 onChange={(v) => setStatus(v as StatusFilter)}
                 options={[
-                  { id: "all", label: "Status" },
-                  { id: "active", label: "Aktif" },
-                  { id: "done", label: "Selesai" },
+                  { id: "all", label: t("dash.status") },
+                  { id: "active", label: t("dash.active") },
+                  { id: "done", label: t("dash.done") },
                 ]}
               />
               <select
@@ -408,9 +416,9 @@ export function DashboardHome({ user }: { user: User }) {
                 onChange={(e) => setSortBy(e.target.value as SortKey)}
                 className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:border-foreground/40"
               >
-                <option value="recent">Terbaru</option>
-                <option value="progress">Progres</option>
-                <option value="name">Nama A-Z</option>
+                <option value="recent">{t("dash.sortRecent")}</option>
+                <option value="progress">{t("dash.sortProgress")}</option>
+                <option value="name">{t("dash.sortName")}</option>
               </select>
               <div className="inline-flex rounded-lg border border-border bg-background p-0.5">
                 <button
@@ -445,14 +453,12 @@ export function DashboardHome({ user }: { user: User }) {
           ) : projects.length === 0 ? (
             <div className="mt-5 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
               <p className="text-sm text-muted-foreground">
-                Belum ada proyek. Mulai dari tombol{" "}
-                <span className="font-medium text-foreground">Paper baru</span> atau{" "}
-                <span className="font-medium text-foreground">PPT baru</span> di atas.
+                {t("dash.emptyProjects")}
               </p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="mt-5 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-              <p className="text-sm text-muted-foreground">Tidak ada proyek yang cocok dengan filter.</p>
+              <p className="text-sm text-muted-foreground">{t("dash.noMatch")}</p>
               <button
                 type="button"
                 onClick={() => {
@@ -462,7 +468,7 @@ export function DashboardHome({ user }: { user: User }) {
                 }}
                 className="mt-3 text-sm font-medium text-foreground hover:underline"
               >
-                Reset filter
+                {t("dash.resetFilter")}
               </button>
             </div>
           ) : view === "list" ? (
@@ -482,7 +488,8 @@ export function DashboardHome({ user }: { user: User }) {
                   to="/projects"
                   className="flex items-center justify-center gap-1 border-t border-border bg-secondary/30 py-2.5 text-xs font-medium text-foreground hover:bg-secondary"
                 >
-                  Lihat {filtered.length - 6} proyek lainnya <ChevronRight className="h-3.5 w-3.5" />
+                  {fmt(t("dash.viewMoreProjects"), { n: filtered.length - 6 })}{" "}
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </Link>
               )}
             </div>
@@ -511,9 +518,9 @@ export function DashboardHome({ user }: { user: User }) {
                   >
                     <ChevronRight className="h-6 w-6" />
                     <span className="text-sm font-medium">
-                      Lihat {filtered.length - 6} lainnya
+                      {fmt(t("dash.viewMore"), { n: filtered.length - 6 })}
                     </span>
-                    <span className="text-xs">Buka semua proyek</span>
+                    <span className="text-xs">{t("dash.openAll")}</span>
                   </Link>
                 ) : (
                   !atCap && (
@@ -523,8 +530,8 @@ export function DashboardHome({ user }: { user: User }) {
                       className="flex w-[85%] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-card p-5 text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-foreground/40 hover:text-foreground sm:w-[48%] lg:w-[32%]"
                     >
                       <Plus className="h-6 w-6" />
-                      <span className="text-sm font-medium">Tambah proyek</span>
-                      <span className="text-xs">{MAX_PROJECTS - projectCount} slot tersisa</span>
+                      <span className="text-sm font-medium">{t("dash.addProject")}</span>
+                      <span className="text-xs">{fmt(t("dash.slotsLeft"), { n: MAX_PROJECTS - projectCount })}</span>
                     </button>
                   )
                 )}
@@ -534,7 +541,7 @@ export function DashboardHome({ user }: { user: User }) {
                   <button
                     type="button"
                     onClick={() => slide(-1)}
-                    aria-label="Sebelumnya"
+                    aria-label={t("dash.prev")}
                     className="absolute left-1 top-1/2 hidden -translate-y-1/2 rounded-full border border-border bg-background/95 p-2 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-secondary md:inline-flex"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -542,7 +549,7 @@ export function DashboardHome({ user }: { user: User }) {
                   <button
                     type="button"
                     onClick={() => slide(1)}
-                    aria-label="Selanjutnya"
+                    aria-label={t("dash.next")}
                     className="absolute right-1 top-1/2 hidden -translate-y-1/2 rounded-full border border-border bg-background/95 p-2 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-secondary md:inline-flex"
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -614,6 +621,7 @@ function ProjectRowItem({
   pinned: boolean;
   onTogglePin: (id: string) => void;
 }) {
+  const { t } = useT();
   const completed = project.progress >= 100;
   const Icon = project.mission === "paper" ? FileText : Presentation;
   return (
@@ -633,7 +641,8 @@ function ProjectRowItem({
           {pinned && <Pin className="h-3 w-3 text-amber-500" />}
         </div>
         <p className="mt-0.5 truncate text-xs text-muted-foreground">
-          {project.mission === "paper" ? "Paper" : "Presentasi"} · {formatRelativeTime(project.updated_at)}
+          {project.mission === "paper" ? t("dash.paper") : t("dash.presentation")} ·{" "}
+          {formatRelativeTime(project.updated_at)}
         </p>
       </div>
       <div className="hidden w-40 items-center gap-2 sm:flex">
@@ -649,7 +658,7 @@ function ProjectRowItem({
         type="button"
         onClick={() => onTogglePin(project.id)}
         className="rounded-md p-1.5 text-muted-foreground hover:bg-background hover:text-foreground"
-        aria-label={pinned ? "Lepas pin" : "Sematkan"}
+        aria-label={pinned ? t("dash.unpin") : t("dash.pin")}
       >
         <Pin className={`h-3.5 w-3.5 ${pinned ? "fill-amber-400 text-amber-500" : ""}`} />
       </button>
@@ -658,7 +667,7 @@ function ProjectRowItem({
         params={{ id: project.id }}
         className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-secondary"
       >
-        Buka <ArrowRight className="h-3 w-3" />
+        {t("dash.open")} <ArrowRight className="h-3 w-3" />
       </Link>
     </li>
   );

@@ -45,6 +45,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useT } from "@/lib/i18n";
+
+function fmt(s: string, vars: Record<string, string | number>) {
+  return Object.entries(vars).reduce((acc, [k, v]) => acc.split(`{${k}}`).join(String(v)), s);
+}
 
 export function ProjectCard({
   project,
@@ -57,9 +62,10 @@ export function ProjectCard({
   onTogglePin?: (id: string) => void;
   compact?: boolean;
 }) {
+  const { t } = useT();
   const completed = project.progress >= 100;
   const Icon = project.mission === "paper" ? FileText : Presentation;
-  const missionLabel = project.mission === "paper" ? "Paper" : "Presentasi";
+  const missionLabel = project.mission === "paper" ? t("dash.paper") : t("dash.presentation");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameVal, setRenameVal] = useState(project.name);
@@ -72,28 +78,28 @@ export function ProjectCard({
   const del = useMutation({
     mutationFn: () => deleteFn({ data: { id: project.id } }),
     onSuccess: () => {
-      toast.success("Proyek dihapus");
+      toast.success(t("card.deleted"));
       qc.invalidateQueries({ queryKey: ["projects"] });
     },
-    onError: (e: Error) => toast.error(e.message || "Gagal menghapus proyek"),
+    onError: (e: Error) => toast.error(e.message || t("card.deleteFail")),
   });
   const dup = useMutation({
     mutationFn: () => duplicateFn({ data: { id: project.id } }),
     onSuccess: () => {
-      toast.success("Proyek diduplikasi");
+      toast.success(t("card.duplicated"));
       qc.invalidateQueries({ queryKey: ["projects"] });
     },
-    onError: (e: Error) => toast.error(e.message || "Gagal menduplikasi"),
+    onError: (e: Error) => toast.error(e.message || t("card.duplicateFail")),
   });
   const rename = useMutation({
     mutationFn: (name: string) =>
       updateFn({ data: { id: project.id, patch: { name } } }),
     onSuccess: () => {
-      toast.success("Nama diperbarui");
+      toast.success(t("card.renamed"));
       setRenameOpen(false);
       qc.invalidateQueries({ queryKey: ["projects"] });
     },
-    onError: (e: Error) => toast.error(e.message || "Gagal mengubah nama"),
+    onError: (e: Error) => toast.error(e.message || t("card.renameFail")),
   });
 
   async function handleDownload() {
@@ -114,7 +120,7 @@ export function ProjectCard({
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Gagal mengunduh file");
+      toast.error(err instanceof Error ? err.message : t("card.downloadFail"));
     } finally {
       setDownloading(false);
     }
@@ -148,7 +154,7 @@ export function ProjectCard({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                aria-label="Aksi proyek"
+                aria-label={t("card.actions")}
                 className="rounded-md p-1 text-muted-foreground opacity-70 transition-colors hover:bg-secondary hover:text-foreground group-hover:opacity-100"
               >
                 <MoreHorizontal className="h-4 w-4" />
@@ -159,11 +165,11 @@ export function ProjectCard({
                 <DropdownMenuItem onSelect={() => onTogglePin(project.id)}>
                   {pinned ? (
                     <>
-                      <PinOff className="mr-2 h-3.5 w-3.5" /> Lepas pin
+                      <PinOff className="mr-2 h-3.5 w-3.5" /> {t("dash.unpin")}
                     </>
                   ) : (
                     <>
-                      <Pin className="mr-2 h-3.5 w-3.5" /> Sematkan
+                      <Pin className="mr-2 h-3.5 w-3.5" /> {t("dash.pin")}
                     </>
                   )}
                 </DropdownMenuItem>
@@ -174,20 +180,20 @@ export function ProjectCard({
                   setRenameOpen(true);
                 }}
               >
-                <Pencil className="mr-2 h-3.5 w-3.5" /> Ubah nama
+                <Pencil className="mr-2 h-3.5 w-3.5" /> {t("card.rename")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 disabled={dup.isPending}
                 onSelect={() => dup.mutate()}
               >
-                <Copy className="mr-2 h-3.5 w-3.5" /> Duplikasi
+                <Copy className="mr-2 h-3.5 w-3.5" /> {t("card.duplicate")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={() => setConfirmOpen(true)}
                 className="text-destructive focus:text-destructive"
               >
-                <Trash2 className="mr-2 h-3.5 w-3.5" /> Hapus
+                <Trash2 className="mr-2 h-3.5 w-3.5" /> {t("card.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -224,7 +230,7 @@ export function ProjectCard({
               ) : (
                 <Download className="h-3.5 w-3.5" />
               )}
-              Unduh
+              {t("card.download")}
             </button>
             <Link
               to="/mission/$id"
@@ -232,7 +238,7 @@ export function ProjectCard({
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
             >
               <FolderOpen className="h-3.5 w-3.5" />
-              Buka proyek
+              {t("card.openProject")}
             </Link>
           </>
         ) : (
@@ -241,7 +247,7 @@ export function ProjectCard({
             params={{ id: project.id }}
             className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:underline"
           >
-            Lanjutkan
+            {t("card.continue")}
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         )}
@@ -250,15 +256,13 @@ export function ProjectCard({
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus proyek ini?</AlertDialogTitle>
+            <AlertDialogTitle>{t("card.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Proyek <span className="font-medium text-foreground">“{project.name}”</span> akan
-              dihapus selamanya beserta seluruh jawaban dan hasilnya. Tindakan ini tidak bisa
-              dibatalkan.
+              {fmt(t("card.deleteDesc"), { name: project.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={del.isPending}>Batal</AlertDialogCancel>
+            <AlertDialogCancel disabled={del.isPending}>{t("card.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               disabled={del.isPending}
               onClick={(e) => {
@@ -267,7 +271,7 @@ export function ProjectCard({
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {del.isPending ? "Menghapus…" : "Hapus selamanya"}
+              {del.isPending ? t("card.deleting") : t("card.deleteForever")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -276,14 +280,14 @@ export function ProjectCard({
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Ubah nama proyek</DialogTitle>
+            <DialogTitle>{t("card.renameTitle")}</DialogTitle>
           </DialogHeader>
           <Input
             autoFocus
             value={renameVal}
             onChange={(e) => setRenameVal(e.target.value)}
             maxLength={200}
-            placeholder="Nama proyek"
+            placeholder={t("card.projectName")}
             onKeyDown={(e) => {
               if (e.key === "Enter" && renameVal.trim()) rename.mutate(renameVal.trim());
             }}
@@ -294,7 +298,7 @@ export function ProjectCard({
               onClick={() => setRenameOpen(false)}
               className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-secondary"
             >
-              Batal
+              {t("card.cancel")}
             </button>
             <button
               type="button"
@@ -302,7 +306,7 @@ export function ProjectCard({
               onClick={() => rename.mutate(renameVal.trim())}
               className="rounded-lg bg-foreground px-3 py-1.5 text-sm font-medium text-background disabled:opacity-50"
             >
-              {rename.isPending ? "Menyimpan…" : "Simpan"}
+              {rename.isPending ? t("card.saving") : t("card.save")}
             </button>
           </DialogFooter>
         </DialogContent>

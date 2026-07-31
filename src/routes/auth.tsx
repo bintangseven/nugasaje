@@ -100,8 +100,13 @@ function AuthPage() {
           <div className="pointer-events-none absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-tertiary/30 blur-3xl" />
 
           <div className="relative">
-            <Link to="/" aria-label="Numu AI" className="inline-flex items-center rounded-xl bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm">
-              <img src={numuLogo.url} alt="Numu AI" className="h-10 w-auto" />
+            <Link to="/" aria-label="Numu AI" className="inline-flex items-center">
+              <img
+                src={numuLogo.url}
+                alt="Numu AI"
+                className="h-10 w-auto"
+                style={{ filter: "brightness(0) invert(1)" }}
+              />
             </Link>
             <span className="eyebrow mt-14 block text-primary-fixed">Ruang kerja akademik</span>
             <h1 className="mt-3 font-display text-4xl font-black leading-tight lg:text-[2.75rem]">
