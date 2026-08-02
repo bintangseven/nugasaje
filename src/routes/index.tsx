@@ -9,13 +9,16 @@ import { MissionCard } from "@/components/MissionCard";
 import { ProjectCard } from "@/components/ProjectCard";
 import { Reveal } from "@/components/Reveal";
 import { Footer } from "@/components/Footer";
-import { ArrowRight, Sparkles, Zap, ShieldCheck, Clock3, Brain, FileInput, FileDown, Gauge, Users, Star } from "lucide-react";
+import { ArrowRight, Sparkles, Zap, ShieldCheck, Clock3, Brain, FileInput, FileDown, FileCheck2, Users, FolderKanban } from "lucide-react";
 import { Quote } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { defaultProjectName, missions, type MissionType, type ProjectRow } from "@/lib/mock-data";
 import { createProject, listProjects } from "@/lib/projects.functions";
 import { DashboardHome } from "@/components/DashboardHome";
 import { useT } from "@/lib/i18n";
+import { MiniDemo } from "@/components/MiniDemo";
+import { SampleDownloads } from "@/components/SampleDownloads";
+import { getPublicStats } from "@/lib/public-stats.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -52,6 +55,14 @@ function Index() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const statsFn = useServerFn(getPublicStats);
+  const statsQuery = useQuery({
+    queryKey: ["public-stats"],
+    queryFn: () => statsFn(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const stats = statsQuery.data ?? { projects: 0, documents: 0, students: 0 };
 
   const projectsQuery = useQuery({
     queryKey: ["projects"],
@@ -232,25 +243,80 @@ function Index() {
 
                 <div className="mt-4 grid grid-cols-3 gap-3">
                   <StatBox
-                    icon={<Gauge className="h-4 w-4" />}
-                    label={t("flow.stat.accuracy")}
-                    value={<CountUp to={95} startDelay={400} suffix="%" />}
-                    prefix=">"
+                    icon={<FileCheck2 className="h-4 w-4" />}
+                    label={t("flow.stat.docs")}
+                    value={<CountUp key={`d-${stats.documents}`} to={stats.documents} startDelay={300} />}
+                  />
+                  <StatBox
+                    icon={<FolderKanban className="h-4 w-4" />}
+                    label={t("proof.projects")}
+                    value={<CountUp key={`p-${stats.projects}`} to={stats.projects} startDelay={450} />}
                   />
                   <StatBox
                     icon={<Users className="h-4 w-4" />}
                     label={t("flow.stat.students")}
-                    value={<CountUp to={12} startDelay={550} suffix="K+" />}
-                  />
-                  <StatBox
-                    icon={<Star className="h-4 w-4" />}
-                    label={t("flow.stat.rating")}
-                    value={<CountUp to={4.9} decimals={1} startDelay={700} />}
+                    value={<CountUp key={`s-${stats.students}`} to={stats.students} startDelay={600} />}
                   />
                 </div>
               </div>
             </div>
           </Reveal>
+        </section>
+
+        {/* MINI DEMO INTERAKTIF */}
+        <section id="demo" className="mt-20 scroll-mt-24">
+          <Reveal>
+            <MiniDemo />
+          </Reveal>
+        </section>
+
+        {/* CONTOH HASIL NYATA */}
+        <section id="contoh" className="mt-14 scroll-mt-24">
+          <Reveal>
+            <SampleDownloads />
+          </Reveal>
+        </section>
+
+        {/* SOCIAL PROOF */}
+        <section id="bukti" className="mt-20 scroll-mt-24">
+          <Reveal className="mb-8 max-w-2xl">
+            <span className="eyebrow">{t("proof.eyebrow")}</span>
+            <h2 className="mt-3 font-display text-3xl font-semibold md:text-4xl">{t("proof.title")}</h2>
+          </Reveal>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {[
+              { icon: <FileCheck2 className="h-4 w-4" />, label: t("proof.docs"), value: stats.documents },
+              { icon: <FolderKanban className="h-4 w-4" />, label: t("proof.projects"), value: stats.projects },
+              { icon: <Users className="h-4 w-4" />, label: t("proof.students"), value: stats.students },
+            ].map((s2, i) => (
+              <Reveal key={s2.label} delay={i * 80}>
+                <div className="rounded-3xl border border-outline-variant bg-surface-container-lowest p-6">
+                  <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
+                    <span className="text-primary">{s2.icon}</span>
+                    {s2.label}
+                  </span>
+                  <p className="mt-2 font-display text-3xl font-semibold text-on-surface">
+                    <CountUp key={`${s2.label}-${s2.value}`} to={s2.value} startDelay={200} />
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {[
+              { quote: t("proof.t1"), author: t("proof.t1.author") },
+              { quote: t("proof.t2"), author: t("proof.t2.author") },
+              { quote: t("proof.t3"), author: t("proof.t3.author") },
+            ].map((q, i) => (
+              <Reveal key={q.author} delay={i * 90}>
+                <figure className="flex h-full flex-col rounded-3xl border border-outline-variant bg-surface-container-low p-6">
+                  <Quote className="h-5 w-5 text-primary" />
+                  <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-on-surface">{q.quote}</blockquote>
+                  <figcaption className="mt-4 text-xs text-on-surface-variant">{q.author}</figcaption>
+                </figure>
+              </Reveal>
+            ))}
+          </div>
         </section>
 
         <section id="misi" className="mt-20 scroll-mt-24">
