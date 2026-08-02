@@ -44,6 +44,39 @@ const translations: Record<Lang, Dict> = {
     "flow.stat.accuracy": "Akurasi",
     "flow.stat.students": "Mahasiswa",
     "flow.stat.rating": "Rating",
+    "flow.stat.docs": "Dokumen",
+
+    // Mini demo
+    "demo.badge": "Coba langsung",
+    "demo.title": "Tulis topikmu, lihat outline-nya sekarang",
+    "demo.sub": "Tanpa daftar akun. Ketik topik singkat dan Numu AI menampilkan rangka bab beserta poin bahasannya.",
+    "demo.placeholder": "Contoh: Pemasaran digital UMKM",
+    "demo.button": "Buat draf outline",
+    "demo.empty": "Hasil outline akan muncul di sini setelah kamu mengetik topik.",
+    "demo.loading": "Menyusun outline…",
+    "demo.resultFor": "Draf outline untuk",
+    "demo.cta": "Lanjutkan jadi makalah utuh",
+    "demo.ctaNote": "Gratis untuk proyek pertama.",
+
+    // Contoh hasil
+    "sample.eyebrow": "Contoh hasil nyata",
+    "sample.title": "Lihat kerapian format sebelum mendaftar",
+    "sample.sub": "Unduh contoh file asli yang dibuat memakai mesin format yang sama: margin standar makalah, daftar pustaka, dan slide PowerPoint yang bisa diedit.",
+    "sample.docx": "Unduh contoh .docx",
+    "sample.pptx": "Unduh contoh .pptx",
+
+    // Social proof
+    "proof.eyebrow": "Bukti nyata",
+    "proof.title": "Sudah dipakai mahasiswa dari berbagai kampus",
+    "proof.docs": "Dokumen selesai dibuat",
+    "proof.projects": "Proyek dikerjakan",
+    "proof.students": "Mahasiswa terdaftar",
+    "proof.t1": "Outline-nya langsung rapi, tinggal saya sesuaikan dengan arahan dosen. Hemat waktu banget saat deadline.",
+    "proof.t1.author": "Mahasiswa S1 Manajemen — anonim",
+    "proof.t2": "Format makalahnya sudah sesuai panduan kampus, jadi saya tidak perlu atur margin dan daftar isi manual.",
+    "proof.t2.author": "Mahasiswa S1 Ilmu Komunikasi — anonim",
+    "proof.t3": "Slide PPT-nya bisa diedit di PowerPoint, bukan gambar. Itu yang bikin saya balik lagi.",
+    "proof.t3.author": "Mahasiswa D3 Akuntansi — anonim",
 
     // Missions section
     "missions.eyebrow": "Research tools Terpercaya",
@@ -267,6 +300,39 @@ const translations: Record<Lang, Dict> = {
     "flow.stat.accuracy": "Accuracy",
     "flow.stat.students": "Students",
     "flow.stat.rating": "Rating",
+    "flow.stat.docs": "Documents",
+
+    // Mini demo
+    "demo.badge": "Try it now",
+    "demo.title": "Type your topic, see the outline instantly",
+    "demo.sub": "No sign-up needed. Enter a short topic and Numu AI shows a chapter outline with talking points.",
+    "demo.placeholder": "Example: Digital marketing for MSMEs",
+    "demo.button": "Generate draft outline",
+    "demo.empty": "Your outline preview will appear here once you enter a topic.",
+    "demo.loading": "Drafting the outline…",
+    "demo.resultFor": "Draft outline for",
+    "demo.cta": "Turn it into a full paper",
+    "demo.ctaNote": "Free for your first project.",
+
+    // Live samples
+    "sample.eyebrow": "Real sample output",
+    "sample.title": "Check the formatting before you sign up",
+    "sample.sub": "Download real files built with the very same formatting engine: academic margins, reference list, and fully editable PowerPoint slides.",
+    "sample.docx": "Download sample .docx",
+    "sample.pptx": "Download sample .pptx",
+
+    // Social proof
+    "proof.eyebrow": "Real usage",
+    "proof.title": "Already used by students across campuses",
+    "proof.docs": "Documents completed",
+    "proof.projects": "Projects worked on",
+    "proof.students": "Registered students",
+    "proof.t1": "The outline came out clean right away — I only tweaked it to match my lecturer's brief. Huge time saver.",
+    "proof.t1.author": "Management undergraduate — anonymous",
+    "proof.t2": "The paper formatting already matched my campus guide, so no manual margins or table of contents.",
+    "proof.t2.author": "Communication undergraduate — anonymous",
+    "proof.t3": "The PPT slides are editable in PowerPoint, not images. That is why I keep coming back.",
+    "proof.t3.author": "Accounting diploma student — anonymous",
 
     // Missions
     "missions.eyebrow": "Trusted research tools",
