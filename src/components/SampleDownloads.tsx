@@ -45,7 +45,20 @@ async function downloadSampleDocx() {
   const doc = new Document({
     creator: "Numu AI",
     title: SAMPLE_TITLE,
-    styles: { default: { document: { run: { font: FONT, size: BODY } } } },
+    styles: {
+      default: { document: { run: { font: FONT, size: BODY } } },
+      paragraphStyles: [
+        {
+          id: "Heading1",
+          name: "Heading 1",
+          basedOn: "Normal",
+          next: "Normal",
+          quickFormat: true,
+          run: { font: FONT, size: 28, bold: true, color: "000000" },
+          paragraph: { spacing: { before: 240, after: 240 }, outlineLevel: 0 },
+        },
+      ],
+    },
     sections: [
       {
         properties: {
