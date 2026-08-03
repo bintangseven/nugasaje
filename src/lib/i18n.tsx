@@ -163,6 +163,24 @@ const translations: Record<Lang, Dict> = {
     "mission.loading": "Memuat proyek…",
     "mission.notFound": "Proyek tidak ditemukan",
 
+    // Preset format dokumen
+    "format.title": "Format dokumen",
+    "format.hint": "Pilih preset format kampus atau atur sendiri margin, font, dan spasi.",
+    "format.preset": "Preset",
+    "format.advanced": "Pengaturan lanjutan",
+    "format.font": "Font",
+    "format.size": "Ukuran",
+    "format.spacing": "Spasi",
+    "format.margin": "Margin",
+    "format.top": "Atas",
+    "format.left": "Kiri",
+    "format.right": "Kanan",
+    "format.bottom": "Bawah",
+    "format.cover": "Cover",
+    "format.cover.kampus": "Standar kampus",
+    "format.cover.minimalis": "Minimalis",
+    "format.cover.tanpa": "Tanpa cover",
+
     // Assistant tips
     "tips.title": "Tips dari Asisten Numu",
     "tips.from": "Asisten Numu",
