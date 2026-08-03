@@ -163,6 +163,24 @@ const translations: Record<Lang, Dict> = {
     "mission.loading": "Memuat proyek…",
     "mission.notFound": "Proyek tidak ditemukan",
 
+    // Preset format dokumen
+    "format.title": "Format dokumen",
+    "format.hint": "Pilih preset format kampus atau atur sendiri margin, font, dan spasi.",
+    "format.preset": "Preset",
+    "format.advanced": "Pengaturan lanjutan",
+    "format.font": "Font",
+    "format.size": "Ukuran",
+    "format.spacing": "Spasi",
+    "format.margin": "Margin",
+    "format.top": "Atas",
+    "format.left": "Kiri",
+    "format.right": "Kanan",
+    "format.bottom": "Bawah",
+    "format.cover": "Cover",
+    "format.cover.kampus": "Standar kampus",
+    "format.cover.minimalis": "Minimalis",
+    "format.cover.tanpa": "Tanpa cover",
+
     // Assistant tips
     "tips.title": "Tips dari Asisten Numu",
     "tips.from": "Asisten Numu",
@@ -418,6 +436,24 @@ const translations: Record<Lang, Dict> = {
     "mission.emptyPreview": "The preview will appear here once I start drafting.",
     "mission.loading": "Loading project…",
     "mission.notFound": "Project not found",
+
+    // Document format presets
+    "format.title": "Document format",
+    "format.hint": "Pick a campus format preset or set margins, font, and spacing yourself.",
+    "format.preset": "Preset",
+    "format.advanced": "Advanced settings",
+    "format.font": "Font",
+    "format.size": "Size",
+    "format.spacing": "Spacing",
+    "format.margin": "Margin",
+    "format.top": "Top",
+    "format.left": "Left",
+    "format.right": "Right",
+    "format.bottom": "Bottom",
+    "format.cover": "Cover",
+    "format.cover.kampus": "Campus standard",
+    "format.cover.minimalis": "Minimal",
+    "format.cover.tanpa": "No cover",
 
     // Assistant tips
     "tips.title": "Tips from Numu Assistant",
