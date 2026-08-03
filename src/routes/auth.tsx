@@ -144,7 +144,14 @@ function AuthPage() {
 
         {/* Right: form */}
         <div className="flex items-center justify-center bg-surface-container-lowest px-6 py-12 md:px-12 md:py-14">
-          <div className="w-full max-w-sm">
+          <div className="relative w-full max-w-sm">
+            <Link
+              to="/"
+              className="absolute -top-8 right-0 inline-flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant transition-colors hover:text-primary md:-top-10"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Kembali ke halaman utama
+            </Link>
             <div className="mb-8 flex items-center md:hidden">
               <img src={numuLogo.url} alt="Numu AI" className="h-8 w-auto" />
             </div>
