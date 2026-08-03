@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { readDocFormat, CM_TO_TWIP, type DocFormat } from "@/lib/doc-format";
 
 type PaperContent = {
   title: string;
@@ -29,7 +30,12 @@ function sanitizeFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9-_ ]+/g, "").trim().slice(0, 60) || "student-os";
 }
 
-async function buildDocx(content: PaperContent, studentName: string): Promise<Uint8Array> {
+async function buildDocx(
+  content: PaperContent,
+  studentName: string,
+  fmt: DocFormat,
+  identity: { university?: string | null; major?: string | null } = {},
+): Promise<Uint8Array> {
   const {
     Document,
     Packer,
@@ -43,17 +49,20 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
     LevelFormat,
   } = await import("docx");
 
-  const FONT = "Times New Roman";
-  // half-points: 24 = 12pt, 28 = 14pt
-  const BODY = 24;
-  const H1 = 28;
-  const H2 = 24;
-  const H3 = 24;
+  // Ukuran docx memakai half-point: 12pt = 24.
+  const FONT = fmt.font;
+  const BODY = Math.round(fmt.fontSize * 2);
+  const H1 = Math.round((fmt.fontSize + 2) * 2);
+  const H2 = BODY;
+  const H3 = BODY;
+  // line spacing docx: 240 = single.
+  const LINE = Math.round(240 * fmt.lineSpacing);
+  const LINE_TIGHT = Math.round(LINE * 0.95);
 
   const bodyPara = (text: string, opts: { firstLine?: boolean; italic?: boolean; align?: (typeof AlignmentType)[keyof typeof AlignmentType] } = {}) =>
     new Paragraph({
       alignment: opts.align ?? AlignmentType.JUSTIFIED,
-      spacing: { after: 120, line: 360 },
+      spacing: { after: 120, line: LINE },
       indent: opts.firstLine ? { firstLine: 720 } : undefined,
       children: [new TextRun({ text, font: FONT, size: BODY, italics: opts.italic })],
     });
@@ -63,7 +72,7 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
   const bulletPara = (text: string) =>
     new Paragraph({
       alignment: AlignmentType.JUSTIFIED,
-      spacing: { after: 80, line: 340 },
+      spacing: { after: 80, line: LINE_TIGHT },
       numbering: { reference: "abc-list", level: 0 },
       children: [new TextRun({ text, font: FONT, size: BODY })],
     });
@@ -95,8 +104,29 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
       children: [new TextRun({ text, font: FONT, size, bold })],
     });
 
-  const cover = [
-    centerPara(content.title.toUpperCase(), 32, true, { before: 2400, after: 400 }),
+  const year = new Date().getFullYear();
+  const university = (identity.university ?? "").trim();
+  const major = (identity.major ?? "").trim();
+
+  const coverKampus = [
+    centerPara(content.title.toUpperCase(), BODY + 6, true, { before: 1600, after: 300 }),
+    centerPara("MAKALAH", BODY, true, { after: 200 }),
+    centerPara(
+      `Disusun untuk memenuhi tugas mata kuliah ${content.course}`,
+      BODY,
+      false,
+      { after: 1400 },
+    ),
+    centerPara("Disusun oleh:", BODY, false, { after: 120 }),
+    centerPara(studentName, BODY, true, { after: 1400 }),
+    ...(major ? [centerPara(`PROGRAM STUDI ${major.toUpperCase()}`, BODY, true, { after: 80 })] : []),
+    ...(university ? [centerPara(university.toUpperCase(), BODY, true, { after: 80 })] : []),
+    centerPara(String(year), BODY, true),
+    new Paragraph({ children: [new PageBreak()] }),
+  ];
+
+  const coverMinimalis = [
+    centerPara(content.title.toUpperCase(), BODY + 6, true, { before: 2400, after: 400 }),
     centerPara("MAKALAH", BODY, true, { after: 200 }),
     centerPara(`Mata Kuliah: ${content.course}`, BODY, false, { after: 1600 }),
     centerPara("Disusun oleh:", BODY, false, { after: 120 }),
@@ -107,6 +137,9 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
     ),
     new Paragraph({ children: [new PageBreak()] }),
   ];
+
+  const cover =
+    fmt.cover === "tanpa" ? [] : fmt.cover === "minimalis" ? coverMinimalis : coverKampus;
 
   const h1 = (text: string, opts: { pageBreakBefore?: boolean } = {}) =>
     new Paragraph({
@@ -199,7 +232,7 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
     ...content.references.map(
       (r) =>
         new Paragraph({
-          spacing: { after: 120, line: 360 },
+          spacing: { after: 120, line: LINE },
           indent: { left: 720, hanging: 720 },
           children: [new TextRun({ text: r, font: FONT, size: BODY })],
         }),
@@ -264,8 +297,13 @@ async function buildDocx(content: PaperContent, studentName: string): Promise<Ui
         properties: {
           page: {
             size: { width: 12240, height: 15840 },
-            // Standar makalah: kiri 4cm (2268), atas 3cm (1701), kanan 3cm (1701), bawah 3cm (1701)
-            margin: { top: 1701, right: 1701, bottom: 1701, left: 2268 },
+            // Margin mengikuti preset format kampus yang dipilih user (dalam cm).
+            margin: {
+              top: Math.round(fmt.marginTop * CM_TO_TWIP),
+              right: Math.round(fmt.marginRight * CM_TO_TWIP),
+              bottom: Math.round(fmt.marginBottom * CM_TO_TWIP),
+              left: Math.round(fmt.marginLeft * CM_TO_TWIP),
+            },
           },
         },
         children: [
@@ -310,7 +348,7 @@ export const exportProject = createServerFn({ method: "POST" })
 
     const { data: profile } = await context.supabase
       .from("profiles")
-      .select("name")
+      .select("name,university,major")
       .eq("id", context.userId)
       .maybeSingle();
     const studentName = profile?.name ?? "Mahasiswa";
@@ -335,7 +373,11 @@ export const exportProject = createServerFn({ method: "POST" })
     const baseName = sanitizeFilename(project.name);
 
     if (project.mission === "paper") {
-      const bytes = await buildDocx(ctx.content as PaperContent, studentName);
+      const fmt = readDocFormat(project.answers as Record<string, string> | null);
+      const bytes = await buildDocx(ctx.content as PaperContent, studentName, fmt, {
+        university: profile?.university,
+        major: profile?.major,
+      });
       return {
         base64: toBase64(bytes),
         filename: `${baseName}.docx`,
