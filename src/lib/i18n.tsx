@@ -437,6 +437,24 @@ const translations: Record<Lang, Dict> = {
     "mission.loading": "Loading project…",
     "mission.notFound": "Project not found",
 
+    // Document format presets
+    "format.title": "Document format",
+    "format.hint": "Pick a campus format preset or set margins, font, and spacing yourself.",
+    "format.preset": "Preset",
+    "format.advanced": "Advanced settings",
+    "format.font": "Font",
+    "format.size": "Size",
+    "format.spacing": "Spacing",
+    "format.margin": "Margin",
+    "format.top": "Top",
+    "format.left": "Left",
+    "format.right": "Right",
+    "format.bottom": "Bottom",
+    "format.cover": "Cover",
+    "format.cover.kampus": "Campus standard",
+    "format.cover.minimalis": "Minimal",
+    "format.cover.tanpa": "No cover",
+
     // Assistant tips
     "tips.title": "Tips from Numu Assistant",
     "tips.from": "Numu Assistant",
