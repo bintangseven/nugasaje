@@ -21,6 +21,7 @@ import { exportProject } from "@/lib/export.functions";
 import { DownloadPptxButton } from "@/components/DownloadPptxButton";
 import { PaperContentPreview, SlidesContentPreview } from "@/components/ContentPreview";
 import { AssistantTips } from "@/components/AssistantTips";
+import { DocFormatPanel } from "@/components/DocFormatPanel";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/mission/$id")({
@@ -528,6 +529,16 @@ function Workspace({
 
           {interviewDone && phase !== "done" && (
             <div className="mt-4 space-y-4 border-t border-border pt-4">
+              {missionType === "paper" && (
+                <DocFormatPanel
+                  answers={answers}
+                  onChange={(patch) => {
+                    const next = { ...answers, ...patch };
+                    setAnswers(next);
+                    scheduleSave({ answers: next });
+                  }}
+                />
+              )}
               <div className="space-y-2">
                 <div className="text-xs font-medium text-foreground">{t("mission.attachOptional")}</div>
                 <p className="text-[11px] text-muted-foreground">
