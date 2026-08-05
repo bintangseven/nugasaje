@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Check, Download, Loader2, Paperclip, Send, Sparkles, Cloud, X } from "lucide-react";
+import { ArrowLeft, Check, Download, Loader2, Paperclip, Send, Sparkles, Cloud, X, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/AppHeader";
@@ -11,6 +11,8 @@ import {
   missions,
   paperSteps,
   presentationSteps,
+  localizeQuestion,
+  localizeAnswer,
   type MissionType,
   type ProjectPhase,
   type ProjectRow,
@@ -102,10 +104,14 @@ function Workspace({
   exportFn: ReturnType<typeof useServerFn<typeof exportProject>>;
   queryClient: ReturnType<typeof useQueryClient>;
 }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const missionType: MissionType = project.mission;
   const mission = missions.find((m) => m.id === missionType)!;
   const questions = missionQuestions[missionType];
+  const localized = useMemo(
+    () => questions.map((q) => localizeQuestion(q, lang)),
+    [questions, lang],
+  );
   const steps = missionType === "paper" ? paperSteps : presentationSteps;
 
   // Local mirror of server state — hydrated once from the loaded project.
@@ -243,6 +249,23 @@ function Workspace({
       question_index: newQIndex,
       progress: Math.round((newQIndex / questions.length) * 25),
       ...(nextName !== name ? { name: nextName } : {}),
+    });
+  }
+
+  function undoAnswer() {
+    if (qIndex <= 0 || phase !== "interview") return;
+    const prevIndex = qIndex - 1;
+    const prevQ = questions[prevIndex];
+    const newAnswers = { ...answers };
+    const prevValue = newAnswers[prevQ.id] ?? "";
+    delete newAnswers[prevQ.id];
+    setAnswers(newAnswers);
+    setQIndex(prevIndex);
+    if (prevQ.type === "text") setDraft(prevValue);
+    scheduleSave({
+      answers: newAnswers,
+      question_index: prevIndex,
+      progress: Math.round((prevIndex / questions.length) * 25),
     });
   }
 
