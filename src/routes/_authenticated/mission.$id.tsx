@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Check, Download, Loader2, Paperclip, Send, Sparkles, Cloud, X } from "lucide-react";
+import { ArrowLeft, Check, Download, Loader2, Paperclip, Send, Sparkles, Cloud, X, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/AppHeader";
@@ -11,6 +11,8 @@ import {
   missions,
   paperSteps,
   presentationSteps,
+  localizeQuestion,
+  localizeAnswer,
   type MissionType,
   type ProjectPhase,
   type ProjectRow,
@@ -102,10 +104,14 @@ function Workspace({
   exportFn: ReturnType<typeof useServerFn<typeof exportProject>>;
   queryClient: ReturnType<typeof useQueryClient>;
 }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const missionType: MissionType = project.mission;
   const mission = missions.find((m) => m.id === missionType)!;
   const questions = missionQuestions[missionType];
+  const localized = useMemo(
+    () => questions.map((q) => localizeQuestion(q, lang)),
+    [questions, lang],
+  );
   const steps = missionType === "paper" ? paperSteps : presentationSteps;
 
   // Local mirror of server state — hydrated once from the loaded project.
@@ -243,6 +249,23 @@ function Workspace({
       question_index: newQIndex,
       progress: Math.round((newQIndex / questions.length) * 25),
       ...(nextName !== name ? { name: nextName } : {}),
+    });
+  }
+
+  function undoAnswer() {
+    if (qIndex <= 0 || phase !== "interview") return;
+    const prevIndex = qIndex - 1;
+    const prevQ = questions[prevIndex];
+    const newAnswers = { ...answers };
+    const prevValue = newAnswers[prevQ.id] ?? "";
+    delete newAnswers[prevQ.id];
+    setAnswers(newAnswers);
+    setQIndex(prevIndex);
+    if (prevQ.type === "text") setDraft(prevValue);
+    scheduleSave({
+      answers: newAnswers,
+      question_index: prevIndex,
+      progress: Math.round((prevIndex / questions.length) * 25),
     });
   }
 
@@ -457,14 +480,16 @@ function Workspace({
           </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto pr-1">
-            {questions.slice(0, qIndex).map((q) => (
+            {localized.slice(0, qIndex).map((q, i) => (
               <div key={q.id} className="space-y-2">
-                <Bubble role="ai">{q.question}</Bubble>
-                <Bubble role="user">{answers[q.id]}</Bubble>
+                <Bubble role="ai">{q.label}</Bubble>
+                <Bubble role="user">
+                  {localizeAnswer(questions[i], answers[q.id] ?? "", lang)}
+                </Bubble>
               </div>
             ))}
 
-            {!interviewDone && <Bubble role="ai">{questions[qIndex].question}</Bubble>}
+            {!interviewDone && <Bubble role="ai">{localized[qIndex].label}</Bubble>}
 
             {interviewDone && phase === "interview" && (
               <Bubble role="ai">
@@ -483,16 +508,26 @@ function Workspace({
 
           {phase === "interview" && !interviewDone && (
             <div className="mt-4 border-t border-border pt-4">
-              {questions[qIndex].type === "choice" ? (
+              {qIndex > 0 && (
+                <button
+                  type="button"
+                  onClick={undoAnswer}
+                  className="mb-3 inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  <Undo2 className="h-3.5 w-3.5" />
+                  {t("mission.undo")}
+                </button>
+              )}
+              {localized[qIndex].type === "choice" ? (
                 <div className="space-y-2">
-                  {(questions[qIndex].options ?? []).map((opt) => (
+                  {(questions[qIndex].options ?? []).map((opt, oi) => (
                     <button
                       key={opt}
                       type="button"
                       onClick={() => commitAnswer(opt)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:border-foreground/30 hover:bg-secondary"
                     >
-                      {opt}
+                      {localized[qIndex].optionLabels[oi] ?? opt}
                     </button>
                   ))}
                   <div className="pt-1 text-xs text-muted-foreground">
@@ -505,7 +540,7 @@ function Workspace({
                     ref={inputRef}
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
-                    placeholder={questions[qIndex].placeholder}
+                    placeholder={localized[qIndex].placeholderLabel}
                     rows={3}
                     className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-foreground/30 focus:outline-none focus:ring-2 focus:ring-foreground/10"
                   />
@@ -529,6 +564,16 @@ function Workspace({
 
           {interviewDone && phase !== "done" && (
             <div className="mt-4 space-y-4 border-t border-border pt-4">
+              {phase === "interview" && (
+                <button
+                  type="button"
+                  onClick={undoAnswer}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  <Undo2 className="h-3.5 w-3.5" />
+                  {t("mission.undo")}
+                </button>
+              )}
               {missionType === "paper" && (
                 <DocFormatPanel
                   answers={answers}
