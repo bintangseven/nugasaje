@@ -438,6 +438,7 @@ export function DashboardHome({ user }: { user: User }) {
                   <List className="h-4 w-4" />
                 </button>
               </div>
+              <DeleteAllProjectsButton count={projectCount} />
             </div>
           </div>
 
