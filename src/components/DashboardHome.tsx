@@ -25,6 +25,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Footer } from "@/components/Footer";
 import { AppHeader } from "@/components/AppHeader";
 import { ProjectCard } from "@/components/ProjectCard";
+import { DeleteAllProjectsButton } from "@/components/DeleteAllProjectsButton";
 import {
   BASIC_DAILY_LIMIT,
   PRO_DAILY_LIMIT,
@@ -438,6 +439,7 @@ export function DashboardHome({ user }: { user: User }) {
                   <List className="h-4 w-4" />
                 </button>
               </div>
+              <DeleteAllProjectsButton count={projectCount} />
             </div>
           </div>
 

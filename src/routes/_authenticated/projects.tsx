@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import { ProjectCard } from "@/components/ProjectCard";
+import { DeleteAllProjectsButton } from "@/components/DeleteAllProjectsButton";
 import { type ProjectRow } from "@/lib/mock-data";
 import { listProjects } from "@/lib/projects.functions";
 
@@ -43,13 +44,16 @@ function ProjectsPage() {
               Lanjutkan pekerjaan yang tertunda atau unduh hasil yang sudah selesai.
             </p>
           </div>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 self-start rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
-          >
-            <Plus className="h-4 w-4" />
-            Tambah Proyek
-          </Link>
+          <div className="flex flex-wrap items-center gap-2 self-start">
+            <DeleteAllProjectsButton count={projects.length} className="py-2.5" />
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+            >
+              <Plus className="h-4 w-4" />
+              Tambah Proyek
+            </Link>
+          </div>
         </div>
 
         <div className="mt-8 inline-flex rounded-lg border border-border bg-card p-1 text-sm">

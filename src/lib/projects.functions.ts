@@ -146,6 +146,18 @@ export const duplicateProject = createServerFn({ method: "POST" })
     return row;
   });
 
+export const deleteAllProjects = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: rows, error } = await context.supabase
+      .from("projects")
+      .delete()
+      .eq("user_id", context.userId)
+      .select("id");
+    if (error) throw new Error(error.message);
+    return { ok: true, deleted: rows?.length ?? 0 };
+  });
+
 export const getProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
