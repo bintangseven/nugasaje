@@ -16,6 +16,7 @@ import {
 import { dummyAvatars } from "@/lib/avatars";
 import { createProUpgradeInvoice, listMyPayments } from "@/lib/payments.functions";
 import { useCurrentUser } from "@/hooks/use-auth";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -40,6 +41,8 @@ export const Route = createFileRoute("/_authenticated/profile")({
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const { t, lang } = useT();
+  const locale = lang === "en" ? "en-US" : "id-ID";
   const { user } = useCurrentUser();
   const queryClient = useQueryClient();
   const getFn = useServerFn(getProfile);
@@ -76,15 +79,15 @@ function ProfilePage() {
   const save = useMutation({
     mutationFn: () => updateFn({ data: { ...form, avatar_url: avatarUrl } }),
     onSuccess: () => {
-      toast.success("Profil disimpan");
+      toast.success(t("profile.saved"));
       queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Gagal menyimpan"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("profile.saveFail")),
   });
 
   async function handleFile(file: File) {
     if (file.size > 3 * 1024 * 1024) {
-      toast.error("Ukuran maksimum 3MB");
+      toast.error(t("profile.maxSize"));
       return;
     }
     setUploading(true);
@@ -112,9 +115,9 @@ function ProfilePage() {
         reader.readAsDataURL(file);
       });
       setAvatarUrl(dataUrl);
-      toast.success("Foto siap disimpan. Klik 'Simpan perubahan'.");
+      toast.success(t("profile.photoReady"));
     } catch {
-      toast.error("Gagal memproses foto");
+      toast.error(t("profile.photoFail"));
     } finally {
       setUploading(false);
     }
@@ -126,10 +129,10 @@ function ProfilePage() {
       if (res?.invoice_url) {
         window.location.href = res.invoice_url;
       } else {
-        toast.error("Invoice tidak tersedia");
+        toast.error(t("profile.noInvoice"));
       }
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Gagal upgrade"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("profile.upgradeFail")),
   });
 
   const isProActive =
@@ -143,7 +146,7 @@ function ProfilePage() {
   const usedPct = Math.min(100, Math.round((usedToday / dailyLimit) * 100));
   const priceLabel = `Rp${PRO_PRICE_IDR.toLocaleString("id-ID")}/bulan`;
 
-  const displayName = form.name || profile?.name || user?.email?.split("@")[0] || "Mahasiswa";
+  const displayName = form.name || profile?.name || user?.email?.split("@")[0] || t("profile.student");
   const initials = displayName
     .split(" ")
     .map((p: string) => p[0])
@@ -162,7 +165,7 @@ function ProfilePage() {
     <div className="min-h-screen bg-background">
       <AppHeader />
       <main className="mx-auto max-w-2xl px-6 pb-24 pt-12">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Profil</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("profile.title")}</h1>
 
         {/* Langganan */}
         <div
@@ -181,16 +184,16 @@ function ProfilePage() {
                   <Sparkles className="h-4 w-4 text-muted-foreground" />
                 )}
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {isProActive ? "Paket PRO" : "Paket Basic"}
+                {isProActive ? t("profile.planPro") : t("profile.planBasic")}
               </span>
               </div>
             <p className="mt-2 text-lg font-semibold text-foreground">
-              Kuota hari ini: {usedToday} / {dailyLimit} generate
+              {t("profile.quotaToday").replace("{used}", String(usedToday)).replace("{limit}", String(dailyLimit))}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               {isProActive
-                ? `Paket PRO aktif sampai ${profile?.pro_until ? new Date(profile.pro_until).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "—"}. Kuota reset otomatis tiap hari.`
-                : `Paket Basic dibatasi ${BASIC_DAILY_LIMIT} generate per hari. Upgrade ke PRO untuk ${PRO_DAILY_LIMIT} generate/hari — promo dari Rp100.000 jadi ${priceLabel}.`}
+                ? t("profile.proActive").replace("{date}", profile?.pro_until ? new Date(profile.pro_until).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" }) : "—")
+                : t("profile.basicNote").replace("{basic}", String(BASIC_DAILY_LIMIT)).replace("{pro}", String(PRO_DAILY_LIMIT)).replace("{price}", priceLabel)}
             </p>
             </div>
             {!isProActive && (
@@ -205,7 +208,7 @@ function ProfilePage() {
                 ) : (
                   <Crown className="h-4 w-4" />
                 )}
-              Upgrade PRO • {priceLabel}
+                {t("profile.upgrade").replace("{price}", priceLabel)}
               </button>
             )}
           </div>
@@ -224,8 +227,8 @@ function ProfilePage() {
               />
             </div>
             <div className="mt-1.5 flex justify-between text-[11px] font-medium text-muted-foreground">
-              <span>Terpakai {usedToday}</span>
-              <span>Sisa {remaining} · reset besok</span>
+              <span>{t("profile.used").replace("{n}", String(usedToday))}</span>
+              <span>{t("profile.remaining").replace("{n}", String(remaining))}</span>
             </div>
           </div>
         </div>
@@ -250,10 +253,10 @@ function ProfilePage() {
           {/* Avatar picker */}
           <div className="mt-6 border-t border-border pt-6">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Foto profil
+              {t("profile.photo")}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Pilih avatar bawaan atau unggah foto pribadimu.
+              {t("profile.photoHint")}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               {dummyAvatars.map((a) => {
@@ -284,10 +287,10 @@ function ProfilePage() {
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
                 className="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-full border-2 border-dashed border-foreground/30 text-muted-foreground transition-colors hover:border-foreground hover:text-foreground disabled:opacity-50"
-                aria-label="Unggah foto"
+                aria-label={t("profile.uploadPhoto")}
               >
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                <span className="text-[9px] font-medium">Unggah</span>
+                <span className="text-[9px] font-medium">{t("profile.upload")}</span>
               </button>
               <input
                 ref={fileRef}
@@ -305,25 +308,25 @@ function ProfilePage() {
 
           <div className="mt-6 grid gap-4 border-t border-border pt-6">
             <Field
-              label="Nama tampilan"
+              label={t("profile.name")}
               value={form.name}
               onChange={(v) => setForm((f) => ({ ...f, name: v }))}
             />
             <Field
-              label="Universitas"
+              label={t("profile.university")}
               value={form.university}
               onChange={(v) => setForm((f) => ({ ...f, university: v }))}
             />
             <Field
-              label="Jurusan"
+              label={t("profile.major")}
               value={form.major}
               onChange={(v) => setForm((f) => ({ ...f, major: v }))}
             />
             <Field
-              label="Semester"
+              label={t("profile.semester")}
               value={form.semester}
               onChange={(v) => setForm((f) => ({ ...f, semester: v }))}
-              placeholder="Contoh: 5"
+              placeholder={t("profile.semesterPlaceholder")}
             />
             <div className="flex items-center justify-end pt-2">
               <button
@@ -333,7 +336,7 @@ function ProfilePage() {
                 className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                Simpan perubahan
+                {t("profile.save")}
               </button>
             </div>
           </div>
@@ -345,7 +348,7 @@ function ProfilePage() {
           className="mt-6 inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary"
         >
           <LogOut className="h-4 w-4" />
-          Keluar
+          {t("profile.signOut")}
         </button>
 
         {/* Riwayat pembayaran */}
@@ -353,18 +356,18 @@ function ProfilePage() {
           <div className="flex items-center gap-2">
             <Receipt className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Riwayat pembayaran
+              {t("profile.payments")}
             </h2>
           </div>
 
           <div className="mt-4">
             {paymentsLoading ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Memuat…
+                <Loader2 className="h-4 w-4 animate-spin" /> {t("profile.loading")}
               </div>
             ) : !payments || payments.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Belum ada transaksi. Upgrade PRO untuk mulai berlangganan.
+                {t("profile.noPayments")}
               </p>
             ) : (
               <ul className="divide-y divide-border">
@@ -381,11 +384,11 @@ function ProfilePage() {
                     <li key={p.id} className="flex items-center justify-between gap-3 py-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-foreground">
-                          {p.purpose === "pro_upgrade" ? "Upgrade PRO" : p.purpose}
+                          {p.purpose === "pro_upgrade" ? t("profile.proUpgrade") : p.purpose}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {when
-                            ? new Date(when).toLocaleString("id-ID", {
+                            ? new Date(when).toLocaleString(locale, {
                                 day: "numeric",
                                 month: "short",
                                 year: "numeric",
@@ -413,7 +416,7 @@ function ProfilePage() {
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 text-xs font-medium text-foreground underline-offset-2 hover:underline"
                           >
-                            Bayar <ExternalLink className="h-3 w-3" />
+                            {t("profile.pay")} <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
                       </div>
